@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::{BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{BinConfig, BinData, SyncBin, UnsafeBin, AnyBin};
+use std::ops::Deref;
 
 #[repr(C)]
 pub struct Bin {
@@ -8,6 +9,19 @@ pub struct Bin {
     config: &'static BinConfig,
     // marker to make sure this is not send + sync
     _not_sync: PhantomData<*const u8>,
+}
+
+impl AnyBin for Bin {
+
+}
+
+impl Deref for Bin {
+    type Target = [u8];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        (self.config.as_slice)(self)
+    }
 }
 
 unsafe impl UnsafeBin for Bin {
