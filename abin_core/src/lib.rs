@@ -12,8 +12,11 @@ pub use {
     empty::*,
     vec::*,
     cap_shrink::*,
-    any_rc::*,
     stack::*,
     rc::*,
     arc::*,
+};
+
+pub(crate) use {
+    any_rc::*,
 };

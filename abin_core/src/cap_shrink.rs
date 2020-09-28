@@ -36,7 +36,7 @@ pub struct NoVecCapShrink;
 
 impl VecCapShrink for NoVecCapShrink {
     #[inline]
-    fn is_shrink(len: usize, capacity: usize) -> bool {
+    fn is_shrink(_len: usize, _capacity: usize) -> bool {
         false
     }
 

@@ -2,7 +2,7 @@ use core::{mem, slice};
 
 use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{ArcBin, DefaultVecCapShrink, EmptyBin, StackBin, VecCapShrink};
+use crate::{ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 const CLONE_TO_ARC_THRESHOLD_BYTES: usize = 2048;
 
@@ -22,7 +22,7 @@ impl VecBin {
         } else {
             let len = vec.len();
             let capacity = vec.len();
-            let is_shrink = (capacity > T::min_capacity() && T::is_shrink(len, capacity));
+            let is_shrink = capacity > T::min_capacity() && T::is_shrink(len, capacity);
             let (len, capacity) = if is_shrink {
                 vec.shrink_to_fit();
                 (vec.len(), vec.capacity())
@@ -67,7 +67,7 @@ fn as_slice(bin: &Bin) -> &[u8] {
 }
 
 fn is_empty(bin: &Bin) -> bool {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     let len = data.1;
     len == 0
 }

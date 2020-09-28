@@ -1,6 +1,6 @@
-use abin_interface::{Bin, SyncBin};
+use abin_interface::{SyncBin};
 
-use crate::{AnyRc, DefaultVecCapShrink, VecCapShrink};
+use crate::{DefaultVecCapShrink, VecCapShrink, AnyRc};
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this
 /// is sync + send. Cloning is cheap.

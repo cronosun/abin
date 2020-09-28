@@ -40,13 +40,13 @@ fn as_slice(bin: &Bin) -> &[u8] {
 }
 
 fn is_empty(bin : &Bin) -> bool {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     let len = data.1;
     len==0
 }
 
 fn clone(bin: &Bin) -> Bin {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     let ptr = data.0;
     let len = data.1;
     unsafe { Bin::_new(BinData(ptr, len, 0), &CONFIG) }

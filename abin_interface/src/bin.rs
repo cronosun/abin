@@ -26,27 +26,27 @@ impl Deref for Bin {
 
 unsafe impl UnsafeBin for Bin {
     #[inline]
-    fn _new(data: BinData, config: &'static BinConfig) -> Self {
+    unsafe fn _new(data: BinData, config: &'static BinConfig) -> Self {
         Self { data, config, _not_sync: PhantomData }
     }
 
     #[inline]
-    fn _data(&self) -> &BinData {
+    unsafe fn _data(&self) -> &BinData {
         &self.data
     }
 
     #[inline]
-    fn _data_mut(&mut self) -> &mut BinData {
+    unsafe fn _data_mut(&mut self) -> &mut BinData {
         &mut self.data
     }
 
     #[inline]
-    fn _config(&self) -> &'static BinConfig {
+    unsafe fn _config(&self) -> &'static BinConfig {
         self.config
     }
 
     #[inline]
-    fn _into_sync(self) -> SyncBin {
+    unsafe fn _into_sync(self) -> SyncBin {
         SyncBin(self)
     }
 }

@@ -24,12 +24,12 @@ impl StackBin {
             Some(EmptyBin::new())
         } else if len < BIN_DATA_LEN {
             // yes, this works (one byte is required for the length information)
-            let mut bin = Bin::_new(BinData(0, 0, 0), &CONFIG);
-            let data_ptr = data_raw_mut(bin._data_mut());
+            let mut bin = unsafe { Bin::_new(BinData(0, 0, 0), &CONFIG) };
+            let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
             unsafe { core::ptr::copy(slice.as_ptr(), data_ptr, len); }
             let len = len as u8;
             unsafe { *data_ptr.offset(I_BIN_DATA_LEN) = len; }
-            Some(bin._into_sync())
+            Some(unsafe { bin._into_sync() })
         } else {
             None
         }
@@ -68,13 +68,13 @@ fn as_slice(bin: &Bin) -> &[u8] {
 }
 
 fn is_empty(bin: &Bin) -> bool {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     let data = data_raw(data);
     let len: u8 = unsafe { *data.offset(I_BIN_DATA_LEN) };
     len == 0
 }
 
 fn clone(bin: &Bin) -> Bin {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     unsafe { Bin::_new(BinData(data.0, data.1, data.2), &CONFIG) }
 }

@@ -2,7 +2,7 @@ use core::{mem, slice};
 
 use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{DefaultVecCapShrink, EmptyBin, NoVecCapShrink, StackBin, VecCapShrink};
+use crate::{NoVecCapShrink, StackBin, VecCapShrink};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;
@@ -29,7 +29,7 @@ impl AnyRc {
         } else {
             let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
             // note: We never need a capacity shrink here (vector should already have the right capacity).
-            Self::from::<NoVecCapShrink>(vec, &SYNC_CONFIG)._into_sync()
+            unsafe { Self::from::<NoVecCapShrink>(vec, &SYNC_CONFIG)._into_sync() }
         }
     }
 
@@ -47,7 +47,7 @@ impl AnyRc {
         if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
             stack_bin
         } else {
-            Self::from::<T>(vec, &SYNC_CONFIG)._into_sync()
+            unsafe { Self::from::<T>(vec, &SYNC_CONFIG)._into_sync() }
         }
     }
 
@@ -69,7 +69,7 @@ impl AnyRc {
 
         let len = vec.len();
         let capacity = vec.len();
-        let is_shrink = (capacity > T::min_capacity() && T::is_shrink(len, capacity));
+        let is_shrink = capacity > T::min_capacity() && T::is_shrink(len, capacity);
         let (len, capacity) = if is_shrink {
             vec.shrink_to_fit();
             (vec.len(), vec.capacity())
@@ -162,7 +162,7 @@ fn as_slice(bin: &Bin) -> &[u8] {
 }
 
 fn is_empty(bin: &Bin) -> bool {
-    let data = bin._data();
+    let data = unsafe { bin._data() };
     let len = data.1;
     len == 0
 }
