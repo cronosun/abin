@@ -1,172 +1,32 @@
-use core::{mem, slice};
+use crate::VecCapShrink;
 
-use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+/// Common trait for the synchronized and the non-synchronized reference counted binary.
+pub trait AnyRc {
+    type T;
 
-use crate::{NoVecCapShrink, StackBin, VecCapShrink};
+    /// Creates a reference counted binary from a vector while trying to avoid memory allocation &
+    /// memory copy (best effort).
+    ///
+    ///  * Note 1: The given vector is used to store the reference count - this avoids (in
+    /// most cases) another indirection and memory copy (best effort).
+    ///
+    ///  * Note 2: Do not manually shrink the given vector, the implementation needs the additional
+    /// capacity to store the reference count. The implementation will shrink the vector itself,
+    /// see `Self::from_with_cap_shrink` if you need to configure this behaviour.
+    ///
+    ///  * Note 3: If you manually create the vector using `Vec::with_capacity` make sure you
+    /// reserve additional space for the reference count to avoid a re-allocation.
+    /// See `Self::overhead_bytes`.
+    fn from(vec: Vec<u8>) -> Self::T;
 
-/// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
-const RC_LEN_BYTES: usize = 4;
+    /// This creates a reference counted binary; this involves copying the given slice.
+    fn copy_from_slice(slice: &[u8]) -> Self::T;
 
-/// A reference counted binary: depending on the configuration it's send+sync or not.
-pub(crate) struct AnyRc;
+    /// This is the overhead required to store the reference count. It's typically about 7 bytes
+    /// (32 bit reference count and up to 3 bytes of padding).
+    fn overhead_bytes() -> usize;
 
-impl AnyRc {
-    #[inline]
-    pub fn from_slice_not_sync(slice: &[u8]) -> Bin {
-        if let Some(stack_bin) = StackBin::try_from(slice) {
-            stack_bin.un_sync()
-        } else {
-            let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
-            // note: We never need a capacity shrink here (vector should already have the right capacity).
-            Self::from::<NoVecCapShrink>(vec, &NS_CONFIG)
-        }
-    }
-
-    #[inline]
-    pub fn from_slice_sync(slice: &[u8]) -> SyncBin {
-        if let Some(stack_bin) = StackBin::try_from(slice) {
-            stack_bin
-        } else {
-            let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
-            // note: We never need a capacity shrink here (vector should already have the right capacity).
-            unsafe { Self::from::<NoVecCapShrink>(vec, &SYNC_CONFIG)._into_sync() }
-        }
-    }
-
-    #[inline]
-    pub fn from_not_sync<T: VecCapShrink>(vec: Vec<u8>) -> Bin {
-        if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
-            stack_bin.un_sync()
-        } else {
-            Self::from::<T>(vec, &NS_CONFIG)
-        }
-    }
-
-    #[inline]
-    pub fn from_sync<T: VecCapShrink>(vec: Vec<u8>) -> SyncBin {
-        if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
-            stack_bin
-        } else {
-            unsafe { Self::from::<T>(vec, &SYNC_CONFIG)._into_sync() }
-        }
-    }
-
-    #[inline]
-    fn vec_from_slice_with_capacity_for_rc(slice: &[u8]) -> Vec<u8> {
-        let slice_len = slice.len();
-        let mut vec = Vec::with_capacity(slice_len + (RC_LEN_BYTES * 2));
-        vec.extend_from_slice(slice);
-        vec
-    }
-
-    fn from<T: VecCapShrink>(mut vec: Vec<u8>, config: &'static BinConfig) -> Bin {
-        let original_len = vec.len();
-        let original_ptr = vec.as_ptr() as usize;
-
-        // extend length to make sure we have enough space for the padding + reference counter.
-        let padding = rc_padding(original_ptr, original_len);
-        extend_with_padding_and_rc(&mut vec, padding);
-
-        let len = vec.len();
-        let capacity = vec.len();
-        let is_shrink = capacity > T::min_capacity() && T::is_shrink(len, capacity);
-        let (len, capacity) = if is_shrink {
-            vec.shrink_to_fit();
-            (vec.len(), vec.capacity())
-        } else {
-            (len, capacity)
-        };
-
-        let ptr = vec.as_ptr() as usize;
-        // make sure vector memory is not freed
-        mem::forget(vec);
-
-        unsafe { Bin::_new(BinData(ptr, len, capacity), config) }
-    }
-}
-
-#[inline]
-fn extend_with_padding_and_rc(vec: &mut Vec<u8>, padding: usize) {
-    let zero_slice = &[0u8; RC_LEN_BYTES * 2];
-    let zero_slice = &zero_slice[0..(padding + RC_LEN_BYTES)];
-    vec.extend_from_slice(zero_slice);
-}
-
-/// This returns the number of padding bytes after the content to make sure the reference
-/// count is aligned.
-#[inline]
-fn rc_padding(base_ptr: usize, len: usize) -> usize {
-    let target = base_ptr + len;
-    // RC_LEN_BYTES bytes alignment
-    let remainder = target % RC_LEN_BYTES;
-    if remainder == 0 {
-        // nice, already aligned
-        0
-    } else {
-        RC_LEN_BYTES - remainder
-    }
-}
-
-const NS_CONFIG: BinConfig = BinConfig {
-    drop: ns_drop,
-    as_slice,
-    is_empty,
-    clone: ns_clone,
-};
-
-const SYNC_CONFIG: BinConfig = BinConfig {
-    drop: ns_drop, // TODO
-    as_slice,
-    is_empty,
-    clone: ns_clone, // TODO
-};
-
-/// Decrements the ref counter. Returns `false` if could not decrement (is already 0).
-#[inline]
-unsafe fn ns_decrement_rc(ptr: usize, len: usize) -> bool {
-    let padding = rc_padding(ptr, len);
-    let rc_index = len + padding;
-    let rc_mut = (ptr + rc_index) as *mut u32;
-    let rc_value = core::ptr::read(rc_mut);
-    if rc_value == 0 {
-        false
-    } else {
-        // decrement reference counter.
-        core::ptr::write(rc_mut, rc_value - 1);
-        true
-    }
-}
-
-fn ns_drop(bin: &mut Bin) {
-    unsafe {
-        let data = bin._data();
-        let ptr = data.0;
-        let len = data.1;
-
-        if !ns_decrement_rc(ptr, len) {
-            // could not decrement ref count. This means this was the last reference.
-            // create a new vector, will immediately deallocate.
-            let capacity = data.1;
-            Vec::<u8>::from_raw_parts(ptr as *mut u8, 0, capacity);
-        }
-    }
-}
-
-fn as_slice(bin: &Bin) -> &[u8] {
-    unsafe {
-        let data = bin._data();
-        let ptr = data.0 as *const u8;
-        let len = data.1;
-        slice::from_raw_parts(ptr, len)
-    }
-}
-
-fn is_empty(bin: &Bin) -> bool {
-    let data = unsafe { bin._data() };
-    let len = data.1;
-    len == 0
-}
-
-fn ns_clone(_: &Bin) -> Bin {
-    unimplemented!()
+    /// This is the same as `Self::from` but allows custom configuration whether to shrink
+    /// the given vector.
+    fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Self::T;
 }

@@ -2,7 +2,7 @@ use core::{mem, slice};
 
 use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
+use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 const CLONE_TO_ARC_THRESHOLD_BYTES: usize = 2048;
 
@@ -44,6 +44,7 @@ const CONFIG: BinConfig = BinConfig {
     as_slice,
     is_empty,
     clone,
+    into_vec,
 };
 
 fn drop(bin: &mut Bin) {
@@ -85,4 +86,15 @@ fn clone(bin: &Bin) -> Bin {
     }
 }
 
+fn into_vec(bin: Bin) -> Vec<u8> {
+    // this is almost a no-op, since this is already backed by a vector.
+    let data = unsafe { bin._data() };
+    let ptr = data.0 as *mut u8;
+    let len = data.1;
+    let capacity = data.1;
+    // make sure drop is not called on `Bin` ... since we need the allocated buffer for the vec.
+    mem::forget(bin);
+    // restore the original vector, will immediately drop
+    unsafe { Vec::<u8>::from_raw_parts(ptr as *mut u8, len, capacity) }
+}
 

@@ -1,24 +1,31 @@
 use abin_interface::Bin;
 
-use crate::{AnyRc, DefaultVecCapShrink, VecCapShrink};
+use crate::{AnyRc, AnyRcImpl, DefaultVecCapShrink, VecCapShrink};
 
 /// A reference-counted binary. Note: The reference counter is not synchronized, so this
 /// is not sync + send but there's less overhead. Cloning is cheap.
 pub struct RcBin;
 
-impl RcBin {
+impl AnyRc for RcBin {
+    type T = Bin;
+
     #[inline]
-    pub fn from(vec: Vec<u8>) -> Bin {
-        AnyRc::from_not_sync::<DefaultVecCapShrink>(vec)
+    fn from(vec: Vec<u8>) -> Self::T {
+        AnyRcImpl::from_not_sync::<DefaultVecCapShrink>(vec)
     }
 
     #[inline]
-    pub fn copy_from_slice(slice : &[u8]) -> Bin {
-        AnyRc::from_slice_not_sync(slice)
+    fn copy_from_slice(slice: &[u8]) -> Self::T {
+        AnyRcImpl::from_slice_not_sync(slice)
     }
 
     #[inline]
-    pub fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Bin {
-        AnyRc::from_not_sync::<T>(vec)
+    fn overhead_bytes() -> usize {
+        AnyRcImpl::overhead_bytes()
+    }
+
+    #[inline]
+    fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Self::T {
+        AnyRcImpl::from_not_sync::<T>(vec)
     }
 }

@@ -15,6 +15,7 @@ const CONFIG: BinConfig = BinConfig {
     as_slice,
     is_empty,
     clone,
+    into_vec,
 };
 
 fn drop(_: &mut Bin) {}
@@ -29,4 +30,8 @@ fn is_empty(_: &Bin) -> bool {
 
 fn clone(_: &Bin) -> Bin {
     EmptyBin::new().un_sync()
+}
+
+fn into_vec(_: Bin) -> Vec<u8> {
+    Vec::new()
 }

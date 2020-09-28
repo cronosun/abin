@@ -2,10 +2,11 @@ mod static_bin;
 mod empty;
 mod vec;
 mod cap_shrink;
-mod any_rc;
+mod any_rc_impl;
 mod stack;
 mod rc;
 mod arc;
+mod any_rc;
 
 pub use {
     static_bin::*,
@@ -15,8 +16,9 @@ pub use {
     stack::*,
     rc::*,
     arc::*,
+    any_rc::*,
 };
 
 pub(crate) use {
-    any_rc::*,
+    any_rc_impl::*,
 };

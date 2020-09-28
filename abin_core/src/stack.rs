@@ -1,6 +1,6 @@
 use core::slice;
 
-use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 use crate::EmptyBin;
 
@@ -50,13 +50,15 @@ const CONFIG: BinConfig = BinConfig {
     drop,
     as_slice,
     is_empty,
-    clone
+    clone,
+    into_vec,
 };
 
 fn drop(_: &mut Bin) {
     // does nothing (stack only).
 }
 
+#[inline]
 fn as_slice(bin: &Bin) -> &[u8] {
     unsafe {
         let data = bin._data();
@@ -77,4 +79,8 @@ fn is_empty(bin: &Bin) -> bool {
 fn clone(bin: &Bin) -> Bin {
     let data = unsafe { bin._data() };
     unsafe { Bin::_new(BinData(data.0, data.1, data.2), &CONFIG) }
+}
+
+fn into_vec(bin: Bin) -> Vec<u8> {
+    as_slice(&bin).to_vec()
 }
