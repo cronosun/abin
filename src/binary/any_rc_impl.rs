@@ -80,7 +80,7 @@ impl AnyRcImpl {
         extend_with_padding_and_rc(&mut vec, padding);
 
         let len = vec.len();
-        let capacity = vec.len();
+        let capacity = vec.capacity();
         let is_shrink = capacity > T::min_capacity() && T::is_shrink(len, capacity);
         let capacity = if is_shrink {
             vec.shrink_to_fit();

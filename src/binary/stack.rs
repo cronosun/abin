@@ -4,8 +4,10 @@ use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 use crate::EmptyBin;
 
+/// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();
-const I_BIN_DATA_LEN: isize = BIN_DATA_LEN as isize;
+/// the offset where to store the length information.
+const LENGTH_OFFSET: usize = BIN_DATA_LEN - 1;
 
 /// A binary that stores the content entirely on the stack.
 pub struct StackBin;
@@ -28,7 +30,7 @@ impl StackBin {
             let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
             unsafe { core::ptr::copy(slice.as_ptr(), data_ptr, len); }
             let len = len as u8;
-            unsafe { *data_ptr.offset(I_BIN_DATA_LEN) = len; }
+            unsafe { *data_ptr.add(LENGTH_OFFSET) = len; }
             Some(unsafe { bin._into_sync() })
         } else {
             None
@@ -63,7 +65,7 @@ fn as_slice(bin: &Bin) -> &[u8] {
     unsafe {
         let data = bin._data();
         let data = data_raw(data);
-        let len: u8 = *data.offset(I_BIN_DATA_LEN);
+        let len: u8 = *data.add(LENGTH_OFFSET);
         let len = len as usize;
         slice::from_raw_parts(data, len)
     }
@@ -72,7 +74,7 @@ fn as_slice(bin: &Bin) -> &[u8] {
 fn is_empty(bin: &Bin) -> bool {
     let data = unsafe { bin._data() };
     let data = data_raw(data);
-    let len: u8 = unsafe { *data.offset(I_BIN_DATA_LEN) };
+    let len: u8 = unsafe { *data.add(LENGTH_OFFSET) };
     len == 0
 }
 
