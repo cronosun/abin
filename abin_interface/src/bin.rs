@@ -11,7 +11,17 @@ pub struct Bin {
     _not_sync: PhantomData<*const u8>,
 }
 
-impl AnyBin for Bin {}
+impl AnyBin for Bin {
+    #[inline]
+    fn as_slice(&self) -> &[u8] {
+        (self.config.as_slice)(self)
+    }
+
+    #[inline]
+    fn into_vec(self) -> Vec<u8> {
+        (self.config.into_vec)(self)
+    }
+}
 
 impl Deref for Bin {
     type Target = [u8];

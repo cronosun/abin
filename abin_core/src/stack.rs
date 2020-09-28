@@ -1,6 +1,6 @@
 use core::slice;
 
-use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 use crate::EmptyBin;
 
@@ -13,8 +13,8 @@ pub struct StackBin;
 impl StackBin {
     /// Does those steps:
     ///
-    ///  * If it's empty, returns a `EmptyBin`.
-    ///  * If the slice is small (less than size of `BinData`) returns a stack binary.
+    ///  * If it's empty, returns `EmptyBin::new()`.
+    ///  * If the slice is small (less than the size of `BinData`) returns a stack binary.
     ///  * ...otherwise returns `None`.
     #[inline]
     pub fn try_from(slice: &[u8]) -> Option<SyncBin> {

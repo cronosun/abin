@@ -1,6 +1,6 @@
 use core::slice;
 
-use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 use crate::EmptyBin;
 
