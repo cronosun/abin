@@ -1,23 +1,29 @@
-use crate::{BinConfig, BinData, SyncBin, UnsafeBin};
 use std::marker::PhantomData;
+
+use crate::{BinConfig, BinData, SyncBin, UnsafeBin};
 
 #[repr(C)]
 pub struct Bin {
     data: BinData,
     config: &'static BinConfig,
     // marker to make sure this is not send + sync
-    _not_sync : PhantomData<*const u8>,
+    _not_sync: PhantomData<*const u8>,
 }
 
 unsafe impl UnsafeBin for Bin {
     #[inline]
     fn _new(data: BinData, config: &'static BinConfig) -> Self {
-        Self { data, config, _not_sync : PhantomData }
+        Self { data, config, _not_sync: PhantomData }
     }
 
     #[inline]
     fn _data(&self) -> &BinData {
         &self.data
+    }
+
+    #[inline]
+    fn _data_mut(&mut self) -> &mut BinData {
+        &mut self.data
     }
 
     #[inline]

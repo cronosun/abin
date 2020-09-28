@@ -2,7 +2,7 @@ use core::{mem, slice};
 
 use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{DefaultVecCapShrink, EmptyBin, VecCapShrink};
+use crate::{DefaultVecCapShrink, EmptyBin, StackBin, VecCapShrink};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted: So cloning
 /// this binary will be expensive. Use this if you're quite sure that the binary won't be cloned.
@@ -15,8 +15,8 @@ impl VecBin {
     }
 
     pub fn from_with_cap_shrink<T: VecCapShrink>(mut vec: Vec<u8>) -> SyncBin {
-        if vec.is_empty() {
-            EmptyBin::new()
+        if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
+            stack_bin
         } else {
             let len = vec.len();
             let capacity = vec.len();
