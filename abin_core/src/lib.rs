@@ -5,6 +5,7 @@ mod cap_shrink;
 mod any_rc;
 mod stack;
 mod rc;
+mod arc;
 
 pub use {
     static_bin::*,
@@ -14,4 +15,5 @@ pub use {
     any_rc::*,
     stack::*,
     rc::*,
+    arc::*,
 };

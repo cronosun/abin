@@ -50,6 +50,7 @@ const CONFIG: BinConfig = BinConfig {
     drop,
     as_slice,
     is_empty,
+    clone
 };
 
 fn drop(_: &mut Bin) {
@@ -71,4 +72,9 @@ fn is_empty(bin: &Bin) -> bool {
     let data = data_raw(data);
     let len: u8 = unsafe { *data.offset(I_BIN_DATA_LEN) };
     len == 0
+}
+
+fn clone(bin: &Bin) -> Bin {
+    let data = bin._data();
+    unsafe { Bin::_new(BinData(data.0, data.1, data.2), &CONFIG) }
 }

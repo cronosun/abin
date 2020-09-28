@@ -30,3 +30,18 @@ impl VecCapShrink for DefaultVecCapShrink {
         255
     }
 }
+
+/// Never performs a capacity shrink.
+pub struct NoVecCapShrink;
+
+impl VecCapShrink for NoVecCapShrink {
+    #[inline]
+    fn is_shrink(len: usize, capacity: usize) -> bool {
+        false
+    }
+
+    #[inline]
+    fn min_capacity() -> usize {
+        std::usize::MAX
+    }
+}

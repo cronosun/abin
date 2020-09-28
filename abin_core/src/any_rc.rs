@@ -1,8 +1,8 @@
 use core::{mem, slice};
 
-use abin_interface::{Bin, BinConfig, BinData, UnsafeBin};
+use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{DefaultVecCapShrink, EmptyBin, StackBin, VecCapShrink};
+use crate::{DefaultVecCapShrink, EmptyBin, NoVecCapShrink, StackBin, VecCapShrink};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;
@@ -12,12 +12,51 @@ pub(crate) struct AnyRc;
 
 impl AnyRc {
     #[inline]
+    pub fn from_slice_not_sync(slice: &[u8]) -> Bin {
+        if let Some(stack_bin) = StackBin::try_from(slice) {
+            stack_bin.un_sync()
+        } else {
+            let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
+            // note: We never need a capacity shrink here (vector should already have the right capacity).
+            Self::from::<NoVecCapShrink>(vec, &NS_CONFIG)
+        }
+    }
+
+    #[inline]
+    pub fn from_slice_sync(slice: &[u8]) -> SyncBin {
+        if let Some(stack_bin) = StackBin::try_from(slice) {
+            stack_bin
+        } else {
+            let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
+            // note: We never need a capacity shrink here (vector should already have the right capacity).
+            Self::from::<NoVecCapShrink>(vec, &SYNC_CONFIG)._into_sync()
+        }
+    }
+
+    #[inline]
     pub fn from_not_sync<T: VecCapShrink>(vec: Vec<u8>) -> Bin {
         if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
             stack_bin.un_sync()
         } else {
             Self::from::<T>(vec, &NS_CONFIG)
         }
+    }
+
+    #[inline]
+    pub fn from_sync<T: VecCapShrink>(vec: Vec<u8>) -> SyncBin {
+        if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
+            stack_bin
+        } else {
+            Self::from::<T>(vec, &SYNC_CONFIG)._into_sync()
+        }
+    }
+
+    #[inline]
+    fn vec_from_slice_with_capacity_for_rc(slice: &[u8]) -> Vec<u8> {
+        let slice_len = slice.len();
+        let mut vec = Vec::with_capacity(slice_len + (RC_LEN_BYTES * 2));
+        vec.extend_from_slice(slice);
+        vec
     }
 
     fn from<T: VecCapShrink>(mut vec: Vec<u8>, config: &'static BinConfig) -> Bin {
@@ -72,6 +111,14 @@ const NS_CONFIG: BinConfig = BinConfig {
     drop: ns_drop,
     as_slice,
     is_empty,
+    clone: ns_clone,
+};
+
+const SYNC_CONFIG: BinConfig = BinConfig {
+    drop: ns_drop, // TODO
+    as_slice,
+    is_empty,
+    clone: ns_clone, // TODO
 };
 
 /// Decrements the ref counter. Returns `false` if could not decrement (is already 0).
@@ -118,4 +165,8 @@ fn is_empty(bin: &Bin) -> bool {
     let data = bin._data();
     let len = data.1;
     len == 0
+}
+
+fn ns_clone(_: &Bin) -> Bin {
+    unimplemented!()
 }
