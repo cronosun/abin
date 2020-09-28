@@ -1,6 +1,9 @@
 use core::{mem, slice};
+use core::sync::atomic;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::Ordering::{Relaxed, Release};
 
-use crate::{NoVecCapShrink, StackBin, VecCapShrink, Bin, SyncBin, UnsafeBin, BinConfig, BinData, AnyBin};
+use crate::{AnyBin, Bin, BinConfig, BinData, NoVecCapShrink, StackBin, SyncBin, UnsafeBin, VecCapShrink};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;
@@ -131,25 +134,45 @@ const NS_CONFIG: BinConfig = BinConfig {
 };
 
 const SYNC_CONFIG: BinConfig = BinConfig {
-    drop: ns_drop, // TODO
+    drop: sync_drop,
     as_slice,
     is_empty,
-    clone: ns_clone, // TODO
-    into_vec: ns_into_vec, // TODO
+    clone: sync_clone,
+    into_vec: sync_into_vec,
 };
+
+fn as_slice(bin: &Bin) -> &[u8] {
+    unsafe {
+        let data = bin._data();
+        let ptr = data.0 as *const u8;
+        let len = data.1;
+        slice::from_raw_parts(ptr, len)
+    }
+}
+
+fn is_empty(bin: &Bin) -> bool {
+    let data = unsafe { bin._data() };
+    let len = data.1;
+    len == 0
+}
+
+#[inline]
+unsafe fn ns_rc_ptr(ptr: *const u8, len: usize) -> *mut u32 {
+    let padding = rc_padding(ptr, len);
+    let rc_index = len + padding;
+    let rc_mut = (ptr.add(rc_index)) as *mut u32;
+    rc_mut
+}
 
 /// Decrements the ref count. Returns `false` if could not decrement (is already 0).
 #[inline]
 unsafe fn ns_decrement_rc(ptr: *const u8, len: usize) -> bool {
-    let padding = rc_padding(ptr, len);
-    let rc_index = len + padding;
-    let rc_mut = (ptr.add(rc_index)) as *mut u32;
-    let rc_value = core::ptr::read(rc_mut);
+    let rc_ptr = ns_rc_ptr(ptr, len);
+    let rc_value = *rc_ptr;
     if rc_value == 0 {
         false
     } else {
-        // decrement reference counter.
-        core::ptr::write(rc_mut, rc_value - 1);
+        *rc_ptr = rc_value - 1;
         true
     }
 }
@@ -157,11 +180,9 @@ unsafe fn ns_decrement_rc(ptr: *const u8, len: usize) -> bool {
 /// increments the ref count by one.
 #[inline]
 unsafe fn ns_increment_rc(ptr: *const u8, len: usize) {
-    let padding = rc_padding(ptr, len);
-    let rc_index = len + padding;
-    let rc_mut = (ptr.add(rc_index)) as *mut u32;
-    let rc_value = core::ptr::read(rc_mut);
-    core::ptr::write(rc_mut, rc_value + 1);
+    let rc_ptr = ns_rc_ptr(ptr, len);
+    let rc_value = *rc_ptr;
+    *rc_ptr = rc_value.checked_add(1).expect("Too many reference counts.");
 }
 
 fn ns_drop(bin: &mut Bin) {
@@ -177,21 +198,6 @@ fn ns_drop(bin: &mut Bin) {
             Vec::<u8>::from_raw_parts(ptr as *mut u8, 0, capacity);
         }
     }
-}
-
-fn as_slice(bin: &Bin) -> &[u8] {
-    unsafe {
-        let data = bin._data();
-        let ptr = data.0 as *const u8;
-        let len = data.1;
-        slice::from_raw_parts(ptr, len)
-    }
-}
-
-fn is_empty(bin: &Bin) -> bool {
-    let data = unsafe { bin._data() };
-    let len = data.1;
-    len == 0
 }
 
 /// cloning is just incrementing the reference count.
@@ -213,6 +219,90 @@ fn ns_into_vec(bin: Bin) -> Vec<u8> {
     let capacity = data.2;
 
     if !unsafe { ns_decrement_rc(ptr, len) } {
+        // great, no cloning required
+        mem::forget(bin);
+        unsafe { Vec::<u8>::from_raw_parts(ptr as *mut u8, len, capacity) }
+    } else {
+        // we need to clone it (there's still other references)
+        let slice = bin.as_slice();
+        let vec = slice.to_vec();
+        mem::forget(bin);
+        vec
+    }
+}
+
+#[inline]
+unsafe fn sync_rc_ptr(ptr: *const u8, len: usize) -> *const AtomicU32 {
+    let padding = rc_padding(ptr, len);
+    let rc_index = len + padding;
+    let rc_mut = (ptr.add(rc_index)) as *mut u32 as *const AtomicU32;
+    rc_mut
+}
+
+/// Decrements the ref count. Returns `false` if there's no more references to this binary.
+#[inline]
+unsafe fn sync_decrement_rc(ptr: *const u8, len: usize) -> bool {
+    let rc_ptr = sync_rc_ptr(ptr, len);
+    // 'Release' seems to be ok according to the sources from "Arc" (rust std lib).
+    // Note: After this call, the ref count will be u32::MAX (overflow) - but this should be
+    // ok (since we do not need that value anymore).
+    let previous_value = (*rc_ptr).fetch_sub(1, Release);
+    if previous_value == 0 {
+        // According to "Arc" (rust std lib) we also need this (don't know exactly why).
+        atomic::fence(Ordering::Acquire);
+        false
+    } else {
+        true
+    }
+}
+
+/// increments the ref count by one.
+#[inline]
+unsafe fn sync_increment_rc(ptr: *const u8, len: usize) {
+    let rc_ptr = sync_rc_ptr(ptr, len);
+    // 'Relaxed' seems to be ok according to the sources from "Arc" (rust std lib).
+    let previous_value = (*rc_ptr).fetch_add(1, Relaxed);
+    if previous_value == std::u32::MAX {
+        // we need to revert that
+        (*rc_ptr).fetch_sub(1, Release);
+        panic!("Too many reference counts.")
+    }
+}
+
+fn sync_drop(bin: &mut Bin) {
+    unsafe {
+        let data = bin._data();
+        let ptr = data.0;
+        let len = data.1;
+
+        if !sync_decrement_rc(ptr, len) {
+            // last reference.
+            // create a new vector, will immediately deallocate.
+            let capacity = data.2;
+            Vec::<u8>::from_raw_parts(ptr as *mut u8, 0, capacity);
+        }
+    }
+}
+
+/// cloning is just incrementing the reference count.
+fn sync_clone(bin: &Bin) -> Bin {
+    let data = unsafe { bin._data() };
+    let ptr = data.0;
+    let len = data.1;
+    let capacity = data.2;
+    unsafe { sync_increment_rc(ptr, len); }
+
+    unsafe { Bin::_new(BinData(ptr, len, capacity), bin._config()) }
+}
+
+fn sync_into_vec(bin: Bin) -> Vec<u8> {
+    // this is sometimes almost a no-op (in case we only have one reference).
+    let data = unsafe { bin._data() };
+    let ptr = data.0;
+    let len = data.1;
+    let capacity = data.2;
+
+    if !unsafe { sync_decrement_rc(ptr, len) } {
         // great, no cloning required
         mem::forget(bin);
         unsafe { Vec::<u8>::from_raw_parts(ptr as *mut u8, len, capacity) }
