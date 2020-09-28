@@ -30,7 +30,7 @@ impl VecBin {
                 (len, capacity)
             };
 
-            let ptr = vec.as_ptr() as usize;
+            let ptr = vec.as_ptr();
             // make sure vector memory is not freed
             mem::forget(vec);
 

@@ -39,12 +39,11 @@ impl Clone for Bin {
 }
 
 impl Bin {
-    /* TODO: For Static_Bin
     /// This is required since we can't use `unsafe` in const fn but we need const new
     /// for the static bin.
     pub(crate) const fn _const_new(data: BinData, config: &'static BinConfig) -> Self {
         Self { data, config, _not_sync: PhantomData }
-    }*/
+    }
 }
 
 unsafe impl UnsafeBin for Bin {

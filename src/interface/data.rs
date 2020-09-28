@@ -1,2 +1,2 @@
 #[repr(C)]
-pub struct BinData(pub usize, pub usize, pub usize);
+pub struct BinData(pub *const u8, pub usize, pub usize);

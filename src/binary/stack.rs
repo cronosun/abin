@@ -24,7 +24,7 @@ impl StackBin {
             Some(EmptyBin::new())
         } else if len < BIN_DATA_LEN {
             // yes, this works (one byte is required for the length information)
-            let mut bin = unsafe { Bin::_new(BinData(0, 0, 0), &CONFIG) };
+            let mut bin = unsafe { Bin::_new(BinData(core::ptr::null(), 0, 0), &CONFIG) };
             let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
             unsafe { core::ptr::copy(slice.as_ptr(), data_ptr, len); }
             let len = len as u8;

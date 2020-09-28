@@ -1,12 +1,12 @@
-use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{Bin, BinConfig, BinData, SyncBin};
 
 /// A binary that's always empty.
 pub struct EmptyBin;
 
 impl EmptyBin {
     #[inline]
-    pub fn new() -> SyncBin {
-        unsafe { Bin::_new(BinData(0, 0, 0), &CONFIG)._into_sync() }
+    pub const fn new() -> SyncBin {
+        SyncBin(Bin::_const_new(BinData(core::ptr::null(), 0, 0), &CONFIG))
     }
 }
 

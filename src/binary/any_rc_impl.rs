@@ -73,7 +73,7 @@ impl AnyRcImpl {
 
     fn from<T: VecCapShrink>(mut vec: Vec<u8>, config: &'static BinConfig) -> Bin {
         let original_len = vec.len();
-        let original_ptr = vec.as_ptr() as usize;
+        let original_ptr = vec.as_ptr();
 
         // extend length to make sure we have enough space for the padding + reference counter.
         let padding = rc_padding(original_ptr, original_len);
@@ -90,7 +90,7 @@ impl AnyRcImpl {
             capacity
         };
 
-        let ptr = vec.as_ptr() as usize;
+        let ptr = vec.as_ptr();
         // make sure vector memory is not freed
         mem::forget(vec);
 
@@ -108,8 +108,8 @@ fn extend_with_padding_and_rc(vec: &mut Vec<u8>, padding: usize) {
 /// This returns the number of padding bytes after the content to make sure the reference
 /// count is aligned.
 #[inline]
-fn rc_padding(base_ptr: usize, len: usize) -> usize {
-    let target = base_ptr + len;
+fn rc_padding(base_ptr: *const u8, len: usize) -> usize {
+    let target = (base_ptr as usize) + len;
     // RC_LEN_BYTES bytes alignment
     let remainder = target % RC_LEN_BYTES;
     if remainder == 0 {
@@ -140,10 +140,10 @@ const SYNC_CONFIG: BinConfig = BinConfig {
 
 /// Decrements the ref count. Returns `false` if could not decrement (is already 0).
 #[inline]
-unsafe fn ns_decrement_rc(ptr: usize, len: usize) -> bool {
+unsafe fn ns_decrement_rc(ptr: *const u8, len: usize) -> bool {
     let padding = rc_padding(ptr, len);
     let rc_index = len + padding;
-    let rc_mut = (ptr + rc_index) as *mut u32;
+    let rc_mut = (ptr.add(rc_index)) as *mut u32;
     let rc_value = core::ptr::read(rc_mut);
     if rc_value == 0 {
         false
@@ -156,10 +156,10 @@ unsafe fn ns_decrement_rc(ptr: usize, len: usize) -> bool {
 
 /// increments the ref count by one.
 #[inline]
-unsafe fn ns_increment_rc(ptr: usize, len: usize) {
+unsafe fn ns_increment_rc(ptr: *const u8, len: usize) {
     let padding = rc_padding(ptr, len);
     let rc_index = len + padding;
-    let rc_mut = (ptr + rc_index) as *mut u32;
+    let rc_mut = (ptr.add(rc_index)) as *mut u32;
     let rc_value = core::ptr::read(rc_mut);
     core::ptr::write(rc_mut, rc_value + 1);
 }

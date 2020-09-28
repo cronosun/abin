@@ -6,15 +6,13 @@ use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin, EmptyBin};
 pub struct StaticBin;
 
 impl StaticBin {
-    // TODO: Can we make this const fn?
-    pub fn from(slice: &'static [u8]) -> SyncBin {
+    pub const fn from(slice: &'static [u8]) -> SyncBin {
         let len = slice.len();
         if len == 0 {
             EmptyBin::new()
         } else {
-            let ptr = slice.as_ptr() as usize;
-            // TODO Bin::_const_new
-            unsafe { Bin::_new(BinData(ptr, len, 0), &CONFIG)._into_sync() }
+            let ptr = slice.as_ptr();
+            SyncBin(Bin::_const_new(BinData(ptr, len, 0), &CONFIG))
         }
     }
 }
