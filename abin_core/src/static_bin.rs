@@ -8,7 +8,7 @@ use crate::EmptyBin;
 pub struct StaticBin;
 
 impl StaticBin {
-    pub fn new(slice: &'static [u8]) -> SyncBin {
+    pub fn from(slice: &'static [u8]) -> SyncBin {
         let len = slice.len();
         if len == 0 {
             EmptyBin::new()

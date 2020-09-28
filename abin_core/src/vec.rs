@@ -2,19 +2,19 @@ use core::{mem, slice};
 
 use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
-use crate::{DefaultVecCapShrink, VecCapShrink, EmptyBin};
+use crate::{DefaultVecCapShrink, EmptyBin, VecCapShrink};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted: So cloning
-/// this binary will copy the content.
+/// this binary will be expensive. Use this if you're quite sure that the binary won't be cloned.
 pub struct VecBin;
 
 impl VecBin {
     #[inline]
-    pub fn new(vec: Vec<u8>) -> SyncBin {
-        Self::new_with_cap_shrink::<DefaultVecCapShrink>(vec)
+    pub fn from(vec: Vec<u8>) -> SyncBin {
+        Self::from_with_cap_shrink::<DefaultVecCapShrink>(vec)
     }
 
-    pub fn new_with_cap_shrink<T: VecCapShrink>(mut vec: Vec<u8>) -> SyncBin {
+    pub fn from_with_cap_shrink<T: VecCapShrink>(mut vec: Vec<u8>) -> SyncBin {
         if vec.is_empty() {
             EmptyBin::new()
         } else {

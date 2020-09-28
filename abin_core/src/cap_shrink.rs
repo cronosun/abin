@@ -1,9 +1,12 @@
+/// Gives information whether the system should shrink a vector before using it as `Bin`.
 pub trait VecCapShrink {
+    /// Returns `true` if the vector should be shrunk.
     fn is_shrink(len: usize, capacity: usize) -> bool;
     /// Do never shrink if vector has less or equal this capacity.
     fn min_capacity() -> usize;
 }
 
+/// Default implementation of `VecCapShrink` - should be ok for most use cases.
 pub struct DefaultVecCapShrink;
 
 impl VecCapShrink for DefaultVecCapShrink {
