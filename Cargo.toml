@@ -1,0 +1,2 @@
+[workspace]
+members = ["abin_core", "abin_interface"]
