@@ -1,8 +1,6 @@
 use core::{mem, slice};
 
-use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
-
-use crate::{NoVecCapShrink, StackBin, VecCapShrink};
+use crate::{NoVecCapShrink, StackBin, VecCapShrink, Bin, SyncBin, UnsafeBin, BinConfig, BinData, AnyBin};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;

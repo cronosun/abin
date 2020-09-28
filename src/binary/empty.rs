@@ -1,4 +1,4 @@
-use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 /// A binary that's always empty.
 pub struct EmptyBin;

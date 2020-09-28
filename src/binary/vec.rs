@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use abin_interface::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
 
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 

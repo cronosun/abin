@@ -1,4 +1,4 @@
-use abin_interface::SyncBin;
+use crate::SyncBin;
 
 use crate::{AnyRc, AnyRcImpl, DefaultVecCapShrink, VecCapShrink};
 

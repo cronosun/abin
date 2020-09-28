@@ -1,8 +1,6 @@
 use core::slice;
 
-use abin_interface::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
-
-use crate::EmptyBin;
+use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin, EmptyBin};
 
 /// A binary from a static slice.
 pub struct StaticBin;
