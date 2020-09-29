@@ -23,6 +23,7 @@ const FN_TABLE: FnTable = FnTable {
     is_empty,
     clone,
     into_vec,
+    slice,
 };
 
 fn drop(_: &mut Bin) {
@@ -30,7 +31,7 @@ fn drop(_: &mut Bin) {
 }
 
 #[inline]
-fn as_slice(bin: &Bin) -> &[u8] {
+fn as_slice(bin: &Bin) -> &'static [u8] {
     unsafe {
         let data = bin._data();
         let ptr = data.0 as *const u8;
@@ -55,4 +56,14 @@ fn clone(bin: &Bin) -> Bin {
 fn into_vec(bin: Bin) -> Vec<u8> {
     // the only option is to copy
     as_slice(&bin).to_vec()
+}
+
+fn slice(bin : &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
+    let self_slice = as_slice(bin);
+    let new_slice = self_slice.get(start..end_excluded);
+    if let Some(new_slice) = new_slice {
+        Some(StaticBin::from(new_slice).un_sync())
+    } else {
+        None
+    }
 }

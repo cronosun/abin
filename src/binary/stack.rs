@@ -1,6 +1,6 @@
 use core::slice;
 
-use crate::{Bin, FnTable, BinData, SyncBin, UnsafeBin};
+use crate::{Bin, FnTable, BinData, SyncBin, UnsafeBin, AnyBin};
 use crate::EmptyBin;
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
@@ -62,6 +62,7 @@ const FN_TABLE: FnTable = FnTable {
     is_empty,
     clone,
     into_vec,
+    slice,
 };
 
 fn drop(_: &mut Bin) {
@@ -93,4 +94,15 @@ fn clone(bin: &Bin) -> Bin {
 
 fn into_vec(bin: Bin) -> Vec<u8> {
     as_slice(&bin).to_vec()
+}
+
+fn slice(bin : &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
+    let new_slice = bin.as_slice().get(start..end_excluded);
+    if let Some(new_slice) = new_slice {
+        Some(StackBin::try_from(new_slice).expect("There's an implementation error: Was \
+        unable to slice a stack bin and re-create a stack bin from that slice (this MUST never \
+        fail, since the slice is never longer than the original).").un_sync())
+    } else {
+        None
+    }
 }

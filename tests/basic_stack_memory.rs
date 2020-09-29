@@ -44,9 +44,9 @@ fn vec_uses_stack_no_alloc() {
     let slice = [15u8; StackBin::max_len()];
     let vec = slice.to_vec();
     mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
-        VecBin::from(vec);
+        VecBin::from(vec, true);
     });
     mem_scoped(&GLOBAL, &MaNoAllocation, || {
-        VecBin::from(Vec::new());
+        VecBin::from(Vec::new(), true);
     });
 }

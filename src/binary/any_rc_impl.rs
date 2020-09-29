@@ -3,7 +3,7 @@ use core::sync::atomic;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::atomic::Ordering::{Relaxed, Release};
 
-use crate::{AnyBin, Bin, FnTable, BinData, NoVecCapShrink, StackBin, SyncBin, UnsafeBin, VecCapShrink};
+use crate::{AnyBin, Bin, BinData, FnTable, NoVecCapShrink, StackBin, SyncBin, UnsafeBin, VecCapShrink};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;
@@ -132,6 +132,7 @@ const NS_FN_TABLE: FnTable = FnTable {
     is_empty,
     clone: ns_clone,
     into_vec: ns_into_vec,
+    slice: ns_slice,
 };
 
 /// The function table for the sync rc.
@@ -141,6 +142,7 @@ const SYNC_FN_TABLE: FnTable = FnTable {
     is_empty,
     clone: sync_clone,
     into_vec: sync_into_vec,
+    slice: sync_slice,
 };
 
 fn as_slice(bin: &Bin) -> &[u8] {
@@ -233,6 +235,10 @@ fn ns_into_vec(bin: Bin) -> Vec<u8> {
     }
 }
 
+fn ns_slice(_bin: &Bin, _start: usize, _end_excluded: usize) -> Option<Bin> {
+    unimplemented!()
+}
+
 #[inline]
 unsafe fn sync_rc_ptr(ptr: *const u8, len: usize) -> *const AtomicU32 {
     let padding = rc_padding(ptr, len);
@@ -315,4 +321,8 @@ fn sync_into_vec(bin: Bin) -> Vec<u8> {
         mem::forget(bin);
         vec
     }
+}
+
+fn sync_slice(_bin: &Bin, _start: usize, _end_excluded: usize) -> Option<Bin> {
+    unimplemented!()
 }
