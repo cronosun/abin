@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{AnyBin, Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnsafeBin};
+use crate::{Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnsafeBin, is_shrink};
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 /// If this threshold is reached, clone and slice won't return a vec again, they will return
@@ -68,9 +68,9 @@ impl VecBin {
     #[inline]
     fn from_non_optimized<T: VecCapShrink>(mut vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
         let len = vec.len();
-        let capacity = vec.len();
-        let is_shrink = capacity > T::min_capacity() && T::is_shrink(len, capacity);
-        let (len, capacity) = if is_shrink {
+        let capacity = vec.capacity();
+        let shrink = is_shrink::<T>(len, capacity);
+        let (len, capacity) = if shrink {
             vec.shrink_to_fit();
             (vec.len(), vec.capacity())
         } else {
@@ -86,7 +86,34 @@ impl VecBin {
         } else {
             &FN_TABLE_NO_OPT
         };
-        unsafe { Bin::_new(BinData(ptr, len, capacity), fn_table)._into_sync() }
+        let vec_data = VecData {
+            ptr,
+            len,
+            capacity,
+        };
+
+        unsafe { Bin::_new(vec_data.to_bin_data(), fn_table)._into_sync() }
+    }
+}
+
+#[repr(C)]
+struct VecData {
+    ptr: *const u8,
+    len: usize,
+    capacity: usize,
+}
+
+impl VecData {
+    #[inline]
+    unsafe fn from_bin(bin: &Bin) -> &Self {
+        let bin_data = bin._data() as *const BinData;
+        let self_data = mem::transmute::<*const BinData, *const Self>(bin_data);
+        &*self_data
+    }
+
+    #[inline]
+    unsafe fn to_bin_data(&self) -> BinData {
+        mem::transmute_copy::<Self, BinData>(self)
     }
 }
 
@@ -109,57 +136,53 @@ const FN_TABLE_OPT: FnTable = FnTable {
 };
 
 fn drop(bin: &mut Bin) {
-    unsafe {
-        let data = bin._data();
-        let ptr = data.0 as *mut u8;
-        let len = data.1;
-        let capacity = data.1;
-        // restore the original vector, will immediately drop
-        Vec::<u8>::from_raw_parts(ptr as *mut u8, len, capacity);
-    }
+    let vec_data = unsafe { VecData::from_bin(bin) };
+    let ptr = vec_data.ptr as *mut u8;
+    let capacity = vec_data.capacity;
+    // restore the original vector, will immediately drop
+    unsafe { Vec::<u8>::from_raw_parts(ptr, 0, capacity); }
 }
 
+#[inline]
 fn as_slice(bin: &Bin) -> &[u8] {
-    unsafe {
-        let data = bin._data();
-        let ptr = data.0 as *const u8;
-        let len = data.1;
-        slice::from_raw_parts(ptr, len)
-    }
+    let vec_data = unsafe { VecData::from_bin(bin) };
+    let ptr = vec_data.ptr;
+    let len = vec_data.len;
+    unsafe { slice::from_raw_parts(ptr, len) }
 }
 
 fn is_empty(bin: &Bin) -> bool {
-    let data = unsafe { bin._data() };
-    let len = data.1;
+    let vec_data = unsafe { VecData::from_bin(bin) };
+    let len = vec_data.len;
     len == 0
 }
 
 fn clone_no_opt(bin: &Bin) -> Bin {
     // this involves copying memory
-    let slice = bin.as_slice();
+    let slice = as_slice(bin);
     VecBin::copy_from_slice(slice, false).un_sync()
 }
 
 fn clone_opt(bin: &Bin) -> Bin {
     // this involves copying memory
-    let slice = bin.as_slice();
+    let slice = as_slice(bin);
     VecBin::copy_from_slice(slice, true).un_sync()
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {
     // this is almost a no-op, since this is already backed by a vector.
-    let data = unsafe { bin._data() };
-    let ptr = data.0 as *mut u8;
-    let len = data.1;
-    let capacity = data.1;
+    let vec_data = unsafe { VecData::from_bin(&bin) };
+    let ptr = vec_data.ptr as *mut u8;
+    let len = vec_data.len;
+    let capacity = vec_data.capacity;
     // make sure drop is not called on `Bin` ... since we need the allocated buffer for the vec.
     mem::forget(bin);
     // restore the original vector
-    unsafe { Vec::<u8>::from_raw_parts(ptr as *mut u8, len, capacity) }
+    unsafe { Vec::<u8>::from_raw_parts(ptr, len, capacity) }
 }
 
 fn slice_no_opt(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
-    let slice = bin.as_slice().get(start..end_excluded);
+    let slice = as_slice(bin).get(start..end_excluded);
     if let Some(slice) = slice {
         Some(VecBin::copy_from_slice(slice, false).un_sync())
     } else {
@@ -168,7 +191,7 @@ fn slice_no_opt(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
 }
 
 fn slice_opt(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
-    let slice = bin.as_slice().get(start..end_excluded);
+    let slice = as_slice(bin).get(start..end_excluded);
     if let Some(slice) = slice {
         Some(VecBin::copy_from_slice(slice, true).un_sync())
     } else {

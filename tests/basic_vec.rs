@@ -1,4 +1,4 @@
-use abin::{AnyBin, VecBin};
+use abin::{AnyBin, NoVecCapShrink, VecBin};
 use utils::*;
 
 pub mod utils;
@@ -6,16 +6,22 @@ pub mod utils;
 #[test]
 fn basic_vec() {
     for index in 0..1024 {
-        test_vec(BinGen::new(index as u8, index as usize).generate_to_vec());
+        test_vec_bin_as_simple_container(BinGen::new(index as u8, index as usize).generate_to_vec());
     }
 }
 
-fn test_vec(vec: Vec<u8>) {
+/// shows how to use `VecBin` as a simple container for `Vec<u8>` that never alters the
+/// wrapped vector.
+fn test_vec_bin_as_simple_container(vec: Vec<u8>) {
     let original_pointer = vec.as_ptr();
     let original_capacity = vec.capacity();
 
     let preserved_vec = vec.clone();
-    let bin = VecBin::from(vec, false).un_sync();
+
+    // note: If we construct the vector using this configuration, it's just a simple container
+    // for a vector - it never alters the wrapped vector (NoVecCapShrink &
+    // allow_optimization = false are important).
+    let bin = VecBin::from_with_cap_shrink::<NoVecCapShrink>(vec, false).un_sync();
 
     assert_eq!(bin.len(), preserved_vec.len());
     assert_eq!(bin.as_slice(), preserved_vec.as_slice());

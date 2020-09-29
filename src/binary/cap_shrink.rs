@@ -1,8 +1,17 @@
+#[inline]
+pub(crate) fn is_shrink<T: VecCapShrink>(len: usize, capacity: usize) -> bool {
+    if capacity > T::min_capacity() {
+        T::is_shrink(len, capacity)
+    } else {
+        false
+    }
+}
+
 /// Gives information whether the system should shrink a vector before using it as `Bin`.
 pub trait VecCapShrink {
     /// Returns `true` if the vector should be shrunk.
     fn is_shrink(len: usize, capacity: usize) -> bool;
-    /// Do never shrink if vector has less or equal this capacity.
+    /// Do never shrink if vector has less or equal this capacity (fast fail for small vectors).
     fn min_capacity() -> usize;
 }
 

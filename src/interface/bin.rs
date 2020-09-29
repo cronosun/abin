@@ -42,7 +42,7 @@ impl Clone for Bin {
 impl Bin {
     /// This is required since we can't use `unsafe` in const fn but we need const new
     /// for the static bin.
-    pub(crate) const fn _const_new(data: BinData, fn_table: &'static FnTable) -> Self {
+    pub(crate) const fn _const_new(data: BinData, fn_table: &'static FnTable) -> Self { // TODO: No longer required, since StaticBin is no longer const..
         Self { data, fn_table, _not_sync: PhantomData }
     }
 }

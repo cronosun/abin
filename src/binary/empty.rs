@@ -6,7 +6,7 @@ pub struct EmptyBin;
 impl EmptyBin {
     #[inline]
     pub const fn new() -> SyncBin {
-        SyncBin(Bin::_const_new(BinData(core::ptr::null(), 0, 0), &FN_TABLE))
+        SyncBin(Bin::_const_new(BinData::empty(), &FN_TABLE))
     }
 }
 
