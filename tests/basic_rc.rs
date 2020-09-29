@@ -1,16 +1,11 @@
-use std::alloc::System;
-use std::cmp::max;
 use std::ops::Deref;
 
-use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
-
 use abin::{AnyBin, AnyRc, ArcBin, Bin, NoVecCapShrink, RcBin, SyncBin};
+pub mod utils;
 use utils::*;
 
 /// small vectors are optimized (stack only)... for those the tests would fail.
 const SAFE_SIZE: usize = 50;
-
-mod utils;
 
 #[test]
 fn basic_rc_non_sync() {
@@ -29,7 +24,6 @@ fn basic_rc<T: AnyRc<T=TBin>, TBin: AnyBin>() {
         into_vec_with_more_than_one_ref_count::<T, TBin>(&bin_gen);
     }
 }
-
 
 /// When a rc-bin is converted into a vec and there is more than one ref count, a copy must
 /// be returned.

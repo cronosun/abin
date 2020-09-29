@@ -9,16 +9,12 @@ use utils::*;
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
-mod utils;
+pub mod utils;
 
 #[test]
-fn basic_rc_memory_non_sync() {
-    basic_rc_memory::<RcBin, Bin>();
-}
-
-#[test]
-fn basic_rc_memory_sync() {
+fn basic_rc_memory_test() {
     basic_rc_memory::<ArcBin, SyncBin>();
+    basic_rc_memory::<RcBin, Bin>();
 }
 
 fn basic_rc_memory<T: AnyRc<T=TBin>, TBin: AnyBin>() {

@@ -1,7 +1,6 @@
 use abin::{AnyBin, VecBin};
-use utils::BinGen;
-
-mod utils;
+use utils::*;
+pub mod utils;
 
 #[test]
 fn basic_vec() {
