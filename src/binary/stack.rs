@@ -1,13 +1,14 @@
 use core::slice;
 
 use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
-
 use crate::EmptyBin;
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();
 /// the offset where to store the length information.
 const LENGTH_OFFSET: usize = BIN_DATA_LEN - 1;
+/// the maximum number of bytes we can store (one byte is required for the length information)
+const STACK_MAX_LEN : usize = BIN_DATA_LEN - 1;
 
 /// A binary that stores the content entirely on the stack.
 pub struct StackBin;
@@ -35,6 +36,13 @@ impl StackBin {
         } else {
             None
         }
+    }
+
+    /// The maximum number of bytes that can be stored on the stack.
+    ///
+    /// Note: This is platform-dependant: It's less on 32-bit machines, more on 64-bit machines.
+    pub const fn max_len() -> usize {
+        STACK_MAX_LEN
     }
 }
 

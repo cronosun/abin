@@ -80,10 +80,10 @@ fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T=TBin>, TBin: AnyB
     let vec_len = 1024 * 1024 * 32;
     let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
     let bin1 = T::from(vec1);
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    let _vec = mem_scoped(&GLOBAL, &MaNoAllocation, || {
         // no allocation, since 'bin1' is single reference
-        let _vec = bin1.into_vec();
-    })
+        bin1.into_vec()
+    });
 }
 
 fn assert_no_leak<T: AnyRc<T=TBin>, TBin: AnyBin>() {

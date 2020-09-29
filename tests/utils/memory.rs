@@ -6,9 +6,9 @@ pub struct Memory<'a, T: GlobalAlloc + 'a> {
     alloc: &'a StatsAlloc<T>
 }
 
-pub fn mem_scoped<'b, TGa, A, TFn>(alloc: &'b StatsAlloc<TGa>, mem_assert: &A, fun: TFn) where TGa: GlobalAlloc + 'b, A: MemAssert, TFn: FnOnce() {
+pub fn mem_scoped<'b, TGa, A, TFn, TRet>(alloc: &'b StatsAlloc<TGa>, mem_assert: &A, fun: TFn) -> TRet where TGa: GlobalAlloc + 'b, A: MemAssert, TFn: FnOnce() -> TRet {
     let this = Memory::new(alloc);
-    this.scoped(mem_assert, fun);
+    this.scoped(mem_assert, fun)
 }
 
 impl<'a, T: GlobalAlloc + 'a> Memory<'a, T> {
@@ -18,13 +18,15 @@ impl<'a, T: GlobalAlloc + 'a> Memory<'a, T> {
         }
     }
 
-    pub fn scoped<A, TFn>(&self, mem_assert: &A, fun: TFn)
-        where A: MemAssert, TFn: FnOnce() {
+    pub fn scoped<A, TFn, TRet>(&self, mem_assert: &A, fun: TFn) -> TRet
+        where A: MemAssert, TFn: FnOnce() -> TRet {
         let region = Region::new(self.alloc);
-        fun();
+        let ret = fun();
         let change = region.change();
         if let Err(err) = mem_assert.assert(change) {
             panic!("Memory assertion error: '{}' (change: {:?})", err, change)
+        } else {
+            ret
         }
     }
 }
@@ -47,13 +49,14 @@ impl MemAssert for MaNoLeak {
     }
 }
 
+/// No allocation and no de-allocation allowed.
 pub struct MaNoAllocation;
 
 impl MemAssert for MaNoAllocation {
     fn assert(&self, change: Stats) -> Result<(), String> {
         let num_allocations = change.allocations;
         let num_de_allocations = change.deallocations;
-        if num_allocations == 0 && num_de_allocations == 0 {
+        if num_allocations != 0 || num_de_allocations != 0 {
             Err(format!("Expected to have no allocation/de-allocation (#op alloc: {}, \
             #op de-alloc {})", num_allocations, num_de_allocations))
         } else {
@@ -62,3 +65,16 @@ impl MemAssert for MaNoAllocation {
     }
 }
 
+/// Only de-allocations allowed.
+pub struct MaOnlyDeAllocation;
+
+impl MemAssert for MaOnlyDeAllocation {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_allocations = change.allocations;
+        if num_allocations != 0 {
+            Err(format!("Expected to have no allocation (#op alloc: {})", num_allocations))
+        } else {
+            Ok(())
+        }
+    }
+}
