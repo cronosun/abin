@@ -1,6 +1,6 @@
 use core::slice;
 
-use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin, EmptyBin};
+use crate::{Bin, FnTable, BinData, SyncBin, UnsafeBin, EmptyBin};
 
 /// A binary from a static slice.
 pub struct StaticBin;
@@ -12,12 +12,12 @@ impl StaticBin {
             EmptyBin::new()
         } else {
             let ptr = slice.as_ptr();
-            SyncBin(Bin::_const_new(BinData(ptr, len, 0), &CONFIG))
+            SyncBin(Bin::_const_new(BinData(ptr, len, 0), &FN_TABLE))
         }
     }
 }
 
-const CONFIG: BinConfig = BinConfig {
+const FN_TABLE: FnTable = FnTable {
     drop,
     as_slice,
     is_empty,
@@ -49,7 +49,7 @@ fn clone(bin: &Bin) -> Bin {
     let data = unsafe { bin._data() };
     let ptr = data.0;
     let len = data.1;
-    unsafe { Bin::_new(BinData(ptr, len, 0), &CONFIG) }
+    unsafe { Bin::_new(BinData(ptr, len, 0), &FN_TABLE) }
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {

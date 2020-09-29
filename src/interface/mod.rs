@@ -1,6 +1,6 @@
 mod data;
 mod bin;
-mod config;
+mod fn_table;
 mod sync_bin;
 mod r#unsafe;
 mod any_bin;
@@ -8,7 +8,7 @@ mod any_bin;
 pub use {
     data::*,
     bin::*,
-    config::*,
+    fn_table::*,
     sync_bin::*,
     r#unsafe::*,
     any_bin::*,

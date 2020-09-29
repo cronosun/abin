@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{AnyBin, Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{AnyBin, Bin, FnTable, BinData, SyncBin, UnsafeBin};
 
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
@@ -34,12 +34,12 @@ impl VecBin {
             // make sure vector memory is not freed
             mem::forget(vec);
 
-            unsafe { Bin::_new(BinData(ptr, len, capacity), &CONFIG)._into_sync() }
+            unsafe { Bin::_new(BinData(ptr, len, capacity), &FN_TABLE)._into_sync() }
         }
     }
 }
 
-const CONFIG: BinConfig = BinConfig {
+const FN_TABLE: FnTable = FnTable {
     drop,
     as_slice,
     is_empty,

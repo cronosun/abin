@@ -3,7 +3,7 @@ use core::sync::atomic;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::atomic::Ordering::{Relaxed, Release};
 
-use crate::{AnyBin, Bin, BinConfig, BinData, NoVecCapShrink, StackBin, SyncBin, UnsafeBin, VecCapShrink};
+use crate::{AnyBin, Bin, FnTable, BinData, NoVecCapShrink, StackBin, SyncBin, UnsafeBin, VecCapShrink};
 
 /// we use u32 (4 bytes) for reference counts. This should be more than enough for most use cases.
 const RC_LEN_BYTES: usize = 4;
@@ -11,12 +11,12 @@ const RC_LEN_BYTES: usize = 4;
 const RC_MAX_PADDING: usize = RC_LEN_BYTES - 1;
 const RC_OVERHEAD: usize = RC_LEN_BYTES + RC_MAX_PADDING;
 
-/// A reference counted binary: depending on the configuration it's send+sync or not.
+/// A reference counted binary: depending on the `FnTable` it's send+sync or not.
 ///
 /// Internal data layout:
 ///
 ///  * data.0: Pointer to the memory.
-///  * data.1: length NOT including padding + rc counter.
+///  * data.1: length (NOT including padding + rc counter).
 ///  * data.2: capacity.
 pub(crate) struct AnyRcImpl;
 
@@ -33,7 +33,7 @@ impl AnyRcImpl {
         } else {
             let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
             // note: We never need a capacity shrink here (vector should already have the right capacity).
-            Self::from::<NoVecCapShrink>(vec, &NS_CONFIG)
+            Self::from::<NoVecCapShrink>(vec, &NS_FN_TABLE)
         }
     }
 
@@ -44,7 +44,7 @@ impl AnyRcImpl {
         } else {
             let vec = Self::vec_from_slice_with_capacity_for_rc(slice);
             // note: We never need a capacity shrink here (vector should already have the right capacity).
-            unsafe { Self::from::<NoVecCapShrink>(vec, &SYNC_CONFIG)._into_sync() }
+            unsafe { Self::from::<NoVecCapShrink>(vec, &SYNC_FN_TABLE)._into_sync() }
         }
     }
 
@@ -53,7 +53,7 @@ impl AnyRcImpl {
         if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
             stack_bin.un_sync()
         } else {
-            Self::from::<T>(vec, &NS_CONFIG)
+            Self::from::<T>(vec, &NS_FN_TABLE)
         }
     }
 
@@ -62,7 +62,7 @@ impl AnyRcImpl {
         if let Some(stack_bin) = StackBin::try_from(vec.as_slice()) {
             stack_bin
         } else {
-            unsafe { Self::from::<T>(vec, &SYNC_CONFIG)._into_sync() }
+            unsafe { Self::from::<T>(vec, &SYNC_FN_TABLE)._into_sync() }
         }
     }
 
@@ -74,7 +74,7 @@ impl AnyRcImpl {
         vec
     }
 
-    fn from<T: VecCapShrink>(mut vec: Vec<u8>, config: &'static BinConfig) -> Bin {
+    fn from<T: VecCapShrink>(mut vec: Vec<u8>, fn_table: &'static FnTable) -> Bin {
         let original_len = vec.len();
         let original_ptr = vec.as_ptr();
 
@@ -97,7 +97,7 @@ impl AnyRcImpl {
         // make sure vector memory is not freed
         mem::forget(vec);
 
-        unsafe { Bin::_new(BinData(ptr, original_len, capacity), config) }
+        unsafe { Bin::_new(BinData(ptr, original_len, capacity), fn_table) }
     }
 }
 
@@ -125,7 +125,8 @@ fn rc_padding(base_ptr: *const u8, len: usize) -> usize {
     }
 }
 
-const NS_CONFIG: BinConfig = BinConfig {
+/// The function table for the non-sync rc.
+const NS_FN_TABLE: FnTable = FnTable {
     drop: ns_drop,
     as_slice,
     is_empty,
@@ -133,7 +134,8 @@ const NS_CONFIG: BinConfig = BinConfig {
     into_vec: ns_into_vec,
 };
 
-const SYNC_CONFIG: BinConfig = BinConfig {
+/// The function table for the sync rc.
+const SYNC_FN_TABLE: FnTable = FnTable {
     drop: sync_drop,
     as_slice,
     is_empty,
@@ -208,7 +210,7 @@ fn ns_clone(bin: &Bin) -> Bin {
     let capacity = data.2;
     unsafe { ns_increment_rc(ptr, len); }
 
-    unsafe { Bin::_new(BinData(ptr, len, capacity), bin._config()) }
+    unsafe { Bin::_new(BinData(ptr, len, capacity), bin._fn_table()) }
 }
 
 fn ns_into_vec(bin: Bin) -> Vec<u8> {
@@ -292,7 +294,7 @@ fn sync_clone(bin: &Bin) -> Bin {
     let capacity = data.2;
     unsafe { sync_increment_rc(ptr, len); }
 
-    unsafe { Bin::_new(BinData(ptr, len, capacity), bin._config()) }
+    unsafe { Bin::_new(BinData(ptr, len, capacity), bin._fn_table()) }
 }
 
 fn sync_into_vec(bin: Bin) -> Vec<u8> {

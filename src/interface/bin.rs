@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-use crate::{AnyBin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{AnyBin, FnTable, BinData, SyncBin, UnsafeBin};
 
 #[repr(C)]
 pub struct Bin {
     data: BinData,
-    config: &'static BinConfig,
+    fn_table: &'static FnTable,
     // marker to make sure this is not send + sync
     _not_sync: PhantomData<*const u8>,
 }
@@ -13,44 +13,44 @@ pub struct Bin {
 impl AnyBin for Bin {
     #[inline]
     fn as_slice(&self) -> &[u8] {
-        (self.config.as_slice)(self)
+        (self.fn_table.as_slice)(self)
     }
 
     #[inline]
     fn into_vec(self) -> Vec<u8> {
-        (self.config.into_vec)(self)
+        (self.fn_table.into_vec)(self)
     }
 
     #[inline]
     fn len(&self) -> usize {
-        (self.config.as_slice)(self).len()
+        (self.fn_table.as_slice)(self).len()
     }
 }
 
 impl Drop for Bin {
     fn drop(&mut self) {
-        (self.config.drop)(self)
+        (self.fn_table.drop)(self)
     }
 }
 
 impl Clone for Bin {
     fn clone(&self) -> Self {
-        (self.config.clone)(self)
+        (self.fn_table.clone)(self)
     }
 }
 
 impl Bin {
     /// This is required since we can't use `unsafe` in const fn but we need const new
     /// for the static bin.
-    pub(crate) const fn _const_new(data: BinData, config: &'static BinConfig) -> Self {
-        Self { data, config, _not_sync: PhantomData }
+    pub(crate) const fn _const_new(data: BinData, fn_table: &'static FnTable) -> Self {
+        Self { data, fn_table, _not_sync: PhantomData }
     }
 }
 
 unsafe impl UnsafeBin for Bin {
     #[inline]
-    unsafe fn _new(data: BinData, config: &'static BinConfig) -> Self {
-        Self { data, config, _not_sync: PhantomData }
+    unsafe fn _new(data: BinData, fn_table: &'static FnTable) -> Self {
+        Self { data, fn_table, _not_sync: PhantomData }
     }
 
     #[inline]
@@ -64,8 +64,8 @@ unsafe impl UnsafeBin for Bin {
     }
 
     #[inline]
-    unsafe fn _config(&self) -> &'static BinConfig {
-        self.config
+    unsafe fn _fn_table(&self) -> &'static FnTable {
+        self.fn_table
     }
 
     #[inline]

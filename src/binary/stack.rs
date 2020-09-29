@@ -1,6 +1,6 @@
 use core::slice;
 
-use crate::{Bin, BinConfig, BinData, SyncBin, UnsafeBin};
+use crate::{Bin, FnTable, BinData, SyncBin, UnsafeBin};
 use crate::EmptyBin;
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
@@ -27,7 +27,7 @@ impl StackBin {
             Some(EmptyBin::new())
         } else if len < BIN_DATA_LEN {
             // yes, this works (one byte is required for the length information)
-            let mut bin = unsafe { Bin::_new(BinData(core::ptr::null(), 0, 0), &CONFIG) };
+            let mut bin = unsafe { Bin::_new(BinData(core::ptr::null(), 0, 0), &FN_TABLE) };
             let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
             unsafe { core::ptr::copy(slice.as_ptr(), data_ptr, len); }
             let len = len as u8;
@@ -56,7 +56,7 @@ fn data_raw_mut(data: &mut BinData) -> *mut u8 {
     data as *mut BinData as *mut u8
 }
 
-const CONFIG: BinConfig = BinConfig {
+const FN_TABLE: FnTable = FnTable {
     drop,
     as_slice,
     is_empty,
@@ -88,7 +88,7 @@ fn is_empty(bin: &Bin) -> bool {
 
 fn clone(bin: &Bin) -> Bin {
     let data = unsafe { bin._data() };
-    unsafe { Bin::_new(BinData(data.0, data.1, data.2), &CONFIG) }
+    unsafe { Bin::_new(BinData(data.0, data.1, data.2), &FN_TABLE) }
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {

@@ -1,4 +1,4 @@
-use crate::{Bin, BinConfig, BinData, SyncBin};
+use crate::{Bin, FnTable, BinData, SyncBin};
 
 /// A binary that's always empty.
 pub struct EmptyBin;
@@ -6,11 +6,11 @@ pub struct EmptyBin;
 impl EmptyBin {
     #[inline]
     pub const fn new() -> SyncBin {
-        SyncBin(Bin::_const_new(BinData(core::ptr::null(), 0, 0), &CONFIG))
+        SyncBin(Bin::_const_new(BinData(core::ptr::null(), 0, 0), &FN_TABLE))
     }
 }
 
-const CONFIG: BinConfig = BinConfig {
+const FN_TABLE : FnTable = FnTable {
     drop,
     as_slice,
     is_empty,
