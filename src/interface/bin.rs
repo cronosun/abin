@@ -23,6 +23,12 @@ impl AnyBin for Bin {
     }
 }
 
+impl Drop for Bin {
+    fn drop(&mut self) {
+        (self.config.drop)(self)
+    }
+}
+
 impl Deref for Bin {
     type Target = [u8];
 
