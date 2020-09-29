@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use abin::{StaticBin, AnyBin};
 
 const EMPTY: &[u8] = &[];
@@ -25,7 +23,7 @@ fn test_static(slice : &'static [u8]) {
     let slice_ptr = slice.as_ptr();
     let bin = StaticBin::from(slice).un_sync();
     assert_eq!(slice.len(), bin.len());
-    assert_eq!(slice, bin.deref());
+    assert_eq!(slice, bin.as_slice());
 
     // non-empty slices must point to the same memory location
     if !slice.is_empty() {

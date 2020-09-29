@@ -1,5 +1,4 @@
 use std::marker::PhantomData;
-use std::ops::Deref;
 
 use crate::{AnyBin, BinConfig, BinData, SyncBin, UnsafeBin};
 
@@ -21,20 +20,16 @@ impl AnyBin for Bin {
     fn into_vec(self) -> Vec<u8> {
         (self.config.into_vec)(self)
     }
+
+    #[inline]
+    fn len(&self) -> usize {
+        (self.config.as_slice)(self).len()
+    }
 }
 
 impl Drop for Bin {
     fn drop(&mut self) {
         (self.config.drop)(self)
-    }
-}
-
-impl Deref for Bin {
-    type Target = [u8];
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        (self.config.as_slice)(self)
     }
 }
 

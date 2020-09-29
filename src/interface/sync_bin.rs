@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::{AnyBin, Bin, UnsafeBin};
 
 pub struct SyncBin(pub(crate) Bin);
@@ -32,20 +30,16 @@ impl AnyBin for SyncBin {
     fn into_vec(self) -> Vec<u8> {
         self.0.into_vec()
     }
+
+    #[inline]
+    fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl Clone for SyncBin {
     #[inline]
     fn clone(&self) -> Self {
         unsafe { self.0.clone()._into_sync() }
-    }
-}
-
-impl Deref for SyncBin {
-    type Target = [u8];
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.0.as_slice()
     }
 }
