@@ -1,6 +1,6 @@
 use core::sync::atomic;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::atomic::Ordering::{Relaxed, Release};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub trait RcCounter {
     /// creates a new counter. The next call to `decrement` will return `Zero`.
@@ -48,8 +48,10 @@ impl RcCounter for NsRcCounter {
     fn increment(&mut self) {
         let current = self.0;
         if current == FINISHED_MARKER {
-            panic!("Too many reference counts or implementation error (reference counter has \
-            invalid state).")
+            panic!(
+                "Too many reference counts or implementation error (reference counter has \
+            invalid state)."
+            )
         }
         self.0 = current + 1;
     }

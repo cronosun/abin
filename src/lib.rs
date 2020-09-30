@@ -1,7 +1,4 @@
 mod binary;
 mod interface;
 
-pub use {
-    binary::*,
-    interface::*,
-};
+pub use {binary::*, interface::*};

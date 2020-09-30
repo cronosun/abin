@@ -1,8 +1,9 @@
 use std::ops::Deref;
 
 use abin::{AnyBin, AnyRc, ArcBin, Bin, NoVecCapShrink, RcBin, SyncBin};
-pub mod utils;
 use utils::*;
+
+pub mod utils;
 
 /// small vectors are optimized (stack only)... for those the tests would fail.
 const SAFE_SIZE: usize = 50;
@@ -17,7 +18,7 @@ fn basic_rc_sync() {
     basic_rc::<ArcBin, SyncBin>();
 }
 
-fn basic_rc<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn basic_rc<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     for index in SAFE_SIZE..1024 {
         let bin_gen = BinGen::new(index as u8, index as usize);
         extracting_returns_same_memory_location::<T, TBin>(&bin_gen);
@@ -27,14 +28,19 @@ fn basic_rc<T: AnyRc<T=TBin>, TBin: AnyBin>() {
 
 /// When a rc-bin is converted into a vec and there is more than one ref count, a copy must
 /// be returned.
-fn into_vec_with_more_than_one_ref_count<T: AnyRc<T=TBin>, TBin: AnyBin>(bin_gen: &BinGen) {
-    let mut vec = bin_gen.generate_to_vec();
+fn into_vec_with_more_than_one_ref_count<T: AnyRc<T = TBin>, TBin: AnyBin>(bin_gen: &BinGen) {
     // make sure we have enough capacity (since if not, the system is allowed /
     // forced to change memory location).
-    vec.reserve(T::overhead_bytes());
+    let vec = bin_gen.generate_to_vec_shrink(T::overhead_bytes());
+
+    // clone: we need to compare content later.
     let original_clone = vec.clone();
-    assert!(vec.len() >= SAFE_SIZE, "This test only works for large vectors (since small vectors \
-    might get optimized; see StackBin).");
+
+    assert!(
+        vec.len() >= SAFE_SIZE,
+        "This test only works for large vectors (since small vectors \
+    might get optimized; see StackBin)."
+    );
     let original_address = vec.as_ptr() as usize;
     let original_capacity = vec.capacity();
 
@@ -45,10 +51,22 @@ fn into_vec_with_more_than_one_ref_count<T: AnyRc<T=TBin>, TBin: AnyBin>(bin_gen
     let bin_5 = bin_4.clone();
 
     // here we must have different addresses, since bin has a ref count > 0.
-    assert_ne!(original_address, bin_1.into_vec().as_slice().as_ptr() as usize);
-    assert_ne!(original_address, bin_2.into_vec().as_slice().as_ptr() as usize);
-    assert_ne!(original_address, bin_3.into_vec().as_slice().as_ptr() as usize);
-    assert_ne!(original_address, bin_4.into_vec().as_slice().as_ptr() as usize);
+    assert_ne!(
+        original_address,
+        bin_1.into_vec().as_slice().as_ptr() as usize
+    );
+    assert_ne!(
+        original_address,
+        bin_2.into_vec().as_slice().as_ptr() as usize
+    );
+    assert_ne!(
+        original_address,
+        bin_3.into_vec().as_slice().as_ptr() as usize
+    );
+    assert_ne!(
+        original_address,
+        bin_4.into_vec().as_slice().as_ptr() as usize
+    );
 
     // now the last one... this must return the same address.
     let restored_vec = bin_5.into_vec();
@@ -60,16 +78,20 @@ fn into_vec_with_more_than_one_ref_count<T: AnyRc<T=TBin>, TBin: AnyBin>(bin_gen
 
 /// When a rc-bin is converted into a vec and there's only one single reference, this
 /// must return the same vector (same address).
-fn extracting_returns_same_memory_location<T: AnyRc<T=TBin>, TBin: AnyBin>(bin_gen: &BinGen) {
+fn extracting_returns_same_memory_location<T: AnyRc<T = TBin>, TBin: AnyBin>(bin_gen: &BinGen) {
     let (original_capacity, original_address, original_clone, bin) = {
-        let mut vec = bin_gen.generate_to_vec();
         // make sure we have enough capacity (since if not, the system is allowed /
         // forced to change memory location).
-        vec.reserve(T::overhead_bytes());
+        let vec = bin_gen.generate_to_vec_shrink(T::overhead_bytes());
 
+        // crate a clone (so we can check content later).
         let original_clone = vec.clone();
-        assert!(vec.len() >= SAFE_SIZE, "This test only works for large vectors (since small vectors \
-    might get optimized; see StackBin).");
+
+        assert!(
+            vec.len() >= SAFE_SIZE,
+            "This test only works for large vectors (since small vectors \
+    might get optimized; see StackBin)."
+        );
         let original_address = vec.as_ptr() as usize;
         let original_capacity = vec.capacity();
         let bin = T::from_with_cap_shrink::<NoVecCapShrink>(vec);
@@ -86,5 +108,9 @@ fn extracting_returns_same_memory_location<T: AnyRc<T=TBin>, TBin: AnyBin>(bin_g
     // and since there's only one reference, we must be able to get back the original vector.
     let restored_vec = bin.into_vec();
     assert_eq!(restored_vec.as_slice().as_ptr() as usize, original_address);
-    assert_eq!(restored_vec.capacity(), original_capacity, "capacity mismatch");
+    assert_eq!(
+        restored_vec.capacity(),
+        original_capacity,
+        "capacity mismatch"
+    );
 }

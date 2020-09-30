@@ -6,7 +6,9 @@ pub mod utils;
 #[test]
 fn basic_vec() {
     for index in 0..1024 {
-        test_vec_bin_as_simple_container(BinGen::new(index as u8, index as usize).generate_to_vec());
+        test_vec_bin_as_simple_container(
+            BinGen::new(index as u8, index as usize).generate_to_vec_shrink(0),
+        );
     }
 }
 

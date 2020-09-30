@@ -1,4 +1,4 @@
-use abin::{StaticBin, AnyBin};
+use abin::{AnyBin, StaticBin};
 
 const EMPTY: &[u8] = &[];
 const ONE: &[u8] = &[15];
@@ -19,7 +19,7 @@ fn basic_static() {
     test_static(LARGE.as_bytes());
 }
 
-fn test_static(slice : &'static [u8]) {
+fn test_static(slice: &'static [u8]) {
     let slice_ptr = slice.as_ptr();
     let bin = StaticBin::from(slice).un_sync();
     assert_eq!(slice.len(), bin.len());

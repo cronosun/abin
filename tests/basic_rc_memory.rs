@@ -1,7 +1,7 @@
 use std::alloc::System;
 use std::cmp::max;
 
-use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
+use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, SyncBin};
 use utils::*;
@@ -17,7 +17,7 @@ fn basic_rc_memory_test() {
     basic_rc_memory::<RcBin, Bin>();
 }
 
-fn basic_rc_memory<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn basic_rc_memory<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     // some simple leak tests
     no_leak_1::<T, TBin>();
     no_leak_2::<T, TBin>();
@@ -29,7 +29,7 @@ fn basic_rc_memory<T: AnyRc<T=TBin>, TBin: AnyBin>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_1<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn no_leak_1<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let _vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
@@ -37,7 +37,7 @@ fn no_leak_1<T: AnyRc<T=TBin>, TBin: AnyBin>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_2<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn no_leak_2<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
@@ -46,7 +46,7 @@ fn no_leak_2<T: AnyRc<T=TBin>, TBin: AnyBin>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_3<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn no_leak_3<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
@@ -56,7 +56,7 @@ fn no_leak_3<T: AnyRc<T=TBin>, TBin: AnyBin>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_4<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn no_leak_4<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 255;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
@@ -76,7 +76,7 @@ fn no_leak_4<T: AnyRc<T=TBin>, TBin: AnyBin>() {
     })
 }
 
-fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
     let bin1 = T::from(vec1);
@@ -86,7 +86,7 @@ fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T=TBin>, TBin: AnyB
     });
 }
 
-fn assert_no_leak<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn assert_no_leak<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let mut reg = Region::new(&GLOBAL);
     let vec_len = 1024 * 1024 * 32;
 
@@ -131,14 +131,19 @@ fn assert_no_leak<T: AnyRc<T=TBin>, TBin: AnyBin>() {
     assert!(change1.bytes_allocated == 0 && change1.bytes_deallocated == 0);
     assert!(change2.bytes_allocated == 100663296 && change2.bytes_deallocated == 0);
     assert!(change3.bytes_allocated == 0 && change3.bytes_deallocated == 0);
-    assert!(change4.bytes_allocated == 33554425 && change4.bytes_deallocated == 0);
-    assert!(change5.bytes_allocated == 0 && change5.bytes_deallocated == 100663296 + 33554425);
+    assert!(change4.bytes_allocated == 33554432 && change4.bytes_deallocated == 0);
+    assert!(change5.bytes_allocated == 0 && change5.bytes_deallocated == 100663296 + 33554432);
 }
 
-fn create_huge_allocation(number_of_bytes: usize, remaining_capacity_for_rc_overhead: usize) -> Vec<u8> {
+fn create_huge_allocation(
+    number_of_bytes: usize,
+    remaining_capacity_for_rc_overhead: usize,
+) -> Vec<u8> {
     let mut huge_vec = Vec::with_capacity(number_of_bytes);
     let len = number_of_bytes - remaining_capacity_for_rc_overhead;
-    unsafe { huge_vec.set_len(len); }
+    unsafe {
+        huge_vec.set_len(len);
+    }
 
     let mut index = 0;
     let step_size = max(len / 1024, 10);

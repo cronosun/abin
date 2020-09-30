@@ -16,4 +16,3 @@ fn sync_bin_size() {
     assert_eq!(word_size * 4, sync_bin_size);
     assert_eq!(core::mem::size_of::<Bin>(), sync_bin_size);
 }
-

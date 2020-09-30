@@ -1,6 +1,9 @@
 use core::{mem, slice};
 
-use crate::{Bin, BinData, DefaultVecCapShrink, is_shrink, RcCounter, RcDecResult, RcMeta, UnsafeBin, VecCapShrink};
+use crate::{
+    is_shrink, Bin, BinData, DefaultVecCapShrink, RcCounter, RcDecResult, RcMeta, UnsafeBin,
+    VecCapShrink,
+};
 
 #[repr(C)]
 pub struct RcData<TCounter: RcCounter> {
@@ -57,13 +60,16 @@ impl<TCounter: RcCounter> RcData<TCounter> {
         (*meta_mut).capacity = vec.capacity();
         (*meta_mut).vec_ptr = vec.as_ptr();
 
-        Self {
+        let this = Self {
             // for non-sliced versions, this is just the same as the vector itself.
             data_ptr: vec.as_ptr(),
             // for non-sliced versions, this is just the same as the vector itself.
             data_len: vec.len(),
             meta_ptr: meta,
-        }
+        };
+        // must not free the vec (we still need its content).
+        mem::forget(vec);
+        this
     }
 
     #[inline]
@@ -133,6 +139,8 @@ impl<TCounter: RcCounter> RcData<TCounter> {
                 if self.data_ptr == meta.vec_ptr {
                     // great, looks good, we can use that vector
                     let mut vec = unsafe { meta.extract_vec(self.data_len) };
+                    // we also shrink the vector, why? If this is a slice, the vector might be
+                    // way too large.
                     Self::maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec);
                     vec
                 } else {
@@ -157,7 +165,9 @@ impl<TCounter: RcCounter> RcData<TCounter> {
         if self.as_slice().get(start..end_excluded).is_some() {
             // ok, within range
             let mut clone = self.clone();
-            unsafe { clone.data_ptr = clone.data_ptr.add(start); }
+            unsafe {
+                clone.data_ptr = clone.data_ptr.add(start);
+            }
             clone.data_len = end_excluded - start;
             Some(clone)
         } else {
@@ -181,14 +191,19 @@ impl<TCounter: RcCounter> RcData<TCounter> {
         alignment - 1 + size
     }
 
+    /// Might shrink the vector but sill keeps enough capacity for the metadata.
     #[inline]
-    fn maybe_shrink_vec<T: VecCapShrink>(vec: &mut Vec<u8>) {
+    pub(crate) fn maybe_shrink_vec<T: VecCapShrink>(vec: &mut Vec<u8>) {
         let len = vec.len();
         if is_shrink::<T>(len, vec.capacity()) {
             // leave enough space to re-use the vector as rc.
-            unsafe { vec.set_len(len + Self::meta_overhead()); }
+            unsafe {
+                vec.set_len(len + Self::meta_overhead());
+            }
             vec.shrink_to_fit();
-            unsafe { vec.set_len(len); }
+            unsafe {
+                vec.set_len(len);
+            }
         }
     }
 }
@@ -196,7 +211,10 @@ impl<TCounter: RcCounter> RcData<TCounter> {
 /// adds padding and metadata but without altering the vector len. Returns a pointer to the
 /// metadata.
 #[inline]
-unsafe fn add_padding_and_metadata<TCounter: RcCounter>(vec: &mut Vec<u8>, meta: RcMeta<TCounter>) -> *const RcMeta<TCounter> {
+unsafe fn add_padding_and_metadata<TCounter: RcCounter>(
+    vec: &mut Vec<u8>,
+    meta: RcMeta<TCounter>,
+) -> *const RcMeta<TCounter> {
     let len = vec.len();
     let ptr = vec.as_ptr().add(vec.len());
     let padding = padding(ptr, mem::align_of::<RcMeta<TCounter>>());

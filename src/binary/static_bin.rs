@@ -29,7 +29,11 @@ struct StaticBinData {
 impl StaticBinData {
     #[inline]
     const fn new(ptr: *const u8, len: usize) -> Self {
-        Self { ptr, len, _unused: 0 }
+        Self {
+            ptr,
+            len,
+            _unused: 0,
+        }
     }
 
     #[inline]

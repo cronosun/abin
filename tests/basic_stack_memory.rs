@@ -1,6 +1,6 @@
-use abin::{StackBin, AnyRc, AnyBin, SyncBin, Bin, RcBin, ArcBin, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StackBin, SyncBin, VecBin};
 
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 use std::alloc::System;
 
 #[global_allocator]
@@ -29,7 +29,7 @@ fn no_alloc() {
 }
 
 /// rc also uses stack and does not allocate for small binaries.
-fn rc_uses_stack_no_alloc<T: AnyRc<T=TBin>, TBin: AnyBin>() {
+fn rc_uses_stack_no_alloc<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let slice = [15u8; StackBin::max_len()];
     mem_scoped(&GLOBAL, &MaNoAllocation, || {
         T::copy_from_slice(&slice);

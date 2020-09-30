@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnsafeBin, is_shrink};
+use crate::{is_shrink, Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnsafeBin};
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 /// If this threshold is reached, clone and slice won't return a vec again, they will return
@@ -28,7 +28,10 @@ impl VecBin {
     /// as a container for `Vec<u8>` and then just unwrap it using `Bin::into_vec()` `false` might
     /// be a good choice too.
     #[inline]
-    pub fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
+    pub fn from_with_cap_shrink<T: VecCapShrink>(
+        vec: Vec<u8>,
+        allow_optimization: bool,
+    ) -> SyncBin {
         if !allow_optimization {
             Self::from_non_optimized::<T>(vec, allow_optimization)
         } else {
@@ -36,7 +39,8 @@ impl VecBin {
                 stack_bin
             } else {
                 let len = vec.len();
-                if len > TO_ARC_THRESHOLD_BYTES && vec.capacity() - len >= ArcBin::overhead_bytes() {
+                if len > TO_ARC_THRESHOLD_BYTES && vec.capacity() - len >= ArcBin::overhead_bytes()
+                {
                     ArcBin::from_with_cap_shrink::<T>(vec)
                 } else {
                     Self::from_non_optimized::<T>(vec, allow_optimization)
@@ -86,11 +90,7 @@ impl VecBin {
         } else {
             &FN_TABLE_NO_OPT
         };
-        let vec_data = VecData {
-            ptr,
-            len,
-            capacity,
-        };
+        let vec_data = VecData { ptr, len, capacity };
 
         unsafe { Bin::_new(vec_data.to_bin_data(), fn_table)._into_sync() }
     }
@@ -140,7 +140,9 @@ fn drop(bin: &mut Bin) {
     let ptr = vec_data.ptr as *mut u8;
     let capacity = vec_data.capacity;
     // restore the original vector, will immediately drop
-    unsafe { Vec::<u8>::from_raw_parts(ptr, 0, capacity); }
+    unsafe {
+        Vec::<u8>::from_raw_parts(ptr, 0, capacity);
+    }
 }
 
 #[inline]

@@ -1,5 +1,5 @@
-use crate::{AnyRcConfigForSync, AnyRcImpl, SyncBin, UnsafeBin};
 use crate::{AnyRc, VecCapShrink};
+use crate::{AnyRcConfigForSync, AnyRcImpl, SyncBin, UnsafeBin};
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this
 /// is sync + send. Cloning is cheap.

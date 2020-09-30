@@ -17,4 +17,3 @@ pub fn stack_too_large() {
     // this was a bit too long, should no longer be possible to stack-allocated this.
     assert!(StackBin::try_from(&slice).is_none());
 }
-

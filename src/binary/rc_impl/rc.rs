@@ -1,10 +1,13 @@
 use core::mem;
 use std::marker::PhantomData;
 
-use crate::{Bin, DefaultVecCapShrink, FnTable, is_shrink, NoVecCapShrink, NsRcCounter, RcCounter, RcData, StackBin, UnsafeBin, VecCapShrink, SyncRcCounter};
+use crate::{
+    Bin, DefaultVecCapShrink, FnTable, NoVecCapShrink, NsRcCounter, RcCounter, RcData, StackBin,
+    SyncRcCounter, UnsafeBin, VecCapShrink,
+};
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
-    _phantom: PhantomData<TConfig>
+    _phantom: PhantomData<TConfig>,
 }
 
 impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
@@ -18,13 +21,7 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
         if let Some(stack) = StackBin::try_from(vec.as_slice()) {
             stack.un_sync()
         } else {
-            let len = vec.len();
-            if is_shrink::<T>(len, vec.capacity()) {
-                // make sure we don't shrink and then have to extend again...
-                unsafe { vec.set_len(len + Self::overhead_bytes()); }
-                vec.shrink_to_fit();
-                unsafe { vec.set_len(len); }
-            }
+            RcData::<TConfig::TCounter>::maybe_shrink_vec::<T>(&mut vec);
             let rc_data = unsafe { RcData::<TConfig::TCounter>::new_from_vec_raw(vec) };
             unsafe { Bin::_new(rc_data.to_bin_data(), TConfig::table()) }
         }

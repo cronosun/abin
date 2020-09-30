@@ -1,14 +1,14 @@
 use core::slice;
 
-use crate::{Bin, FnTable, BinData, SyncBin, UnsafeBin, AnyBin};
 use crate::EmptyBin;
+use crate::{AnyBin, Bin, BinData, FnTable, SyncBin, UnsafeBin};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();
 /// the offset where to store the length information.
 const LENGTH_OFFSET: usize = BIN_DATA_LEN - 1;
 /// the maximum number of bytes we can store (one byte is required for the length information)
-const STACK_MAX_LEN : usize = BIN_DATA_LEN - 1;
+const STACK_MAX_LEN: usize = BIN_DATA_LEN - 1;
 
 /// A binary that stores the content entirely on the stack.
 pub struct StackBin;
@@ -29,9 +29,13 @@ impl StackBin {
             // yes, this works (one byte is required for the length information)
             let mut bin = unsafe { Bin::_new(BinData(core::ptr::null(), 0, 0), &FN_TABLE) };
             let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
-            unsafe { core::ptr::copy(slice.as_ptr(), data_ptr, len); }
+            unsafe {
+                core::ptr::copy(slice.as_ptr(), data_ptr, len);
+            }
             let len = len as u8;
-            unsafe { *data_ptr.add(LENGTH_OFFSET) = len; }
+            unsafe {
+                *data_ptr.add(LENGTH_OFFSET) = len;
+            }
             Some(unsafe { bin._into_sync() })
         } else {
             None
@@ -96,12 +100,18 @@ fn into_vec(bin: Bin) -> Vec<u8> {
     as_slice(&bin).to_vec()
 }
 
-fn slice(bin : &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
+fn slice(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     let new_slice = bin.as_slice().get(start..end_excluded);
     if let Some(new_slice) = new_slice {
-        Some(StackBin::try_from(new_slice).expect("There's an implementation error: Was \
+        Some(
+            StackBin::try_from(new_slice)
+                .expect(
+                    "There's an implementation error: Was \
         unable to slice a stack bin and re-create a stack bin from that slice (this MUST never \
-        fail, since the slice is never longer than the original).").un_sync())
+        fail, since the slice is never longer than the original).",
+                )
+                .un_sync(),
+        )
     } else {
         None
     }
