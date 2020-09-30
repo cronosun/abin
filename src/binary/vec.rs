@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{is_shrink, Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnSync, UnsafeBin};
+use crate::{is_shrink, Bin, BinData, FnTable, IntoUnSyncView, NoVecCapShrink, SyncBin, UnsafeBin};
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 /// If this threshold is reached, clone and slice won't return a vec again, they will return
@@ -118,21 +118,29 @@ impl VecData {
 }
 
 const FN_TABLE_NO_OPT: FnTable = FnTable {
-    drop,
+    drop: Some(drop),
     as_slice,
     is_empty,
     clone: clone_no_opt,
     into_vec,
     slice: slice_no_opt,
+    // not required: sync only
+    convert_into_un_sync: None,
+    // not required: sync only
+    convert_into_sync: None,
 };
 
 const FN_TABLE_OPT: FnTable = FnTable {
-    drop,
+    drop: Some(drop),
     as_slice,
     is_empty,
     clone: clone_opt,
     into_vec,
     slice: slice_opt,
+    // not required: sync only
+    convert_into_un_sync: None,
+    // not required: sync only
+    convert_into_sync: None,
 };
 
 fn drop(bin: &mut Bin) {

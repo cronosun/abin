@@ -2,8 +2,8 @@ use core::mem;
 use std::marker::PhantomData;
 
 use crate::{
-    Bin, DefaultVecCapShrink, FnTable, NoVecCapShrink, NsRcCounter, RcCounter, RcData, RcUtils,
-    StackBin, SyncRcCounter, UnSync, UnsafeBin, VecCapShrink,
+    Bin, DefaultVecCapShrink, FnTable, IntoUnSyncView, NoVecCapShrink, NsRcCounter, RcCounter,
+    RcData, RcUtils, StackBin, SyncRcCounter, UnsafeBin, VecCapShrink,
 };
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
@@ -72,21 +72,29 @@ pub trait AnyRcImplConfig {
 }
 
 const NON_SYNC_FN_TABLE: FnTable = FnTable {
-    drop: drop::<NsRcCounter>,
+    drop: Some(drop::<NsRcCounter>),
     as_slice: as_slice::<NsRcCounter>,
     is_empty: is_empty::<NsRcCounter>,
     clone: clone::<NsRcCounter>,
     into_vec: into_vec::<NsRcCounter>,
     slice: slice::<NsRcCounter>,
+    // this is already non-sync
+    convert_into_un_sync: None,
+    // required. Since this version is not sync.
+    convert_into_sync: Some(convert_into_sync),
 };
 
 const SYNC_FN_TABLE: FnTable = FnTable {
-    drop: drop::<SyncRcCounter>,
+    drop: Some(drop::<SyncRcCounter>),
     as_slice: as_slice::<SyncRcCounter>,
     is_empty: is_empty::<SyncRcCounter>,
     clone: clone::<SyncRcCounter>,
     into_vec: into_vec::<SyncRcCounter>,
     slice: slice::<SyncRcCounter>,
+    // required, since this is the sync version.
+    convert_into_un_sync: Some(convert_into_un_sync),
+    // not required, it's already sync
+    convert_into_sync: None,
 };
 
 fn drop<TCounter: RcCounter>(bin: &mut Bin) {
@@ -125,4 +133,18 @@ fn slice<TCounter: RcCounter>(bin: &Bin, start: usize, end_excluded: usize) -> O
     } else {
         None
     }
+}
+
+fn convert_into_sync(bin: Bin) -> Bin {
+    // extract the vector.
+    let vec = into_vec::<NsRcCounter>(bin);
+    // and create a sync version.
+    AnyRcImpl::<AnyRcConfigForSync>::from_vec(vec)
+}
+
+fn convert_into_un_sync(bin: Bin) -> Bin {
+    // extract the vector.
+    let vec = into_vec::<SyncRcCounter>(bin);
+    // and create a non-synced version
+    AnyRcImpl::<AnyRcConfigForNonSync>::from_vec(vec)
 }

@@ -20,10 +20,10 @@ pub fn stack_memory() {
 /// Does not stack-allocate
 fn no_alloc() {
     let slice = [15u8; StackBin::max_len()];
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         StackBin::try_from(&slice).expect("Max len must be stack-allocated");
     });
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         StackBin::try_from(&[]).expect("Empty must be stack-allocated");
     });
 }
@@ -31,10 +31,10 @@ fn no_alloc() {
 /// rc also uses stack and does not allocate for small binaries.
 fn rc_uses_stack_no_alloc<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let slice = [15u8; StackBin::max_len()];
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         T::copy_from_slice(&slice);
     });
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         T::copy_from_slice(&[]);
     });
 }
@@ -46,7 +46,7 @@ fn vec_uses_stack_no_alloc() {
     mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
         VecBin::from_vec(vec, true);
     });
-    mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         VecBin::from_vec(Vec::new(), true);
     });
 }

@@ -1,7 +1,7 @@
 use core::slice;
 use std::mem;
 
-use crate::{Bin, BinData, EmptyBin, FnTable, SyncBin, UnSync, UnsafeBin};
+use crate::{Bin, BinData, EmptyBin, FnTable, IntoUnSyncView, SyncBin, UnsafeBin};
 
 /// A binary from a static slice.
 pub struct StaticBin;
@@ -50,17 +50,18 @@ impl StaticBinData {
 }
 
 const FN_TABLE: FnTable = FnTable {
-    drop,
+    // not required, no managed heap-memory
+    drop: None,
     as_slice,
     is_empty,
     clone,
     into_vec,
     slice,
+    // not required: sync only.
+    convert_into_un_sync: None,
+    // not required: sync only.
+    convert_into_sync: None,
 };
-
-fn drop(_: &mut Bin) {
-    // does nothing, static does not need to be dropped.
-}
 
 #[inline]
 fn as_slice(bin: &Bin) -> &'static [u8] {

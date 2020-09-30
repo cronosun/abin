@@ -1,4 +1,4 @@
-use crate::{AnyRc, AnyStr, Bin, RcBin, UnSync};
+use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, SyncStr};
 
 /// A string backed by `Bin` (not sync + send).
 pub type Str = AnyStr<Bin>;
@@ -18,10 +18,20 @@ impl<'a> From<&'a str> for Str {
     }
 }
 
-impl UnSync for Str {
+impl IntoUnSyncView for Str {
     type Target = Str;
 
     fn un_sync(self) -> Self::Target {
         self
+    }
+}
+
+impl IntoSync for Str {
+    type Target = SyncStr;
+
+    fn into_sync(self) -> Self::Target {
+        let bin = self.into_bin();
+        let sync_bin = bin.into_sync();
+        unsafe { Self::Target::from_utf8_unchecked(sync_bin) }
     }
 }

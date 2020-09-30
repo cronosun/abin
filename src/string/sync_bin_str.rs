@@ -1,4 +1,4 @@
-use crate::{AnyRc, AnyStr, ArcBin, StaticBin, Str, SyncBin, UnSync};
+use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, StaticBin, Str, SyncBin};
 
 /// A string backed by `SyncBin` (sync + send).
 pub type SyncStr = AnyStr<SyncBin>;
@@ -26,7 +26,7 @@ impl<'a> From<&'a str> for SyncStr {
     }
 }
 
-impl UnSync for SyncStr {
+impl IntoUnSyncView for SyncStr {
     type Target = Str;
 
     fn un_sync(self) -> Self::Target {

@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::RangeBounds;
 
-use crate::{AnyBin, Bin, UnSync, UnSyncRef, UnsafeBin};
+use crate::{AnyBin, Bin, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
 pub struct SyncBin(pub(crate) Bin);
 
@@ -20,8 +20,8 @@ impl Into<Bin> for SyncBin {
     }
 }
 
-/// Returns the un-synchronized version of this binary.
-impl UnSync for SyncBin {
+/// Returns the un-synchronized view of this binary.
+impl IntoUnSyncView for SyncBin {
     type Target = Bin;
 
     #[inline]
@@ -36,6 +36,20 @@ impl UnSyncRef for SyncBin {
     #[inline]
     fn un_sync_ref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl IntoUnSync for SyncBin {
+    type Target = Bin;
+
+    #[inline]
+    fn un_sync_convert(self) -> Self::Target {
+        if let Some(convert_fn) = unsafe { self.0._fn_table() }.convert_into_un_sync {
+            convert_fn(self.0)
+        } else {
+            // this means that this is already the un-synced version or there's no un-synced version.
+            self.0
+        }
     }
 }
 

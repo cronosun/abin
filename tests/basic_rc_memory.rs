@@ -80,7 +80,7 @@ fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T = TBin>, TBin: An
     let vec_len = 1024 * 1024 * 32;
     let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
     let bin1 = T::from_vec(vec1);
-    let _vec = mem_scoped(&GLOBAL, &MaNoAllocation, || {
+    let _vec = mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         // no allocation, since 'bin1' is single reference
         bin1.into_vec()
     });

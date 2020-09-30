@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
@@ -5,8 +6,9 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::{Bound, RangeBounds};
 
-use crate::{AnyBin, BinData, FnTable, SyncBin, UnSync, UnSyncRef, UnsafeBin};
-use std::borrow::Borrow;
+use crate::{
+    AnyBin, BinData, FnTable, IntoSync, IntoUnSync, IntoUnSyncView, SyncBin, UnSyncRef, UnsafeBin,
+};
 
 #[repr(C)]
 pub struct Bin {
@@ -51,8 +53,8 @@ impl AnyBin for Bin {
     }
 }
 
-/// This does nothing, since `Bin` is already un-synchronized. Just returns itself.
-impl UnSync for Bin {
+/// This does nothing, since `Bin` is already un-synchronized (view). Just returns itself.
+impl IntoUnSyncView for Bin {
     type Target = Bin;
 
     #[inline]
@@ -61,10 +63,40 @@ impl UnSync for Bin {
     }
 }
 
-/// This does nothing, since `Bin` is already un-synchronized. Just returns itself.
+/// This might actually do something, since this `Bin` could just be an un-synchronized view
+/// for a synchronized binary. In that case, the binary is converted.
+impl IntoUnSync for Bin {
+    type Target = Bin;
+
+    #[inline]
+    fn un_sync_convert(self) -> Self::Target {
+        if let Some(convert_fn) = self.fn_table.convert_into_un_sync {
+            convert_fn(self)
+        } else {
+            self
+        }
+    }
+}
+
+impl IntoSync for Bin {
+    type Target = SyncBin;
+
+    #[inline]
+    fn into_sync(self) -> Self::Target {
+        if let Some(convert_fn) = self.fn_table.convert_into_sync {
+            unsafe { convert_fn(self)._into_sync() }
+        } else {
+            // this means that this is already the synced version
+            unsafe { self._into_sync() }
+        }
+    }
+}
+
+/// This does nothing, since `Bin` is already un-synchronized (view). Just returns itself.
 impl UnSyncRef for Bin {
     type Target = Bin;
 
+    #[inline]
     fn un_sync_ref(&self) -> &Self::Target {
         &self
     }
@@ -73,7 +105,9 @@ impl UnSyncRef for Bin {
 impl Drop for Bin {
     #[inline]
     fn drop(&mut self) {
-        (self.fn_table.drop)(self)
+        if let Some(drop_fn) = self.fn_table.drop {
+            (drop_fn)(self)
+        }
     }
 }
 

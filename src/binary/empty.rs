@@ -1,4 +1,4 @@
-use crate::{Bin, BinData, FnTable, SyncBin, UnSync};
+use crate::{Bin, BinData, FnTable, IntoUnSyncView, SyncBin};
 
 /// A binary that's always empty.
 pub struct EmptyBin;
@@ -11,15 +11,17 @@ impl EmptyBin {
 }
 
 const FN_TABLE: FnTable = FnTable {
-    drop,
+    drop: None,
     as_slice,
     is_empty,
     clone,
     into_vec,
     slice,
+    // not required: there's no non-synced version.
+    convert_into_un_sync: None,
+    // not required: this is already the sync version.
+    convert_into_sync: None,
 };
-
-fn drop(_: &mut Bin) {}
 
 fn as_slice(_: &Bin) -> &[u8] {
     &[]

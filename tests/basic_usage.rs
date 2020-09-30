@@ -1,4 +1,4 @@
-use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, RcBin, StaticBin, UnSync, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, IntoUnSyncView, RcBin, StaticBin, VecBin};
 
 #[test]
 pub fn usage() {
@@ -25,7 +25,7 @@ pub fn usage() {
     // no allocation for static data.
     let bin6 = StaticBin::from("Static data".as_bytes());
 
-    use_bin(bin1.un_sync());
+    use_bin(bin1.un_sync()); // 'un_sync' is a cheap operation that converts SyncBin to Bin.
     use_bin(bin2);
     use_bin(bin3);
     use_bin(bin4.un_sync());

@@ -63,9 +63,9 @@ impl MemAssert for MaNoLeak {
 }
 
 /// No allocation and no de-allocation allowed.
-pub struct MaNoAllocation;
+pub struct MaNoAllocNoDealloc;
 
-impl MemAssert for MaNoAllocation {
+impl MemAssert for MaNoAllocNoDealloc {
     fn assert(&self, change: Stats) -> Result<(), String> {
         let num_allocations = change.allocations;
         let num_de_allocations = change.deallocations;
@@ -90,6 +90,23 @@ impl MemAssert for MaOnlyDeAllocation {
         if num_allocations != 0 {
             Err(format!(
                 "Expected to have no allocation (#op alloc: {})",
+                num_allocations
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// Must have at least one allocation.
+pub struct MaDoesAllocate;
+
+impl MemAssert for MaDoesAllocate {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_allocations = change.allocations;
+        if num_allocations == 0 {
+            Err(format!(
+                "Expected to have at least one allocation (#op alloc: {})",
                 num_allocations
             ))
         } else {

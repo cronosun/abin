@@ -1,4 +1,4 @@
-use abin::{Bin, StaticBin, SyncBin, UnSync};
+use abin::{Bin, IntoUnSyncView, StaticBin, SyncBin};
 use std::collections::HashMap;
 
 /// binary is compatible with hash map.

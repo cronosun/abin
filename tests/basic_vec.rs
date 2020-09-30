@@ -1,4 +1,4 @@
-use abin::{AnyBin, NoVecCapShrink, UnSync, VecBin};
+use abin::{AnyBin, IntoUnSyncView, NoVecCapShrink, VecBin};
 use utils::*;
 
 pub mod utils;

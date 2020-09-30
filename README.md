@@ -7,7 +7,7 @@ A utility library for working with bytes / binaries. It provides multiple implem
  * static (`StaticBin`): A binary pointing to static data.
  * vec (`VecBin`): A binary backed by a `Vec<u8>`.
  * reference-counted, non-synchronized (`RcBin`): Reference counted binary (without synchronization-overhead).
- * reference-counted, synchronized (`ArBin`): Reference counted binary (without synchronization-overhead).
+ * reference-counted, synchronized (`ArcBin`): Reference counted binary (with synchronization-overhead).
  * stack (`StackBin`): Stores small binaries on the stack.
  * empty (`EmpyBin`): For empty binaries (stack).  
 
@@ -15,6 +15,7 @@ It's similar to [https://crates.io/crates/bytes](https://crates.io/crates/bytes)
 
  * It's extensible (you can provide your own binary type).
  * Provides a reference-counted binary without synchronization-overhead.
+ * Stores small binaries on the stack.
  * ... see *Details* below for more differences.
 
 ## Details / Highlights / Features
@@ -23,9 +24,11 @@ It's similar to [https://crates.io/crates/bytes](https://crates.io/crates/bytes)
 
 Many operations prevent allocation. There's a reference counted binary that can be cloned without allocating memory. Small binaries (up to 3 words minus one byte; 23 bytes on 64-bit platforms) can be stored in-line (on the stack).
 
+See [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs) for operations that are guaranteed to be alloc-free.
+
 **Reference counted binary**
 
-There's a reference-counted binary that can be cloned without allocating memory. It can be constructed from a `Vec<u8` without allocating memory (as long as the vec has some capacity left). It can be converted back to a `Vec<u8>` without allocating memory (as long as there are no more references to the binary).
+There's a reference-counted binary that can be cloned without allocating memory. It can be constructed from a `Vec<u8>` without allocating memory (as long as the vec has some capacity left). It can be converted back to a `Vec<u8>` without allocating memory (as long as there are no more references to the binary).
 
 **Reference-counted binary: No indirection / from Vec**
 

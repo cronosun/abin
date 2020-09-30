@@ -1,7 +1,7 @@
 use core::slice;
 
 use crate::{AnyBin, Bin, BinData, FnTable, SyncBin, UnsafeBin};
-use crate::{EmptyBin, UnSync};
+use crate::{EmptyBin, IntoUnSyncView};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();
@@ -61,17 +61,18 @@ fn data_raw_mut(data: &mut BinData) -> *mut u8 {
 }
 
 const FN_TABLE: FnTable = FnTable {
-    drop,
+    // not required: Stack only.
+    drop: None,
     as_slice,
     is_empty,
     clone,
     into_vec,
     slice,
+    // not required: there's only a sync version.
+    convert_into_un_sync: None,
+    // not required: there's only a sync version.
+    convert_into_sync: None,
 };
-
-fn drop(_: &mut Bin) {
-    // does nothing (stack only).
-}
 
 #[inline]
 fn as_slice(bin: &Bin) -> &[u8] {

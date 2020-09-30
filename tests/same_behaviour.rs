@@ -5,7 +5,7 @@ use std::ops::Range;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, UnSync, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, IntoUnSyncView, RcBin, StaticBin, VecBin};
 use utils::*;
 
 #[global_allocator]
