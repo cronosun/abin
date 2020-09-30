@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use crate::{
     Bin, DefaultVecCapShrink, FnTable, NoVecCapShrink, NsRcCounter, RcCounter, RcData, RcUtils,
-    StackBin, SyncRcCounter, UnsafeBin, VecCapShrink,
+    StackBin, SyncRcCounter, UnSync, UnsafeBin, VecCapShrink,
 };
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {

@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{is_shrink, Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnsafeBin};
+use crate::{is_shrink, Bin, BinData, FnTable, NoVecCapShrink, SyncBin, UnSync, UnsafeBin};
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 /// If this threshold is reached, clone and slice won't return a vec again, they will return

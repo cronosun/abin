@@ -1,3 +1,5 @@
+// TODO: Improve this: Remove `min_capacity` and is_shrink should give hints on remaining capacity...
+
 #[inline]
 pub(crate) fn is_shrink<T: VecCapShrink>(len: usize, capacity: usize) -> bool {
     if capacity > T::min_capacity() {
@@ -7,11 +9,11 @@ pub(crate) fn is_shrink<T: VecCapShrink>(len: usize, capacity: usize) -> bool {
     }
 }
 
-/// Gives information whether the system should shrink a vector before using it as `Bin`.
+/// Gives information whether the system should shrink a vector.
 pub trait VecCapShrink {
     /// Returns `true` if the vector should be shrunk.
     fn is_shrink(len: usize, capacity: usize) -> bool;
-    /// Do never shrink if vector has less or equal this capacity (fast fail for small vectors).
+    /// Do never shrink if vector has less or equal this capacity (fast fail for small allocations).
     fn min_capacity() -> usize;
 }
 
@@ -27,10 +29,10 @@ impl VecCapShrink for DefaultVecCapShrink {
             too_much > 512
         } else if len < 1024 * 32 {
             // medium sized
-            too_much > 1024 * 8
+            too_much > 1024 * 4
         } else {
             // large
-            too_much > 1024 * 32
+            too_much > 1024 * 8
         }
     }
 

@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::{Bound, RangeBounds};
 
-use crate::{AnyBin, BinData, FnTable, SyncBin, UnsafeBin};
+use crate::{AnyBin, BinData, FnTable, SyncBin, UnSync, UnSyncRef, UnsafeBin};
 use std::borrow::Borrow;
 
 #[repr(C)]
@@ -48,6 +48,25 @@ impl AnyBin for Bin {
             Bound::Unbounded => self.len(),
         };
         (self.fn_table.slice)(self, start, end_excluded)
+    }
+}
+
+/// This does nothing, since `Bin` is already un-synchronized. Just returns itself.
+impl UnSync for Bin {
+    type Target = Bin;
+
+    #[inline]
+    fn un_sync(self) -> Self::Target {
+        self
+    }
+}
+
+/// This does nothing, since `Bin` is already un-synchronized. Just returns itself.
+impl UnSyncRef for Bin {
+    type Target = Bin;
+
+    fn un_sync_ref(&self) -> &Self::Target {
+        &self
     }
 }
 

@@ -1,7 +1,7 @@
 use core::slice;
 
-use crate::EmptyBin;
 use crate::{AnyBin, Bin, BinData, FnTable, SyncBin, UnsafeBin};
+use crate::{EmptyBin, UnSync};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();

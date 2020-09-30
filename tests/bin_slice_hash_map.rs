@@ -1,5 +1,5 @@
+use abin::{Bin, StaticBin, SyncBin, UnSync};
 use std::collections::HashMap;
-use abin::{StaticBin, Bin, SyncBin};
 
 /// binary is compatible with hash map.
 #[test]

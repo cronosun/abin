@@ -1,7 +1,7 @@
 use core::slice;
 use std::mem;
 
-use crate::{Bin, BinData, EmptyBin, FnTable, SyncBin, UnsafeBin};
+use crate::{Bin, BinData, EmptyBin, FnTable, SyncBin, UnSync, UnsafeBin};
 
 /// A binary from a static slice.
 pub struct StaticBin;

@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::RangeBounds;
 
-use crate::{AnyBin, Bin, UnsafeBin};
+use crate::{AnyBin, Bin, UnSync, UnSyncRef, UnsafeBin};
 
 pub struct SyncBin(pub(crate) Bin);
 
@@ -20,14 +20,21 @@ impl Into<Bin> for SyncBin {
     }
 }
 
-impl SyncBin {
-    #[inline]
-    pub fn un_sync(self) -> Bin {
-        self.0
-    }
+/// Returns the un-synchronized version of this binary.
+impl UnSync for SyncBin {
+    type Target = Bin;
 
     #[inline]
-    pub fn as_bin(&self) -> &Bin {
+    fn un_sync(self) -> Self::Target {
+        self.0
+    }
+}
+
+impl UnSyncRef for SyncBin {
+    type Target = Bin;
+
+    #[inline]
+    fn un_sync_ref(&self) -> &Self::Target {
         &self.0
     }
 }
@@ -35,7 +42,7 @@ impl SyncBin {
 impl AnyBin for SyncBin {
     #[inline]
     fn as_slice(&self) -> &[u8] {
-        self.as_bin().as_slice()
+        self.un_sync_ref().as_slice()
     }
 
     #[inline]
@@ -45,15 +52,15 @@ impl AnyBin for SyncBin {
 
     #[inline]
     fn len(&self) -> usize {
-        self.as_bin().len()
+        self.un_sync_ref().len()
     }
 
     #[inline]
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
-        where
-            TRange: RangeBounds<usize>,
+    where
+        TRange: RangeBounds<usize>,
     {
-        self.as_bin()
+        self.un_sync_ref()
             .slice(range)
             .map(|bin| unsafe { bin._into_sync() })
     }
@@ -61,7 +68,7 @@ impl AnyBin for SyncBin {
 
 impl Debug for SyncBin {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.as_bin().fmt(f)
+        self.un_sync_ref().fmt(f)
     }
 }
 
@@ -70,28 +77,28 @@ impl Eq for SyncBin {}
 impl PartialEq for SyncBin {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.as_bin() == other.as_bin()
+        self.un_sync_ref() == other.un_sync_ref()
     }
 }
 
 impl Ord for SyncBin {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
-        self.as_bin().cmp(other.as_bin())
+        self.un_sync_ref().cmp(other.un_sync_ref())
     }
 }
 
 impl PartialOrd for SyncBin {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.as_bin().partial_cmp(other.as_bin())
+        self.un_sync_ref().partial_cmp(other.un_sync_ref())
     }
 }
 
 impl Hash for SyncBin {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_bin().hash(state)
+        self.un_sync_ref().hash(state)
     }
 }
 
@@ -105,6 +112,6 @@ impl Clone for SyncBin {
 impl Borrow<[u8]> for SyncBin {
     #[inline]
     fn borrow(&self) -> &[u8] {
-        self.as_bin().as_slice()
+        self.un_sync_ref().as_slice()
     }
 }

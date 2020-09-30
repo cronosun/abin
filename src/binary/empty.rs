@@ -1,4 +1,4 @@
-use crate::{Bin, BinData, FnTable, SyncBin};
+use crate::{Bin, BinData, FnTable, SyncBin, UnSync};
 
 /// A binary that's always empty.
 pub struct EmptyBin;

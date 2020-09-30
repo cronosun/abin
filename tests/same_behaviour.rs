@@ -3,9 +3,9 @@ use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::ops::Range;
 
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, UnSync, VecBin};
 use utils::*;
 
 #[global_allocator]
