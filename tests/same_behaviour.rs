@@ -1,7 +1,9 @@
 use std::alloc::System;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use std::ops::Range;
 
-use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
+use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
 use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, VecBin};
 use utils::*;
@@ -11,7 +13,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-/// Tests whether a vec and a bin behave the same.
+/// Tests whether a vec/slice and a bin behave the same.
 #[test]
 fn test_same_behaviour_basics() {
     // make sure there are no leaks
@@ -67,18 +69,35 @@ fn same_behaviour(original: &[u8], bin: Bin) {
 fn same_behaviour_basics(original: &[u8], bin: &Bin) {
     assert_eq!(original.len(), bin.len(), "Same length");
     assert_eq!(original, bin.as_slice(), "Slice equality");
+    same_hash(original, bin);
 
-    // edge cases
+    // slice: edge cases
     check_slice(original, &bin, 0..0);
     check_slice(original, &bin, 0..1);
     check_slice(original, &bin, 1..0);
     check_slice(original, &bin, 1..1);
 
-    // out of range
+    // slice: out of range
     check_slice(original, &bin, 0..(bin.len() + 1));
     check_slice(original, &bin, 0..core::usize::MAX);
     // just within range
     check_slice(original, &bin, 0..bin.len());
+
+    let cloned_bin = bin.clone();
+    assert_eq!(bin, &cloned_bin);
+    assert_eq!(bin.partial_cmp(&cloned_bin), Some(Ordering::Equal));
+    assert_eq!(bin.cmp(&cloned_bin), Ordering::Equal);
+}
+
+/// a binary produces the same hash as a slice.
+fn same_hash(original: &[u8], bin: &Bin) {
+    let mut hasher1 = std::collections::hash_map::DefaultHasher::default();
+    original.hash(&mut hasher1);
+
+    let mut hasher2 = std::collections::hash_map::DefaultHasher::default();
+    bin.hash(&mut hasher2);
+
+    assert_eq!(hasher1.finish(), hasher2.finish());
 }
 
 fn check_slice(original: &[u8], bin: &Bin, range: Range<usize>) {

@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use std::ops::{Bound, RangeBounds};
 
 use crate::{AnyBin, BinData, FnTable, SyncBin, UnsafeBin};
+use std::borrow::Borrow;
 
 #[repr(C)]
 pub struct Bin {
@@ -102,6 +103,13 @@ impl Hash for Bin {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_slice().hash(state)
+    }
+}
+
+impl Borrow<[u8]> for Bin {
+    #[inline]
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
     }
 }
 

@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::RangeBounds;
+use std::borrow::Borrow;
 
-pub trait AnyBin: Clone + Debug + Eq + PartialEq + Hash + Ord + PartialOrd {
+pub trait AnyBin: Clone + Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Borrow<[u8]> {
     /// Returns slice-view into this binary.
     fn as_slice(&self) -> &[u8];
 

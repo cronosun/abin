@@ -1,10 +1,11 @@
-use std::ops::RangeBounds;
-
-use crate::{AnyBin, Bin, UnsafeBin};
 use core::fmt;
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
+use std::ops::RangeBounds;
+
+use crate::{AnyBin, Bin, UnsafeBin};
 
 pub struct SyncBin(pub(crate) Bin);
 
@@ -49,8 +50,8 @@ impl AnyBin for SyncBin {
 
     #[inline]
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
-    where
-        TRange: RangeBounds<usize>,
+        where
+            TRange: RangeBounds<usize>,
     {
         self.as_bin()
             .slice(range)
@@ -98,5 +99,12 @@ impl Clone for SyncBin {
     #[inline]
     fn clone(&self) -> Self {
         unsafe { self.0.clone()._into_sync() }
+    }
+}
+
+impl Borrow<[u8]> for SyncBin {
+    #[inline]
+    fn borrow(&self) -> &[u8] {
+        self.as_bin().as_slice()
     }
 }
