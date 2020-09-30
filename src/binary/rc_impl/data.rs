@@ -1,8 +1,7 @@
 use core::{mem, slice};
 
 use crate::{
-    is_shrink, Bin, BinData, DefaultVecCapShrink, RcCounter, RcDecResult, RcMeta, UnsafeBin,
-    VecCapShrink,
+    Bin, BinData, DefaultVecCapShrink, RcCounter, RcDecResult, RcMeta, RcUtils, UnsafeBin,
 };
 
 #[repr(C)]
@@ -54,7 +53,7 @@ impl<TCounter: RcCounter> RcData<TCounter> {
     #[inline]
     pub(crate) unsafe fn new_from_vec_raw(mut vec: Vec<u8>) -> Self {
         let meta = RcMeta::<TCounter>::initial(TCounter::new());
-        let meta = add_padding_and_metadata(&mut vec, meta);
+        let meta = RcUtils::add_padding_and_metadata(&mut vec, meta);
         // setup meta data
         let meta_mut = meta as *mut RcMeta<TCounter>;
         (*meta_mut).capacity = vec.capacity();
@@ -141,20 +140,21 @@ impl<TCounter: RcCounter> RcData<TCounter> {
                     let mut vec = unsafe { meta.extract_vec(self.data_len) };
                     // we also shrink the vector, why? If this is a slice, the vector might be
                     // way too large.
-                    Self::maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec);
+                    RcUtils::maybe_shrink_vec::<TCounter, DefaultVecCapShrink>(&mut vec);
                     vec
                 } else {
                     // no, unfortunately we can't use that vector. but extract it anyway, so
                     // it gets dropped.
                     let vec = unsafe { meta.extract_vec(self.data_len) };
-                    let new_vec = Self::slice_to_vec_with_meta_overhead(vec.as_slice());
+                    let new_vec =
+                        RcUtils::slice_to_vec_with_meta_overhead::<TCounter>(vec.as_slice());
                     new_vec
                 }
             }
             RcDecResult::More => {
                 // we definitely have to copy, there's still references.
                 let slice = self.as_slice();
-                Self::slice_to_vec_with_meta_overhead(slice)
+                RcUtils::slice_to_vec_with_meta_overhead::<TCounter>(slice)
             }
         }
     }
@@ -173,75 +173,5 @@ impl<TCounter: RcCounter> RcData<TCounter> {
         } else {
             None
         }
-    }
-
-    pub(crate) fn slice_to_vec_with_meta_overhead(slice: &[u8]) -> Vec<u8> {
-        let slice_len = slice.len();
-        let mut vec = Vec::with_capacity(slice_len + Self::meta_overhead());
-        vec.extend_from_slice(slice);
-        vec
-    }
-
-    /// Returns the additional bytes needed in a vector to store metadata. It's the maximum
-    /// padding (worst case) required plus the size of the meta-data.
-    #[inline]
-    pub(crate) fn meta_overhead() -> usize {
-        let alignment = mem::align_of::<RcMeta<TCounter>>();
-        let size = mem::size_of::<RcMeta<TCounter>>();
-        alignment - 1 + size
-    }
-
-    /// Might shrink the vector but sill keeps enough capacity for the metadata.
-    #[inline]
-    pub(crate) fn maybe_shrink_vec<T: VecCapShrink>(vec: &mut Vec<u8>) {
-        let len = vec.len();
-        if is_shrink::<T>(len, vec.capacity()) {
-            // leave enough space to re-use the vector as rc.
-            unsafe {
-                vec.set_len(len + Self::meta_overhead());
-            }
-            vec.shrink_to_fit();
-            unsafe {
-                vec.set_len(len);
-            }
-        }
-    }
-}
-
-/// adds padding and metadata but without altering the vector len. Returns a pointer to the
-/// metadata.
-#[inline]
-unsafe fn add_padding_and_metadata<TCounter: RcCounter>(
-    vec: &mut Vec<u8>,
-    meta: RcMeta<TCounter>,
-) -> *const RcMeta<TCounter> {
-    let len = vec.len();
-    let ptr = vec.as_ptr().add(vec.len());
-    let padding = padding(ptr, mem::align_of::<RcMeta<TCounter>>());
-    let padding_buf = [0u8; 16];
-    let padding_buf = &padding_buf[0..padding];
-    let meta_size = mem::size_of::<RcMeta<TCounter>>();
-    let required_capacity = padding + meta_size;
-    // this is a no-op if we already have enough capacity
-    vec.reserve(required_capacity);
-    vec.extend_from_slice(padding_buf);
-    let meta_ptr = ptr.add(padding) as *mut u8 as *mut RcMeta<TCounter>;
-    *meta_ptr = meta;
-    // restore the vector length to the original length
-    vec.set_len(len);
-    meta_ptr
-}
-
-#[inline]
-fn padding(ptr: *const u8, alignment: usize) -> usize {
-    let target = ptr as usize;
-    let remainder = target % alignment;
-    if remainder == 0 {
-        // nice, already aligned
-        0
-    } else {
-        let padding = alignment - remainder;
-        assert!(padding <= (alignment - 1));
-        padding
     }
 }

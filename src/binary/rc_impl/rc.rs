@@ -2,8 +2,8 @@ use core::mem;
 use std::marker::PhantomData;
 
 use crate::{
-    Bin, DefaultVecCapShrink, FnTable, NoVecCapShrink, NsRcCounter, RcCounter, RcData, StackBin,
-    SyncRcCounter, UnsafeBin, VecCapShrink,
+    Bin, DefaultVecCapShrink, FnTable, NoVecCapShrink, NsRcCounter, RcCounter, RcData, RcUtils,
+    StackBin, SyncRcCounter, UnsafeBin, VecCapShrink,
 };
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
@@ -21,7 +21,7 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
         if let Some(stack) = StackBin::try_from(vec.as_slice()) {
             stack.un_sync()
         } else {
-            RcData::<TConfig::TCounter>::maybe_shrink_vec::<T>(&mut vec);
+            RcUtils::maybe_shrink_vec::<TConfig::TCounter, T>(&mut vec);
             let rc_data = unsafe { RcData::<TConfig::TCounter>::new_from_vec_raw(vec) };
             unsafe { Bin::_new(rc_data.to_bin_data(), TConfig::table()) }
         }
@@ -32,7 +32,7 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
         if let Some(stack) = StackBin::try_from(slice) {
             stack.un_sync()
         } else {
-            let vec = RcData::<TConfig::TCounter>::slice_to_vec_with_meta_overhead(slice);
+            let vec = RcUtils::slice_to_vec_with_meta_overhead::<TConfig::TCounter>(slice);
             // we do not need capacity shrink (vector should already be ok).
             Self::from_with_cap_shrink::<NoVecCapShrink>(vec)
         }
@@ -40,7 +40,7 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
 
     #[inline]
     pub(crate) fn overhead_bytes() -> usize {
-        RcData::<TConfig::TCounter>::meta_overhead()
+        RcUtils::meta_overhead::<TConfig::TCounter>()
     }
 }
 

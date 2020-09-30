@@ -1,4 +1,10 @@
+use std::ops::RangeBounds;
+
 use crate::{AnyBin, Bin, UnsafeBin};
+use core::fmt;
+use std::cmp::Ordering;
+use std::fmt::{Debug, Formatter};
+use std::hash::{Hash, Hasher};
 
 pub struct SyncBin(pub(crate) Bin);
 
@@ -18,22 +24,73 @@ impl SyncBin {
     pub fn un_sync(self) -> Bin {
         self.0
     }
+
+    #[inline]
+    pub fn as_bin(&self) -> &Bin {
+        &self.0
+    }
 }
 
 impl AnyBin for SyncBin {
     #[inline]
     fn as_slice(&self) -> &[u8] {
-        self.0.as_slice()
+        self.as_bin().as_slice()
     }
 
     #[inline]
     fn into_vec(self) -> Vec<u8> {
-        self.0.into_vec()
+        self.un_sync().into_vec()
     }
 
     #[inline]
     fn len(&self) -> usize {
-        self.0.len()
+        self.as_bin().len()
+    }
+
+    #[inline]
+    fn slice<TRange>(&self, range: TRange) -> Option<Self>
+    where
+        TRange: RangeBounds<usize>,
+    {
+        self.as_bin()
+            .slice(range)
+            .map(|bin| unsafe { bin._into_sync() })
+    }
+}
+
+impl Debug for SyncBin {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.as_bin().fmt(f)
+    }
+}
+
+impl Eq for SyncBin {}
+
+impl PartialEq for SyncBin {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.as_bin() == other.as_bin()
+    }
+}
+
+impl Ord for SyncBin {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_bin().cmp(other.as_bin())
+    }
+}
+
+impl PartialOrd for SyncBin {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_bin().partial_cmp(other.as_bin())
+    }
+}
+
+impl Hash for SyncBin {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_bin().hash(state)
     }
 }
 

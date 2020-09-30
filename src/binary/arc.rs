@@ -9,7 +9,7 @@ impl AnyRc for ArcBin {
     type T = SyncBin;
 
     #[inline]
-    fn from(vec: Vec<u8>) -> Self::T {
+    fn from_vec(vec: Vec<u8>) -> Self::T {
         unsafe { AnyRcImpl::<AnyRcConfigForSync>::from_vec(vec)._into_sync() }
     }
 

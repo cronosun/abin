@@ -41,7 +41,7 @@ fn no_leak_2<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
-        let _bin1 = T::from(vec1);
+        let _bin1 = T::from_vec(vec1);
     })
 }
 
@@ -50,7 +50,7 @@ fn no_leak_3<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
-        let bin1 = T::from(vec1);
+        let bin1 = T::from_vec(vec1);
         let _bin11 = bin1.clone();
     })
 }
@@ -60,12 +60,12 @@ fn no_leak_4<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 255;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
-        let bin1 = T::from(vec1);
+        let bin1 = T::from_vec(vec1);
         {
             let _bin11 = bin1.clone();
         }
         let restored_vec = bin1.into_vec();
-        let bin2 = T::from(restored_vec);
+        let bin2 = T::from_vec(restored_vec);
         for idx in 0..20 {
             if idx % 2 == 0 {
                 bin2.clone().into_vec();
@@ -79,7 +79,7 @@ fn no_leak_4<T: AnyRc<T = TBin>, TBin: AnyBin>() {
 fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let vec_len = 1024 * 1024 * 32;
     let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
-    let bin1 = T::from(vec1);
+    let bin1 = T::from_vec(vec1);
     let _vec = mem_scoped(&GLOBAL, &MaNoAllocation, || {
         // no allocation, since 'bin1' is single reference
         bin1.into_vec()
@@ -98,9 +98,9 @@ fn assert_no_leak<T: AnyRc<T = TBin>, TBin: AnyBin>() {
         let vec2 = create_huge_allocation(vec_len, T::overhead_bytes());
         let vec3 = create_huge_allocation(vec_len, T::overhead_bytes());
 
-        let bin1 = T::from(vec1);
-        let bin2 = T::from(vec2);
-        let bin3 = T::from(vec3);
+        let bin1 = T::from_vec(vec1);
+        let bin2 = T::from_vec(vec2);
+        let bin3 = T::from_vec(vec3);
 
         // expected: about 3 * vec_len (the size of the 3 vectors)
         let change2 = reg.change_and_reset();

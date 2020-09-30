@@ -14,7 +14,7 @@ impl StaticBin {
         } else {
             let ptr = slice.as_ptr();
             let data = StaticBinData::new(ptr, len);
-            SyncBin(Bin::_const_new(unsafe { data.to_bin_data() }, &FN_TABLE))
+            SyncBin(unsafe { Bin::_new(data.to_bin_data(), &FN_TABLE) })
         }
     }
 }

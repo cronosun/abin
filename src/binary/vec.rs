@@ -14,7 +14,7 @@ pub struct VecBin;
 impl VecBin {
     /// See `Self::from_with_cap_shrink`.
     #[inline]
-    pub fn from(vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
+    pub fn from_vec(vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
         Self::from_with_cap_shrink::<DefaultVecCapShrink>(vec, allow_optimization)
     }
 

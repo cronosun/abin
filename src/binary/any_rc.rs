@@ -17,7 +17,7 @@ pub trait AnyRc {
     ///  * Note 3: If you manually create the vector using `Vec::with_capacity` make sure you
     /// reserve additional space for the reference count to avoid a re-allocation.
     /// See `Self::overhead_bytes`.
-    fn from(vec: Vec<u8>) -> Self::T;
+    fn from_vec(vec: Vec<u8>) -> Self::T;
 
     /// This creates a reference counted binary; this involves copying the given slice.
     fn copy_from_slice(slice: &[u8]) -> Self::T;

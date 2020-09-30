@@ -8,7 +8,7 @@ impl AnyRc for RcBin {
     type T = Bin;
 
     #[inline]
-    fn from(vec: Vec<u8>) -> Self::T {
+    fn from_vec(vec: Vec<u8>) -> Self::T {
         AnyRcImpl::<AnyRcConfigForNonSync>::from_vec(vec)
     }
 
