@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::ops::RangeBounds;
 
-use crate::{AnyBin, Bin, IntoIter, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
+use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
 /// A synchronized version (`Send + Sync`) of [Bin](struct.Bin.html). See
 /// also [AnyBin](trait.AnyBin.html).
@@ -86,6 +86,15 @@ impl AnyBin for SyncBin {
         self.un_sync_ref()
             .slice(range)
             .map(|bin| unsafe { bin._into_sync() })
+    }
+
+    #[inline]
+    fn try_to_re_integrate(&self, slice: &[u8]) -> Option<Self> {
+        unsafe {
+            self.un_sync_ref()
+                .try_to_re_integrate(slice)
+                .map(|bin| bin._into_sync())
+        }
     }
 }
 
@@ -182,5 +191,15 @@ impl Into<Vec<u8>> for SyncBin {
     #[inline]
     fn into(self) -> Vec<u8> {
         self.into_vec()
+    }
+}
+
+/// This is a no-op (it's already sync).
+impl IntoSync for SyncBin {
+    type Target = SyncBin;
+
+    #[inline]
+    fn into_sync(self) -> Self::Target {
+        self
     }
 }

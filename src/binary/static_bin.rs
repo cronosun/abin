@@ -70,6 +70,7 @@ const FN_TABLE: FnTable = FnTable {
     convert_into_un_sync: None,
     // not required: sync only.
     convert_into_sync: None,
+    try_re_integrate: Some(try_re_integrate),
 };
 
 #[inline]
@@ -101,6 +102,21 @@ fn slice(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     let new_slice = self_slice.get(start..end_excluded);
     if let Some(new_slice) = new_slice {
         Some(StaticBin::from(new_slice).un_sync())
+    } else {
+        None
+    }
+}
+
+fn try_re_integrate(bin: &Bin, slice: &[u8]) -> Option<Bin> {
+    let self_slice = as_slice(bin);
+    let start = (slice.as_ptr() as usize).checked_sub(self_slice.as_ptr() as usize);
+    if let Some(start) = start {
+        let new_slice = self_slice.get(start..(start + slice.len()));
+        if let Some(new_slice) = new_slice {
+            Some(StaticBin::from(new_slice).un_sync())
+        } else {
+            None
+        }
     } else {
         None
     }

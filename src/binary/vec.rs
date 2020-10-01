@@ -145,6 +145,8 @@ const FN_TABLE_NO_OPT: FnTable = FnTable {
     convert_into_un_sync: None,
     // not required: sync only
     convert_into_sync: None,
+    // not supported
+    try_re_integrate: None,
 };
 
 const FN_TABLE_OPT: FnTable = FnTable {
@@ -158,6 +160,8 @@ const FN_TABLE_OPT: FnTable = FnTable {
     convert_into_un_sync: None,
     // not required: sync only
     convert_into_sync: None,
+    // not supported
+    try_re_integrate: None,
 };
 
 fn drop(bin: &mut Bin) {

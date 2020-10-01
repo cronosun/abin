@@ -46,4 +46,20 @@ pub struct FnTable {
     /// IT IS NEVER allowed to return `None` here if this is not the synchronized version (this
     /// can't be checked by the compiler; it's in the responsibility of the implementer).
     pub convert_into_sync: Option<fn(bin: Bin) -> Bin>,
+
+    /// Tries to re-integrate the given slice into the given binary.
+    ///
+    /// Details: If the given binary is a slice of the given binary, it returns a re-integrated
+    /// version. Example: Say `bin` is a reference-counted binary from address 150 to 220
+    /// (length 70) and the given slice points to memory address 170 and has a length of 30,
+    /// this function returns a slice of the reference-counted binary (start 20, length 30).
+    ///
+    /// This is `None` if the binary type does not support re-integration altogether. This
+    /// function returns `None` if the given slice cannot be re-integrated. This method usually
+    /// makes only sense for reference-counted binaries or static binaries. This is purely an
+    /// optimization - it's valid to always return `None` here.
+    ///
+    /// IMPORTANT: If `bin` is a synchronized binary, the returned binary has to be
+    /// synchronized too.
+    pub try_re_integrate: Option<fn(bin: &Bin, slice: &[u8]) -> Option<Bin>>,
 }

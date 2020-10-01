@@ -1,7 +1,7 @@
 use std::alloc::System;
 
 use serde::{Deserialize, Serialize};
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{AnyBin, AnyRc, Bin, EmptyBin, RcBin, StackBin};
 use utils::*;

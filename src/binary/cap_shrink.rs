@@ -63,6 +63,7 @@ impl VecCapShrink for NoVecCapShrink {
     }
 }
 
+/// Whether to shrink the vector and if so, how much excess to keep.
 #[derive(Debug, Copy, Clone)]
 pub struct ShrinkResult(u32);
 
@@ -73,7 +74,7 @@ impl ShrinkResult {
         Self(core::u32::MAX)
     }
 
-    /// Shrinks the vector but keeps some remaining capacity.
+    /// Shrinks the vector but keeps some remaining excess.
     #[inline]
     pub fn shrink_with_remaining_excess(remaining_excess: u16) -> Self {
         Self(remaining_excess as u32)

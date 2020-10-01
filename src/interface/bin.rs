@@ -67,6 +67,15 @@ impl AnyBin for Bin {
         };
         (self.fn_table.slice)(self, start, end_excluded)
     }
+
+    #[inline]
+    fn try_to_re_integrate(&self, slice: &[u8]) -> Option<Self> {
+        if let Some(re_integrate_fn) = self.fn_table.try_re_integrate {
+            (re_integrate_fn)(self, slice)
+        } else {
+            None
+        }
+    }
 }
 
 /// This does nothing, since `Bin` is already un-synchronized (view). Just returns itself.

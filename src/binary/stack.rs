@@ -86,6 +86,8 @@ const FN_TABLE: FnTable = FnTable {
     convert_into_un_sync: None,
     // not required: there's only a sync version.
     convert_into_sync: None,
+    // not supported.
+    try_re_integrate: None,
 };
 
 #[inline]

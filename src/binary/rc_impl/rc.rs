@@ -88,6 +88,7 @@ const NON_SYNC_FN_TABLE: FnTable = FnTable {
     convert_into_un_sync: None,
     // required. Since this version is not sync.
     convert_into_sync: Some(convert_into_sync),
+    try_re_integrate: Some(try_re_integrate::<NsRcCounter>),
 };
 
 const SYNC_FN_TABLE: FnTable = FnTable {
@@ -101,6 +102,7 @@ const SYNC_FN_TABLE: FnTable = FnTable {
     convert_into_un_sync: Some(convert_into_un_sync),
     // not required, it's already sync
     convert_into_sync: None,
+    try_re_integrate: Some(try_re_integrate::<SyncRcCounter>),
 };
 
 fn drop<TCounter: RcCounter>(bin: &mut Bin) {
@@ -108,6 +110,7 @@ fn drop<TCounter: RcCounter>(bin: &mut Bin) {
     rc_data.drop();
 }
 
+#[inline]
 fn as_slice<TCounter: RcCounter + 'static>(bin: &Bin) -> &[u8] {
     let rc_data = unsafe { RcData::<TCounter>::from_bin(bin) };
     rc_data.as_slice()
@@ -132,6 +135,7 @@ fn into_vec<TCounter: RcCounter>(mut bin: Bin) -> Vec<u8> {
     vec
 }
 
+#[inline]
 fn slice<TCounter: RcCounter>(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     let rc_data = unsafe { RcData::<TCounter>::from_bin_mut_cast(bin) };
     if let Some(rc_data) = rc_data.slice(start, end_excluded) {
@@ -153,4 +157,14 @@ fn convert_into_un_sync(bin: Bin) -> Bin {
     let vec = into_vec::<SyncRcCounter>(bin);
     // and create a non-synced version
     AnyRcImpl::<AnyRcConfigForNonSync>::from_vec(vec)
+}
+
+fn try_re_integrate<TCounter: RcCounter + 'static>(bin: &Bin, slice_in: &[u8]) -> Option<Bin> {
+    let self_slice = as_slice::<TCounter>(bin);
+    let start = (slice_in.as_ptr() as usize).checked_sub(self_slice.as_ptr() as usize);
+    if let Some(start) = start {
+        slice::<TCounter>(bin, start, start + slice_in.len())
+    } else {
+        None
+    }
 }

@@ -33,6 +33,8 @@ const FN_TABLE: FnTable = FnTable {
     convert_into_un_sync: None,
     // not required: this is already the sync version.
     convert_into_sync: None,
+    // not supported.
+    try_re_integrate: None,
 };
 
 fn clone(_: &Bin) -> Bin {

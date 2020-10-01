@@ -1,3 +1,4 @@
+use crate::{IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef};
 use std::borrow::Borrow;
 use std::fmt::{Debug, LowerHex, UpperHex};
 use std::hash::Hash;
@@ -18,6 +19,10 @@ pub trait AnyBin:
     + LowerHex
     + UpperHex
     + Into<Vec<u8>>
+    + UnSyncRef
+    + IntoUnSyncView
+    + IntoUnSync
+    + IntoSync
 {
     /// Returns a view into this binary.
     fn as_slice(&self) -> &[u8];
@@ -65,4 +70,40 @@ pub trait AnyBin:
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
     where
         TRange: RangeBounds<usize>;
+
+    /// Tries to re-integrate the given slice into `self`. To some extent (not 100%), this is the
+    /// reverse of `as_slice`.
+    ///
+    /// Details: If the given binary is a slice of `self`, it returns a re-integrated
+    /// version. Example: Say `self` is a reference-counted binary from memory-address 150 to 220
+    /// (length 70) and the given slice points to memory address 170 and has a length of 30,
+    /// this function returns a slice of the reference-counted binary (start 20, length 30).
+    ///
+    /// This is `None` if the binary type does not support re-integration altogether. This
+    /// is `None` if the given slice cannot be re-integrated (for example if the given slice is
+    /// completely unrelated to `self` - is not within the managed memory of `self`). This method
+    /// makes sense for reference-counted binaries or static binaries. This is purely an
+    /// optimization - it's valid to always return `None` here.
+    ///
+    /// Use case: Say you got some `Vec<u8>` from the network, convert that to `RcBin` (A) and
+    /// then use that binary (A) to de-serialize some data (`Bin::as_slice`) using serde: When
+    /// de-serializing a `Bin` (B), this `Bin` (B) could then re-integrate itself into bin (A) and
+    /// thus prevent a memory-allocation; `Bin` (B) is then just a slice of `Bin` (A).
+    ///
+    /// ```rust
+    /// use abin::{StaticBin, AnyBin};
+    ///
+    /// let bin_a_slice = "this is some static binary".as_bytes();
+    /// let bin_a = StaticBin::from(bin_a_slice);
+    ///
+    /// let bin_b_slice = &bin_a.as_slice()[5..];
+    ///
+    /// // note: This does not allocate
+    /// let bin_b = bin_a.try_to_re_integrate(bin_b_slice).unwrap();
+    /// assert_eq!(bin_b.as_slice(), bin_b_slice);
+    ///
+    /// let bin_c_completely_unrelated_slice = "Something completely unrelated".as_bytes();
+    /// assert_eq!(None, bin_a.try_to_re_integrate(bin_c_completely_unrelated_slice));
+    /// ```
+    fn try_to_re_integrate(&self, slice: &[u8]) -> Option<Self>;
 }
