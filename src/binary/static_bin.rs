@@ -7,6 +7,15 @@ use crate::{Bin, BinData, EmptyBin, FnTable, IntoUnSyncView, SyncBin, UnsafeBin}
 pub struct StaticBin;
 
 impl StaticBin {
+    /// A static binary. Does never allocate memory.
+    ///
+    /// ```rust
+    /// use abin::{StaticBin, AnyBin};
+    ///
+    /// let slice = "Hello, world!".as_bytes();
+    /// let bin = StaticBin::from(slice);
+    /// assert_eq!(bin.as_slice(), slice);
+    /// ```
     pub fn from(slice: &'static [u8]) -> SyncBin {
         let len = slice.len();
         if len == 0 {

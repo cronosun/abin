@@ -133,6 +133,15 @@ pub fn use_bin(bin: Bin) {
 }
 ```
 
+## Important traits / structs
+
+ * `Bin` / `SyncBin`: The interfaces (structs) for all binary types.
+ * `AnyBin`: The trait `Bin` and `SyncBin` implement.
+ * `RcBin`, `ArcBin`, `StaticBin`, `VecBin`, `EmptyBin`: Implementations; they provide methods to construct `Bin` / `SyncBin`.
+ * `AnyRc`: The trait both reference-counted types implement.
+ * `IntoSync`, `IntoUnSyncView`, `UnSyncRef`, `IntoUnSync`: Convert `Bin` to `SyncBin` and vice-versa.
+ * `ChainSlicesIter`: Chain multiple binaries (slices) into one binary with just one single allocation.
+ 
 ## Design decisions / faq
 
 ### No `Deref<Target=[u8]>` for `Bin`/`SyncBin`

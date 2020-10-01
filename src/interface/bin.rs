@@ -11,6 +11,7 @@ use crate::{
     UnsafeBin,
 };
 
+/// A binary that does not implement `Send + Sync`. See also `SyncBin` and `AnyBin`.
 #[repr(C)]
 pub struct Bin {
     data: BinData,

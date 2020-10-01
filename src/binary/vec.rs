@@ -12,7 +12,27 @@ const TO_ARC_THRESHOLD_BYTES: usize = 2048;
 pub struct VecBin;
 
 impl VecBin {
-    /// See `Self::from_with_cap_shrink`.
+    /// Constructs `VecBin` from a `Vec<u8>`; see `Self::from_with_cap_shrink` for more details.
+    ///
+    /// ```rust
+    /// use abin::{VecBin, AnyBin, NoVecCapShrink};
+    /// let vec : Vec<u8> = (0..200).map(|item| (item + 4) as u8).collect();
+    /// let vec_address = vec.as_ptr();
+    /// let vec_len = vec.len();
+    /// let vec_capacity = vec.capacity();
+    ///
+    /// // constructed like this, the VecBin is just a wrapper for the vec.
+    /// let vec_bin = VecBin::from_with_cap_shrink::<NoVecCapShrink>(vec, false);
+    /// assert_eq!(200, vec_bin.len());
+    ///
+    /// // we can just un-wrap the wrapped vector (this does not allocate memory).
+    /// let original_vec = vec_bin.into_vec();
+    ///
+    /// // it's still the same vector.
+    /// assert_eq!(vec_address, original_vec.as_ptr());
+    /// assert_eq!(vec_len, original_vec.len());
+    /// assert_eq!(vec_capacity, original_vec.capacity());
+    /// ```
     #[inline]
     pub fn from_vec(vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
         Self::from_with_cap_shrink::<DefaultVecCapShrink>(vec, allow_optimization)

@@ -4,6 +4,18 @@ use crate::{Bin, BinData, FnTable, IntoUnSyncView, SyncBin};
 pub struct EmptyBin;
 
 impl EmptyBin {
+    /// Creates a new empty binary.
+    ///
+    /// ```rust
+    /// use abin::{EmptyBin, SyncBin, AnyBin};
+    ///
+    /// let bin : SyncBin = EmptyBin::new();
+    ///
+    /// assert_eq!(0, bin.len());
+    /// assert_eq!(&[] as &[u8], bin.as_slice());
+    /// assert_eq!(true, bin.is_empty());
+    /// assert_eq!(Vec::<u8>::new(), bin.into_vec());
+    /// ```
     #[inline]
     pub const fn new() -> SyncBin {
         SyncBin(Bin::_const_new(BinData::empty(), &FN_TABLE))

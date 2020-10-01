@@ -149,6 +149,23 @@ impl MemAssert for MaExactNumberOfDeAllocations {
     }
 }
 
+/// Must have exactly the number of given re-allocations.
+pub struct MaExactNumberOfReAllocations(pub usize);
+
+impl MemAssert for MaExactNumberOfReAllocations {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_re_allocations = change.reallocations;
+        if num_re_allocations != self.0 {
+            Err(format!(
+                "Expected to have exactly {} re-allocations (got {} re-allocations instead)",
+                self.0, num_re_allocations
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
 /// All asserts must hold.
 pub struct MaAnd<'a>(pub &'a [&'a dyn MemAssert]);
 

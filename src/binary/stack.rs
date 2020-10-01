@@ -19,6 +19,20 @@ impl StackBin {
     ///  * If it's empty, returns `EmptyBin::new()`.
     ///  * If the slice is small (less than the size of `BinData`) returns a stack binary.
     ///  * ...otherwise returns `None`.
+    ///
+    /// ```rust
+    /// use abin::{StackBin, SyncBin, AnyBin};
+    ///
+    /// let maximum_for_stack : Vec<u8> = (0..StackBin::max_len())
+    ///   .map(|item| (item*2) as u8).collect();
+    /// let bin : SyncBin = StackBin::try_from(maximum_for_stack.as_slice())
+    ///   .expect("StackBin::max_len() must fit onto the stack.");
+    /// assert_eq!(bin.as_slice(), maximum_for_stack.as_slice());
+    ///
+    /// let too_long_for_stack : Vec<u8> = (0..StackBin::max_len() + 1)
+    ///   .map(|item| (item*2) as u8).collect();
+    /// assert_eq!(None, StackBin::try_from(too_long_for_stack.as_slice()));
+    /// ```
     #[inline]
     pub fn try_from(slice: &[u8]) -> Option<SyncBin> {
         let len = slice.len();
@@ -27,7 +41,7 @@ impl StackBin {
             Some(EmptyBin::new())
         } else if len < BIN_DATA_LEN {
             // yes, this works (one byte is required for the length information)
-            let mut bin = unsafe { Bin::_new(BinData(core::ptr::null(), 0, 0), &FN_TABLE) };
+            let mut bin = unsafe { Bin::_new(BinData::empty(), &FN_TABLE) };
             let data_ptr = data_raw_mut(unsafe { bin._data_mut() });
             unsafe {
                 core::ptr::copy(slice.as_ptr(), data_ptr, len);
@@ -94,7 +108,7 @@ fn is_empty(bin: &Bin) -> bool {
 
 fn clone(bin: &Bin) -> Bin {
     let data = unsafe { bin._data() };
-    unsafe { Bin::_new(BinData(data.0, data.1, data.2), &FN_TABLE) }
+    unsafe { Bin::_new(data.clone(), &FN_TABLE) }
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {
