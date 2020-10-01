@@ -1,6 +1,6 @@
 ** DO NOT USE YET - WIP - NOT YET RELEASED **
 
-## Introduction
+# Introduction
 
 A utility library for working with binaries. It provides multiple implementations that all share the same interface (`AnyBin`, `struct Bin`/`struct SyncBin`). `Bin` and `SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free, and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`. The available implementations are:
 
@@ -18,7 +18,7 @@ It's similar to [https://crates.io/crates/bytes](https://crates.io/crates/bytes)
  * Provides a reference-counted binary without synchronization-overhead (`RcBin`).
  * ... see *Details* below for more differences.
 
-## Details / Highlights / Features
+# Details / Highlights / Features
 
 **Reduces allocations & memory usage**
 
@@ -133,7 +133,7 @@ pub fn use_bin(bin: Bin) {
 }
 ```
 
-## Important traits / structs
+# Important traits / structs
 
  * `Bin` / `SyncBin`: The interfaces (structs) for all binary types.
  * `AnyBin`: The trait `Bin` and `SyncBin` implement.
@@ -143,12 +143,101 @@ pub fn use_bin(bin: Bin) {
  * `ChainSlicesIter`: Chain multiple binaries (slices) into one binary with just one single allocation.
  * `AnyStr` (`Str` / `SyncStr`): `Bin`/`SyncBin` backed utf-8 strings.
  
-## Design decisions / faq
+# Design decisions / faq
 
-### No `Deref<Target=[u8]>` for `Bin`/`SyncBin`
+**No `Deref<Target=[u8]>` for `Bin`/`SyncBin`**
 
 I decided against implementing this for `Bin`/`SyncBin`. Reason: It's too easy to pick the wrong method if this is implemented; for instance there's `&[u8]::to_vec()` (which needs to allocate & copy) and there's `Bin::into_vec()` you most likely want to use. ... or `&[u8]::len()` and `Bin::len()` ... there's some change you pick the wrong operation.
 
-### No `From<T>` for `Bin`/`SyncBin`
+**No `From<T>` for `Bin`/`SyncBin`**
 
 I want `Bin`/`SyncBin` (interface) to be decoupled from the implementation (`RcBin`/`VecBin`...). Implementing `From<Vec<u8>>` for `Bin`/`SyncBin` would couple the interface to a certain implementation... the next question would arise: Which implementation to take? A `Bin` can be constructed from a `Vec<u8>` using `RcBin`, `ArcBin` and `VecBin`, which one is the correct implementation?  
+
+# Technical details
+
+## `Bin` / `SyncBin`
+
+`Bin` is just a struct with 3 data-fields, each data-field is of type `usize` (word) and a function-table. The function-table contains functions like `clone`, `drop`, `as_slice`, `slice` and is provided by the implementation. The meaning of the 3 data-type fields is unknown to `Bin` (that's implementation-specific). `SyncBin` is just a newtype of `Bin` that implements `Sync + Send`.
+
+It looks something like this (simplified):
+
+```
+struct Bin {
+    data_field_1 : usize,
+    data_field_2 : usize,
+    data_field_3 : usize,
+    function_table : &'static FunctionTable,
+}
+
+struct FunctionTable {
+    drop : fn(bin : &mut Bin),
+    clone : fn(bin : &bin) -> Bin,
+    ...
+}
+```
+
+## `RcBin` and `ArcBin`
+
+`RcBin` and `ArcBin` are basically a `Vec<u8>`. When `RcBin`/`ArcBin` is constructed, some meta-data is added to the `Vec<u8>`. This meta-data contains the reference-counter (and more). `RcBin` and `ArcBin` are identical except for the reference-counter (`RcBin` uses just a `usize`, `ArcBin` uses a `AtomicUsize`).
+
+`RcBin` and `ArcBin` can be sliced, that's the reason why `capacity` and `payload_ptr` is also stored in `Meta` (this information is required for freeing the memory). `RcBin.data_field_1` points to `Heap.payload` for rc-binaries that have not been sliced.
+
+```
+// stack
+struct RcBin : Bin {
+    data_field_1: pointer to somewhere inside [Heap.payload],
+    data_field_2: the length (usize),
+    data_field_3: pointer to [Heap.meta],
+    function_table: ... // function table for RcBin
+}
+
+// this is stored on the heap (one allocation; no indirection).
+struct Heap {
+  payload: [u8; ...],
+  padding: <padding for [Meta] alignment>,
+  meta: struct Meta {
+      payload_ptr: pointer back to [Heap.payload] (used for `mem::free`),
+      capacity: capacity (allocated heap memory) of [Heap] (used for `mem::free`),
+      reference_counter: usize or AtomicUsize (RcBin / ArcBin)
+  }  
+}
+```
+
+## `EmptyBin` / `StackBin`
+
+All 3 data-fields are ignored by `EmptyBin`. `StackBin` uses the 3 data fields to store the binary (except for the last byte, that's used for the length).
+
+```
+struct StackBin : Bin {
+    data_field_1: [u8; sizeof(usize)]
+    data_field_2: [u8; sizeof(usize)]
+    data_field_3: [u8; sizeof(usize) - 1][length : u8]
+    function_table: ... // function table for StackBin
+}
+```
+
+## `VecBin`
+
+`VecBin` just wraps a `Vec<u8>` (stack for `VecBin` and `Vec<u8>` is identical), it looks like this:
+
+```
+struct VecBin : Bin {
+    data_field_1: *const u8, // pointer to payload
+    data_field_2: usize, // length
+    data_field_3: usize, // capacity
+    function_table: ... // function table for VecBin
+}
+```
+
+## `StaticBin`
+
+`StaticBin` looks like this:
+
+```
+struct StackBin : Bin {
+    data_field_1: *const u8, // pointer to static data
+    data_field_2: usize, // length
+    data_field_3: _, // this field is not used for StaticBin
+    function_table: ... // function table for StackBin
+}
+```
