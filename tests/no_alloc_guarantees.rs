@@ -13,7 +13,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-/// This tests some guarantees that are given that do not stack-allocate.
+/// This tests some guarantees that are given that do not heap-allocate.
 #[test]
 fn no_alloc_guarantees() {
     empty();
@@ -56,7 +56,7 @@ fn small_binaries_are_stack_allocated() {
 }
 
 /// VecBin just wraps a vec and returns the same vec when `into_vec` is called (so no
-/// allocation in this case).
+/// allocation in that case).
 fn vec_bin_create_and_into_vec() {
     let bin_gen = BinGen::new(0, 200);
     let vec = bin_gen.generate_to_vec();
