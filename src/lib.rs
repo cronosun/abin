@@ -54,9 +54,9 @@
 //! }
 //! ```
 
-pub use {binary::*, interface::*, string::*};
+pub use {::serde::*, binary::*, interface::*, string::*};
 
 mod binary;
 mod interface;
+mod serde;
 mod string;
-

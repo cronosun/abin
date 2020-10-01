@@ -6,3 +6,4 @@
 * Make sure we implement all interfaces from Bytes (e.g. AsRef)
 * Serde (kann man de-serializen into owned ohne allocation?)
 * Cow
+* Bin.try_merge()
