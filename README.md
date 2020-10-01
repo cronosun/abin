@@ -56,7 +56,7 @@ If you don't like the implementations provided by this crate, you can implement 
 
 **Strings**
 
-There's also s string implementation available that's backed by the binaries provided by this crate.
+There's also s string implementation available that's backed by the binaries provided by this crate (see `AnyStr`, `Str` and `SyncStr`).
 
 **Map-friendly**
 
@@ -141,6 +141,7 @@ pub fn use_bin(bin: Bin) {
  * `AnyRc`: The trait both reference-counted types implement.
  * `IntoSync`, `IntoUnSyncView`, `UnSyncRef`, `IntoUnSync`: Convert `Bin` to `SyncBin` and vice-versa.
  * `ChainSlicesIter`: Chain multiple binaries (slices) into one binary with just one single allocation.
+ * `AnyStr` (`Str` / `SyncStr`): `Bin`/`SyncBin` backed utf-8 strings.
  
 ## Design decisions / faq
 
