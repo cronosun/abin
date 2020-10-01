@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{is_shrink, Bin, BinData, FnTable, IntoUnSyncView, NoVecCapShrink, SyncBin, UnsafeBin};
+use crate::{Bin, BinData, FnTable, IntoUnSyncView, maybe_shrink_vec, NoVecCapShrink, SyncBin, UnsafeBin};
 use crate::{AnyRc, ArcBin, DefaultVecCapShrink, StackBin, VecCapShrink};
 
 /// If this threshold is reached, clone and slice won't return a vec again, they will return
@@ -92,15 +92,9 @@ impl VecBin {
 
     #[inline]
     fn from_non_optimized<T: VecCapShrink>(mut vec: Vec<u8>, allow_optimization: bool) -> SyncBin {
+        maybe_shrink_vec::<T>(&mut vec, 0);
         let len = vec.len();
         let capacity = vec.capacity();
-        let shrink = is_shrink::<T>(len, capacity);
-        let (len, capacity) = if shrink {
-            vec.shrink_to_fit();
-            (vec.len(), vec.capacity())
-        } else {
-            (len, capacity)
-        };
 
         let ptr = vec.as_ptr();
         // make sure vector memory is not freed
