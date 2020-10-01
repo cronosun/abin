@@ -1,3 +1,6 @@
+/// Returns the un-synchronized view of self.
+///
+/// See also [UnSyncRef](trait.UnSyncRef.html) and [IntoUnSync](trait.IntoUnSync.html).
 pub trait IntoUnSyncView {
     type Target;
 
@@ -24,6 +27,9 @@ pub trait IntoUnSyncView {
     fn un_sync(self) -> Self::Target;
 }
 
+/// Returns the un-synchronized view of self (as reference).
+///
+/// See also [IntoUnSyncView](trait.IntoUnSyncView.html) and [IntoUnSync](trait.IntoUnSync.html).
 pub trait UnSyncRef {
     type Target;
 
@@ -47,10 +53,13 @@ pub trait UnSyncRef {
     fn un_sync_ref(&self) -> &Self::Target;
 }
 
+/// Converts self into the un-synchronized version.
+///
+/// See also [IntoUnSyncView](trait.IntoUnSyncView.html) and [UnSyncRef](trait.UnSyncRef.html).
 pub trait IntoUnSync {
     type Target;
 
-    /// Returns the un-synchronized version of self.
+    /// Converts self into the un-synchronized version.
     ///
     /// Note: Unlike the `IntoUnSyncView` this does not always just return a view, it might
     /// actually change the backend (depending on the implementation). This operation

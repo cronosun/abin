@@ -1,6 +1,6 @@
 use crate::Bin;
 
-/// The function table to be implemented for `Bin`.
+/// The function table to be implemented for [Bin](struct.Bin.html) types.
 ///
 /// Note: This is only required if you implement your own binary type.
 pub struct FnTable {

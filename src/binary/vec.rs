@@ -12,7 +12,8 @@ const TO_ARC_THRESHOLD_BYTES: usize = 2048;
 pub struct VecBin;
 
 impl VecBin {
-    /// Constructs `VecBin` from a `Vec<u8>`; see `Self::from_with_cap_shrink` for more details.
+    /// Constructs [VecBin](struct.VecBin.html) from a `Vec<u8>`; see `from_with_cap_shrink`
+    /// for more details.
     ///
     /// ```rust
     /// use abin::{VecBin, AnyBin, NoVecCapShrink};
@@ -43,10 +44,10 @@ impl VecBin {
     /// `allow_optimization`: If this is true, the implementation is allowed to perform
     /// optimizations: If the given vector is small, it's allowed to choose a stack-binary
     /// instead - if the vector is large (and has enough capacity for the reference counter),
-    /// it's allowed to use a `ArcBin` instead. This behaviour is also applied for `clone` and
-    /// `slice` (recursively). You most likely want this to be `true`; but if you just use `Bin`
-    /// as a container for `Vec<u8>` and then just unwrap it using `Bin::into_vec()` `false` might
-    /// be a good choice too.
+    /// it's allowed to use a [ArcBin](struct.ArcBin.html) instead. This behaviour is also
+    /// applied for `clone` and `slice` (recursively). You most likely want this to be `true`;
+    /// but if you just use [Bin](struct.Bin.html) as a container for `Vec<u8>` and then just
+    /// unwrap it using `Bin::into_vec()` `false` might be a good choice too.
     #[inline]
     pub fn from_with_cap_shrink<T: VecCapShrink>(
         vec: Vec<u8>,

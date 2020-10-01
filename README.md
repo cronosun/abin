@@ -2,7 +2,7 @@
 
 ## Introduction
 
-A utility library for working with bytes / binaries. It provides multiple implementations that all implement the 'interfaces' (actually structs) `Bin`/`SyncBin`. `Bin` and `SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`. The available implementations are:
+A utility library for working with binaries. It provides multiple implementations that all share the same interface (`AnyBin`, `struct Bin`/`struct SyncBin`). `Bin` and `SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free, and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`. The available implementations are:
 
  * `StaticBin`: A binary pointing to static data.
  * `VecBin`: A binary backed by a `Vec<u8>`.

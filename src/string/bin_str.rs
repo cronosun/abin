@@ -1,6 +1,6 @@
 use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, SyncStr};
 
-/// A string backed by `Bin` (not sync + send).
+/// A string backed by [Bin](struct.Bin.html) (not `Sync + Send`).
 pub type Str = AnyStr<Bin>;
 
 impl From<String> for Str {

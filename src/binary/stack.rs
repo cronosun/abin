@@ -16,8 +16,8 @@ pub struct StackBin;
 impl StackBin {
     /// Does those steps:
     ///
-    ///  * If it's empty, returns `EmptyBin::new()`.
-    ///  * If the slice is small (less than the size of `BinData`) returns a stack binary.
+    ///  * If it's empty, returns [EmptyBin](struct.EmptyBin.html)`::new()`.
+    ///  * If the slice is small (<= `max_len`) returns a stack binary.
     ///  * ...otherwise returns `None`.
     ///
     /// ```rust

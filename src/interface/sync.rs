@@ -1,13 +1,18 @@
+/// Converts this into a synchronized version.
+///
+/// See also [IntoUnSyncView](trait.IntoUnSyncView.html), [IntoUnSync](trait.IntoUnSync.html)
+/// and [UnSyncRef](trait.UnSyncRef.html).
 pub trait IntoSync {
     type Target;
 
     /// Converts this into a synchronized version.
     ///
     /// It's cheap if this is already backed by a synchronized implementation (or if it's just a
-    /// view). See also `IntoUnSyncView` / `IntoUnSync`. If it's not backed by a synchronized
-    /// implementation, this operation might be expensive: for instance if you apply this
-    /// operation on a reference-counted binary that's not synchronized and has multiple
-    /// references pointing to it, the data of the binary must be cloned.
+    /// view). See also [IntoUnSyncView](trait.IntoUnSyncView.html) /
+    /// [IntoUnSync](trait.IntoUnSync.html). If it's not
+    /// backed by a synchronized implementation, this operation might be expensive: for instance
+    /// if you apply this operation on a reference-counted binary that's not synchronized and has
+    /// multiple references pointing to it, the data of the binary must be cloned.
     ///
     /// ```rust
     /// use abin::{RcBin, AnyRc, Bin, SyncBin, IntoSync, AnyBin, ArcBin};

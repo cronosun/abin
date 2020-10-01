@@ -1,6 +1,6 @@
 use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, StaticBin, Str, SyncBin};
 
-/// A string backed by `SyncBin` (sync + send).
+/// A string backed by [SyncBin](struct.SyncBin.html) (`Sync + Send`).
 pub type SyncStr = AnyStr<SyncBin>;
 
 impl SyncStr {

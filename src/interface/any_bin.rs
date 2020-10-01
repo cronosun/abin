@@ -3,7 +3,7 @@ use std::fmt::{Debug, LowerHex, UpperHex};
 use std::hash::Hash;
 use std::ops::RangeBounds;
 
-/// Common trait implemented by `Bin` and `SyncBin`.
+/// Common trait implemented by [Bin](struct.Bin.html) and [SyncBin](struct.SyncBin.html).
 pub trait AnyBin:
     Clone
     + Debug

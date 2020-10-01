@@ -1,7 +1,7 @@
 use crate::{BinData, FnTable, SyncBin};
 
-/// Unsafe interface for `Bin`. This is only to be used if you want to implement your own
-/// binary type.
+/// Unsafe interface for [Bin](struct.Bin.html). This is only to be used if you want to
+/// implement your own binary type.
 pub unsafe trait UnsafeBin {
     unsafe fn _new(data: BinData, fn_table: &'static FnTable) -> Self;
     unsafe fn _data(&self) -> &BinData;

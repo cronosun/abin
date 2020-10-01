@@ -1,6 +1,6 @@
-/// An iterator that can be used for `AnyRc::from_iter` that guarantees one single allocation
-/// when chaining multiple slices into one binary (can also be used for other things, like for
-/// constructing a `Vec`).
+/// An iterator that can be used for [AnyRc](trait.AnyRc.html)`::from_iter` that guarantees one single
+/// allocation when chaining multiple slices into one binary (can also be used for other things,
+/// like for constructing a `Vec`).
 ///
 /// ```rust
 /// use abin::{StaticBin, EmptyBin, RcBin, AnyRc, ChainSlicesIter, AnyBin};

@@ -7,7 +7,8 @@ use std::ops::RangeBounds;
 
 use crate::{AnyBin, Bin, IntoIter, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
-/// A synchronized version (`Send + Sync`) of `Bin`. See also `AnyBin`.
+/// A synchronized version (`Send + Sync`) of [Bin](struct.Bin.html). See
+/// also [AnyBin](trait.AnyBin.html).
 pub struct SyncBin(pub(crate) Bin);
 
 unsafe impl Sync for SyncBin {}
