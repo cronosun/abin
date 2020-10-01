@@ -11,6 +11,7 @@ use crate::AnyBin;
 pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
+// TODO implement: From<'static str> -> From<String> -> Self::from_str()
 where
     TBin: AnyBin,
 {
@@ -19,7 +20,8 @@ where
     /// The given value must be valid UTF-8. If the value is not valid UTF-8, this method
     /// returns an error containing the original binary.
     #[inline]
-    pub fn from_utf8(value: TBin) -> Result<Self, AnyStrUtf8Error<TBin>> {
+    pub fn from_utf8(value: impl Into<TBin>) -> Result<Self, AnyStrUtf8Error<TBin>> {
+        let value = value.into();
         // check whether it's valid UTF8
         if let Err(err) = core::str::from_utf8(value.as_slice()) {
             Err(AnyStrUtf8Error::new(err, value))

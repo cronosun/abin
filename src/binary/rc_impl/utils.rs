@@ -1,10 +1,24 @@
 use core::mem;
+use std::iter::FromIterator;
 
-use crate::{is_shrink, RcCounter, RcMeta, VecCapShrink};
+use crate::{is_shrink, RcCounter, RcMeta, SizeHintExtendingIter, VecCapShrink};
 
 pub struct RcUtils;
 
 impl RcUtils {
+    /// Creates a vector with sufficient capacity for the meta-data from given iterator.
+    #[inline]
+    pub(crate) fn vec_with_capacity_for_rc_from_iter<TCounter: RcCounter, TIter>(
+        iter: TIter,
+    ) -> Vec<u8>
+    where
+        TIter: IntoIterator<Item = u8>,
+    {
+        let extend_size_by = Self::meta_overhead::<TCounter>();
+        let new_iter = SizeHintExtendingIter::new(iter.into_iter(), extend_size_by);
+        Vec::from_iter(new_iter)
+    }
+
     /// Shrinks the vector (if T says to do so) but sill keeps enough capacity for the metadata.
     #[inline]
     pub fn maybe_shrink_vec<TCounter: RcCounter, T: VecCapShrink>(vec: &mut Vec<u8>) {

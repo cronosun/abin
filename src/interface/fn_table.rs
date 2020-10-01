@@ -7,10 +7,15 @@ pub struct FnTable {
     /// Drop function. It's `None` if dropping is not required.
     pub drop: Option<fn(bin: &mut Bin)>,
 
-    pub as_slice: fn(bin: &Bin) -> &[u8],
+    /// Returns a slice of this binary.
+    ///
+    /// It's allowed to be `None` if this binary is always empty (constant).
+    pub as_slice: Option<fn(bin: &Bin) -> &[u8]>,
 
     /// True if this binary has a length of 0.
-    pub is_empty: fn(bin: &Bin) -> bool,
+    ///
+    /// It's allowed to be `None` if this binary is always empty (constant).
+    pub is_empty: Option<fn(bin: &Bin) -> bool>,
 
     /// Clones this type.
     ///
@@ -19,13 +24,15 @@ pub struct FnTable {
     /// implementer).
     pub clone: fn(bin: &Bin) -> Bin,
 
-    /// Converts this binary into a vector; Try to avoid allocation/memory-copy whenever possible.
+    /// Converts this binary into a vector; Tries to avoid allocation/memory-copy whenever possible.
     pub into_vec: fn(bin: Bin) -> Vec<u8>,
 
     /// Returns a slice of the given binary. Returns `None` if the given range is out of bounds.
+    ///
+    /// Important: If `bin` is synchronized, the returned `Bin` MUST be synchronized too.
     pub slice: fn(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin>,
 
-    /// Returns an un-synchronized version (not just a view).
+    /// Returns an un-synchronized version (not just a view - if there's an un-synchronized version).
     ///
     /// This is allowed to be `None` if:
     ///

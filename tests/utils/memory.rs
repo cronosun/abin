@@ -114,3 +114,49 @@ impl MemAssert for MaDoesAllocate {
         }
     }
 }
+
+/// Must have exactly the number of given allocations.
+pub struct MaExactNumberOfAllocations(pub usize);
+
+impl MemAssert for MaExactNumberOfAllocations {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_allocations = change.allocations;
+        if num_allocations != self.0 {
+            Err(format!(
+                "Expected to have exactly {} allocations (got {} allocations instead)",
+                self.0, num_allocations
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// Must have exactly the number of given de-allocations.
+pub struct MaExactNumberOfDeAllocations(pub usize);
+
+impl MemAssert for MaExactNumberOfDeAllocations {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_de_allocations = change.deallocations;
+        if num_de_allocations != self.0 {
+            Err(format!(
+                "Expected to have exactly {} de-allocations (got {} de-allocations instead)",
+                self.0, num_de_allocations
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// All asserts must hold.
+pub struct MaAnd<'a>(pub &'a [&'a dyn MemAssert]);
+
+impl<'a> MemAssert for MaAnd<'a> {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        for assert in self.0 {
+            assert.assert(change)?;
+        }
+        Ok(())
+    }
+}

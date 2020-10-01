@@ -1,10 +1,25 @@
 use std::borrow::Borrow;
-use std::fmt::Debug;
+use std::fmt::{Debug, LowerHex, UpperHex};
 use std::hash::Hash;
 use std::ops::RangeBounds;
 
-pub trait AnyBin: Clone + Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Borrow<[u8]> {
-    /// Returns slice-view into this binary.
+/// Common trait implemented by `Bin` and `SyncBin`.
+pub trait AnyBin:
+    Clone
+    + Debug
+    + Eq
+    + PartialEq
+    + Hash
+    + Ord
+    + PartialOrd
+    + Borrow<[u8]>
+    + AsRef<[u8]>
+    + IntoIterator<Item = u8>
+    + LowerHex
+    + UpperHex
+    + Into<Vec<u8>>
+{
+    /// Returns a view into this binary.
     fn as_slice(&self) -> &[u8];
 
     /// Converts this binary into a `Vec<u8>` - the implementation tries to avoid copying memory
@@ -13,6 +28,9 @@ pub trait AnyBin: Clone + Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Bor
 
     /// The length (number of bytes).
     fn len(&self) -> usize;
+
+    /// `true` if this binary is empty.
+    fn is_empty(&self) -> bool;
 
     /// Returns a slice if the given range is within bounds.
     ///

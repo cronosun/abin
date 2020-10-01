@@ -1,13 +1,14 @@
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::{Bound, RangeBounds};
 
 use crate::{
-    AnyBin, BinData, FnTable, IntoSync, IntoUnSync, IntoUnSyncView, SyncBin, UnSyncRef, UnsafeBin,
+    AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SyncBin, UnSyncRef,
+    UnsafeBin,
 };
 
 #[repr(C)]
@@ -21,7 +22,11 @@ pub struct Bin {
 impl AnyBin for Bin {
     #[inline]
     fn as_slice(&self) -> &[u8] {
-        (self.fn_table.as_slice)(self)
+        if let Some(as_slice_fn) = self.fn_table.as_slice {
+            (as_slice_fn)(self)
+        } else {
+            &[]
+        }
     }
 
     #[inline]
@@ -31,7 +36,16 @@ impl AnyBin for Bin {
 
     #[inline]
     fn len(&self) -> usize {
-        (self.fn_table.as_slice)(self).len()
+        self.as_slice().len()
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        if let Some(is_empty_fn) = self.fn_table.is_empty {
+            (is_empty_fn)(self)
+        } else {
+            true
+        }
     }
 
     #[inline]
@@ -163,6 +177,58 @@ impl Borrow<[u8]> for Bin {
     #[inline]
     fn borrow(&self) -> &[u8] {
         self.as_slice()
+    }
+}
+
+impl LowerHex for Bin {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for &b in self.as_slice() {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+
+impl UpperHex for Bin {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for &b in self.as_slice() {
+            write!(f, "{:02X}", b)?;
+        }
+        Ok(())
+    }
+}
+
+impl AsRef<[u8]> for Bin {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
+impl<'a> IntoIterator for &'a Bin {
+    type Item = &'a u8;
+    type IntoIter = core::slice::Iter<'a, u8>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.as_slice().into_iter()
+    }
+}
+
+impl IntoIterator for Bin {
+    type Item = u8;
+    type IntoIter = IntoIter<Bin>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter::new(self, 0)
+    }
+}
+
+impl Into<Vec<u8>> for Bin {
+    #[inline]
+    fn into(self) -> Vec<u8> {
+        self.into_vec()
     }
 }
 

@@ -1,11 +1,11 @@
 use core::fmt;
 use std::borrow::Borrow;
 use std::cmp::Ordering;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::ops::RangeBounds;
 
-use crate::{AnyBin, Bin, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
+use crate::{AnyBin, Bin, IntoIter, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
 pub struct SyncBin(pub(crate) Bin);
 
@@ -13,6 +13,8 @@ unsafe impl Sync for SyncBin {}
 
 unsafe impl Send for SyncBin {}
 
+/// Returns the un-synchronized view of this binary. (so it's the same as `IntoUnSyncView`;
+/// NOT `IntoUnSync`).
 impl Into<Bin> for SyncBin {
     #[inline]
     fn into(self) -> Bin {
@@ -70,6 +72,11 @@ impl AnyBin for SyncBin {
     }
 
     #[inline]
+    fn is_empty(&self) -> bool {
+        self.un_sync_ref().is_empty()
+    }
+
+    #[inline]
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
     where
         TRange: RangeBounds<usize>,
@@ -82,7 +89,7 @@ impl AnyBin for SyncBin {
 
 impl Debug for SyncBin {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.un_sync_ref().fmt(f)
+        Debug::fmt(self.un_sync_ref(), f)
     }
 }
 
@@ -127,5 +134,51 @@ impl Borrow<[u8]> for SyncBin {
     #[inline]
     fn borrow(&self) -> &[u8] {
         self.un_sync_ref().as_slice()
+    }
+}
+
+impl UpperHex for SyncBin {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        UpperHex::fmt(self.un_sync_ref(), f)
+    }
+}
+
+impl LowerHex for SyncBin {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        LowerHex::fmt(self.un_sync_ref(), f)
+    }
+}
+
+impl AsRef<[u8]> for SyncBin {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.un_sync_ref().as_slice()
+    }
+}
+
+impl<'a> IntoIterator for &'a SyncBin {
+    type Item = &'a u8;
+    type IntoIter = core::slice::Iter<'a, u8>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.un_sync_ref().as_slice().into_iter()
+    }
+}
+
+impl IntoIterator for SyncBin {
+    type Item = u8;
+    type IntoIter = IntoIter<SyncBin>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter::new(self, 0)
+    }
+}
+
+impl Into<Vec<u8>> for SyncBin {
+    #[inline]
+    fn into(self) -> Vec<u8> {
+        self.into_vec()
     }
 }

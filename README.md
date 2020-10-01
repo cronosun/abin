@@ -2,27 +2,27 @@
 
 ## Introduction
 
-A utility library for working with bytes / binaries. It provides multiple implementations that all share the same interface (`struct Bin`/`struct SyncBin`):
+A utility library for working with bytes / binaries. It provides multiple implementations that all implement the 'interfaces' (actually structs) `Bin`/`SyncBin`. `Bin` and `SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`. The available implementations are:
 
- * static (`StaticBin`): A binary pointing to static data.
- * vec (`VecBin`): A binary backed by a `Vec<u8>`.
- * reference-counted, non-synchronized (`RcBin`): Reference counted binary (without synchronization-overhead).
- * reference-counted, synchronized (`ArcBin`): Reference counted binary (with synchronization-overhead).
- * stack (`StackBin`): Stores small binaries on the stack.
- * empty (`EmpyBin`): For empty binaries (stack).  
+ * `StaticBin`: A binary pointing to static data.
+ * `VecBin`: A binary backed by a `Vec<u8>`.
+ * `RcBin`: Reference counted binary (without synchronization-overhead). (only implements `Bin`, not `SyncBin`).
+ * `ArcBin`: Reference counted binary (with synchronization-overhead).
+ * `StackBin`: Stores small binaries on the stack.
+ * `EmpyBin`: For empty binaries (stack).  
 
 It's similar to [https://crates.io/crates/bytes](https://crates.io/crates/bytes); these are the main differences:
 
  * It's extensible (you can provide your own binary type).
- * Provides a reference-counted binary without synchronization-overhead.
  * Stores small binaries on the stack.
+ * Provides a reference-counted binary without synchronization-overhead (`RcBin`).
  * ... see *Details* below for more differences.
 
 ## Details / Highlights / Features
 
 **Reduces allocations & memory usage**
 
-Many operations prevent allocation. There's a reference counted binary that can be cloned without allocating memory. Small binaries (up to 3 words minus one byte; 23 bytes on 64-bit platforms) can be stored in-line (on the stack).
+Many operations do not need memory-allocation / are zero-copy operations. There's a reference counted binary that can be cloned without allocating memory. Small binaries (up to 3 words minus one byte; 23 bytes on 64-bit platforms) can be stored in-line (on the stack).
 
 See [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs) for operations that are guaranteed to be alloc-free.
 
@@ -36,7 +36,7 @@ If you use `Rc<[u8]>`/`Arc<[u8]>` there's no possibility to convert `Vec<u8>` to
 
 This crate on the other hand supports reference counted binaries that can be constructed from a `Vec<u8>` without allocation*1 and still does not introduce another indirection. It does this by storing the metadata (like the reference-counter) inside the vector. 
 
-(*1): The vector must have some capacity left.
+(*1): The vector must have some capacity left (it's 3 word-aligned words; this is between 24 and 31 bytes on 64-bit platforms).
 
 **No synchronization when not needed**
 
@@ -137,5 +137,8 @@ pub fn use_bin(bin: Bin) {
 
 ### No `Deref<Target=[u8]>` for `Bin`/`SyncBin`
 
-I decided against implementing this for `Bin`/`SyncBin`. Reason: It's too easy to pick the wrong method if this is implemented; for instance there's `&[u8]::to_vec()` (which needs to allocate & copy) and there's `Bin::into_vec()` you most likely want to use. 
+I decided against implementing this for `Bin`/`SyncBin`. Reason: It's too easy to pick the wrong method if this is implemented; for instance there's `&[u8]::to_vec()` (which needs to allocate & copy) and there's `Bin::into_vec()` you most likely want to use. ... or `&[u8]::len()` and `Bin::len()` ... there's some change you pick the wrong operation.
 
+### No `From<T>` for `Bin`/`SyncBin`
+
+I want `Bin`/`SyncBin` (interface) to be decoupled from the implementation (`RcBin`/`VecBin`...). Implementing `From<Vec<u8>>` for `Bin`/`SyncBin` would couple the interface to a certain implementation... the next question would arise: Which implementation to take? A `Bin` can be constructed from a `Vec<u8>` using `RcBin`, `ArcBin` and `VecBin`, which one is the correct implementation?  

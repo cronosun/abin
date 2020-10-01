@@ -1,7 +1,9 @@
 use crate::VecCapShrink;
 
-/// Common trait for the synchronized and the non-synchronized reference counted binary.
+/// Common trait for the synchronized and the non-synchronized reference counted binary
+/// (`RcBin` and `ArcBin`).
 pub trait AnyRc {
+    /// The binary type produced.
     type T;
 
     /// Creates a reference counted binary from a vector while trying to avoid memory allocation &
@@ -21,6 +23,10 @@ pub trait AnyRc {
 
     /// This creates a reference counted binary; this involves copying the given slice.
     fn copy_from_slice(slice: &[u8]) -> Self::T;
+
+    /// This creates a reference counted binary; It will first create a vector (with enough
+    /// capacity for the meta-data) and then call `Self::from_vec`.
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T;
 
     /// This is the overhead required to store the reference count. It's typically about 7 bytes
     /// (32 bit reference count and up to 3 bytes of padding).

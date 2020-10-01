@@ -18,6 +18,11 @@ impl AnyRc for RcBin {
     }
 
     #[inline]
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
+        AnyRcImpl::<AnyRcConfigForNonSync>::from_iter(iter)
+    }
+
+    #[inline]
     fn overhead_bytes() -> usize {
         AnyRcImpl::<AnyRcConfigForNonSync>::overhead_bytes()
     }

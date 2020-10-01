@@ -52,8 +52,8 @@ impl StaticBinData {
 const FN_TABLE: FnTable = FnTable {
     // not required, no managed heap-memory
     drop: None,
-    as_slice,
-    is_empty,
+    as_slice: Some(as_slice),
+    is_empty: Some(is_empty),
     clone,
     into_vec,
     slice,

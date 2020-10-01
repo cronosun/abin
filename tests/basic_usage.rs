@@ -25,7 +25,8 @@ pub fn usage() {
     // no allocation for static data.
     let bin6 = StaticBin::from("Static data".as_bytes());
 
-    use_bin(bin1.un_sync()); // 'un_sync' is a cheap operation that converts SyncBin to Bin.
+    // 'un_sync' is a cheap operation that converts SyncBin to Bin. You can also use `Into` instead.
+    use_bin(bin1.un_sync());
     use_bin(bin2);
     use_bin(bin3);
     use_bin(bin4.un_sync());

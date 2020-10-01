@@ -19,6 +19,11 @@ impl AnyRc for ArcBin {
     }
 
     #[inline]
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
+        unsafe { AnyRcImpl::<AnyRcConfigForSync>::from_iter(iter)._into_sync() }
+    }
+
+    #[inline]
     fn overhead_bytes() -> usize {
         AnyRcImpl::<AnyRcConfigForSync>::overhead_bytes()
     }

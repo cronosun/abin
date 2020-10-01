@@ -17,6 +17,12 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
     }
 
     #[inline]
+    pub(crate) fn from_iter(iter: impl IntoIterator<Item = u8>) -> Bin {
+        let vec = RcUtils::vec_with_capacity_for_rc_from_iter::<TConfig::TCounter, _>(iter);
+        Self::from_vec(vec)
+    }
+
+    #[inline]
     pub(crate) fn from_with_cap_shrink<T: VecCapShrink>(mut vec: Vec<u8>) -> Bin {
         if let Some(stack) = StackBin::try_from(vec.as_slice()) {
             stack.un_sync()
@@ -73,8 +79,8 @@ pub trait AnyRcImplConfig {
 
 const NON_SYNC_FN_TABLE: FnTable = FnTable {
     drop: Some(drop::<NsRcCounter>),
-    as_slice: as_slice::<NsRcCounter>,
-    is_empty: is_empty::<NsRcCounter>,
+    as_slice: Some(as_slice::<NsRcCounter>),
+    is_empty: Some(is_empty::<NsRcCounter>),
     clone: clone::<NsRcCounter>,
     into_vec: into_vec::<NsRcCounter>,
     slice: slice::<NsRcCounter>,
@@ -86,8 +92,8 @@ const NON_SYNC_FN_TABLE: FnTable = FnTable {
 
 const SYNC_FN_TABLE: FnTable = FnTable {
     drop: Some(drop::<SyncRcCounter>),
-    as_slice: as_slice::<SyncRcCounter>,
-    is_empty: is_empty::<SyncRcCounter>,
+    as_slice: Some(as_slice::<SyncRcCounter>),
+    is_empty: Some(is_empty::<SyncRcCounter>),
     clone: clone::<SyncRcCounter>,
     into_vec: into_vec::<SyncRcCounter>,
     slice: slice::<SyncRcCounter>,

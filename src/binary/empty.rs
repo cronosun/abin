@@ -12,8 +12,8 @@ impl EmptyBin {
 
 const FN_TABLE: FnTable = FnTable {
     drop: None,
-    as_slice,
-    is_empty,
+    as_slice: None,
+    is_empty: None,
     clone,
     into_vec,
     slice,
@@ -22,14 +22,6 @@ const FN_TABLE: FnTable = FnTable {
     // not required: this is already the sync version.
     convert_into_sync: None,
 };
-
-fn as_slice(_: &Bin) -> &[u8] {
-    &[]
-}
-
-fn is_empty(_: &Bin) -> bool {
-    true
-}
 
 fn clone(_: &Bin) -> Bin {
     EmptyBin::new().un_sync()

@@ -119,8 +119,8 @@ impl VecData {
 
 const FN_TABLE_NO_OPT: FnTable = FnTable {
     drop: Some(drop),
-    as_slice,
-    is_empty,
+    as_slice: Some(as_slice),
+    is_empty: Some(is_empty),
     clone: clone_no_opt,
     into_vec,
     slice: slice_no_opt,
@@ -132,8 +132,8 @@ const FN_TABLE_NO_OPT: FnTable = FnTable {
 
 const FN_TABLE_OPT: FnTable = FnTable {
     drop: Some(drop),
-    as_slice,
-    is_empty,
+    as_slice: Some(as_slice),
+    is_empty: Some(is_empty),
     clone: clone_opt,
     into_vec,
     slice: slice_opt,
