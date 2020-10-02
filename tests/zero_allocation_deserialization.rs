@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, DefaultVecCapShrink, maybe_shrink_vec, SyncBin, serde_re_integrate};
+use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, DefaultVecCapShrink, maybe_shrink_vec, SyncBin, SyncStr};
 use utils::*;
 
 #[global_allocator]
@@ -13,6 +13,11 @@ pub mod utils;
 
 /// This demonstrates that it's possible to have a zero-allocation de-serialization. It's
 /// a client-server example.
+///
+/// The important thing here is (see `ServerRequest`):
+///
+/// * `#[serde(deserialize_with = "abin::ri_deserialize_sync_str")]`
+/// * `#[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]`
 #[test]
 fn zero_allocation_deserialization() {
     // no memory-leak is allowed of course
@@ -46,9 +51,8 @@ fn server_process_message(msg: Vec<u8>) {
     // create a scope for re-integration
     let scope_setup = DefaultScopes::sync(&msg_as_bin);
     // de-serialize
-    let request = scope_setup.scoped(|| {
-        serde_cbor::from_slice::<ServerRequest>(msg_as_bin.as_slice()).unwrap()
-    });
+    let request = scope_setup
+        .scoped(|| serde_cbor::from_slice::<ServerRequest>(msg_as_bin.as_slice()).unwrap());
 
     let (bin1, bin2) = (request.huge_binary_1, request.huge_binary_2);
 
@@ -83,8 +87,9 @@ fn database_process_message(command: DatabaseCommand) {
 #[derive(Deserialize, Serialize, Eq, PartialEq, Clone, Debug)]
 pub struct ServerRequest {
     pub request_id: u64,
-    //#[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
-    #[serde_re_integrate]
+    #[serde(deserialize_with = "abin::ri_deserialize_sync_str")]
+    pub user_name: SyncStr,
+    #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
     pub huge_binary_1: SyncBin,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
     pub huge_binary_2: SyncBin,
@@ -98,7 +103,14 @@ pub struct DatabaseCommand {
 fn create_server_request() -> ServerRequest {
     ServerRequest {
         request_id: 25,
-        huge_binary_1: ArcBin::from_vec(BinGen::new(0, 1024 * 32).generate_to_vec_shrink(ArcBin::overhead_bytes())),
-        huge_binary_2: ArcBin::from_vec(BinGen::new(0, 1024 * 16).generate_to_vec_shrink(ArcBin::overhead_bytes())),
+        user_name: SyncStr::from_static(
+            "a_very_long_user_name_that_does_not_fit_on_stack@my_long_server.com \
+            ['The user also has a readable name - this name is long too']"),
+        huge_binary_1: ArcBin::from_vec(
+            BinGen::new(0, 1024 * 32).generate_to_vec_shrink(ArcBin::overhead_bytes()),
+        ),
+        huge_binary_2: ArcBin::from_vec(
+            BinGen::new(0, 1024 * 16).generate_to_vec_shrink(ArcBin::overhead_bytes()),
+        ),
     }
 }

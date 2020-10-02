@@ -4,8 +4,9 @@ use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, StaticBin, Str, SyncBin};
 pub type SyncStr = AnyStr<SyncBin>;
 
 impl SyncStr {
+    /// Static string backed by [StaticBin](struct.StaticBin.html).
     #[inline]
-    pub fn from_static(string: &'static str) -> AnyStr<SyncBin> {
+    pub fn from_static(string: &'static str) -> Self {
         let static_bin = StaticBin::from(string.as_bytes());
         unsafe { Self::from_utf8_unchecked(static_bin) }
     }

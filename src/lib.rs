@@ -1,4 +1,4 @@
-//! A utility library for working with binaries. It provides multiple implementations that all
+//! A library for working with binaries. It provides multiple implementations that all
 //! share the same interface ([AnyBin](trait.AnyBin.html),
 //! [struct Bin](struct.Bin.html)/[struct SyncBin](struct.SyncBin.html)). [Bin](struct.Bin.html)
 //! and [SyncBin](struct.SyncBin.html) have no lifetime arguments, are sized (structs), easy
@@ -8,10 +8,14 @@
 //!
 //! The implementations are [EmptyBin](struct.EmptyBin.html), [RcBin](struct.RcBin.html),
 //! [ArcBin](struct.ArcBin.html), [VecBin](struct.VecBin.html), [StackBin](struct.StackBin.html)
-//! and [StaticBin](struct.StaticBin.html). Cutoms implementations are possible.
+//! and [StaticBin](struct.StaticBin.html). Custom implementations are possible.
 //!
 //! To work with strings (utf-8 strings), there's [AnyStr](struct.AnyStr.html)
-//! ([Str](type.Str.html) / [SyncStr](type.SyncStr.html)).
+//! ([Str](type.Str.html) / [SyncStr](type.SyncStr.html) backed by [struct Bin](struct.Bin.html)
+//! and [struct SyncBin](struct.SyncBin.html) respectively).
+//!
+//! Serde support is available. Zero-copy / zero-allocation de-serialization (under some
+//! conditions) is possible.
 //!
 //! ```rust
 //! use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, RcBin, StaticBin, VecBin};
@@ -54,17 +58,9 @@
 //! }
 //! ```
 
-pub use {serde_support::*, binary::*, interface::*, string::*};
-use proc_macro::TokenStream;
+pub use {binary::*, interface::*, serde_support::*, string::*};
 
 mod binary;
 mod interface;
 mod serde_support;
 mod string;
-
-#[proc_macro_attribute]
-pub fn re_integrate(attr: TokenStream, item: TokenStream) -> TokenStream {
-    //#[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
-}
-
-

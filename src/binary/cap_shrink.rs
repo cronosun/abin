@@ -91,10 +91,7 @@ impl ShrinkResult {
 ///
 /// `never_below_excess`: Makes sure to never shrink the vector below given excess.
 #[inline]
-pub fn maybe_shrink_vec<T: VecCapShrink>(
-    vec: &mut Vec<u8>,
-    never_below_excess: usize,
-) -> bool {
+pub fn maybe_shrink_vec<T: VecCapShrink>(vec: &mut Vec<u8>, never_below_excess: usize) -> bool {
     let len = vec.len();
     let capacity = vec.capacity();
     let excess = capacity - len;

@@ -1,8 +1,11 @@
 use std::alloc::System;
 
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NoVecCapShrink, RcBin, StackBin, StaticBin, VecBin};
+use abin::{
+    AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NoVecCapShrink, RcBin,
+    StackBin, StaticBin, VecBin,
+};
 use utils::*;
 
 #[global_allocator]

@@ -3,10 +3,10 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
-use std::ops::Deref;
+use std::ops::{Deref, RangeBounds};
 use std::str::Utf8Error;
 
-use crate::AnyBin;
+use crate::{AnyBin, StaticBin};
 
 /// A utf-8 string backed by [AnyBin](trait.AnyBin.html) ([Bin](struct.Bin.html) or
 /// [SyncBin](struct.SyncBin.html)), see also [Str](type.Str.html) and
@@ -15,8 +15,8 @@ pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
 // TODO implement: From<'static str> -> From<String> -> Self::from_str()
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     /// Converts the given value to a string.
     ///
@@ -54,8 +54,8 @@ where
 impl<TBin> Eq for AnyStr<TBin> where TBin: AnyBin {}
 
 impl<TBin> PartialEq for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn eq(&self, other: &Self) -> bool {
         self.as_str() == other.as_str()
@@ -63,8 +63,8 @@ where
 }
 
 impl<TBin> Ord for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_str().cmp(other.as_str())
@@ -72,8 +72,8 @@ where
 }
 
 impl<TBin> PartialOrd for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_str().partial_cmp(other.as_str())
@@ -81,8 +81,8 @@ where
 }
 
 impl<TBin> Hash for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
@@ -90,8 +90,8 @@ where
 }
 
 impl<TBin> Debug for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Debug::fmt(self.as_str(), f)
@@ -99,8 +99,8 @@ where
 }
 
 impl<TBin> Display for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self.as_str(), f)
@@ -108,8 +108,8 @@ where
 }
 
 impl<TBin> Into<String> for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     #[inline]
     fn into(self) -> String {
@@ -119,9 +119,19 @@ where
     }
 }
 
+impl<TBin> Clone for AnyStr<TBin>
+    where
+        TBin: AnyBin,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        unsafe { AnyStr::from_utf8_unchecked(self.0.clone()) }
+    }
+}
+
 impl<TBin> Deref for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     type Target = str;
 
@@ -132,8 +142,8 @@ where
 }
 
 impl<TBin> Borrow<str> for AnyStr<TBin>
-where
-    TBin: AnyBin,
+    where
+        TBin: AnyBin,
 {
     #[inline]
     fn borrow(&self) -> &str {

@@ -45,7 +45,7 @@ pub trait AnyRc {
     /// let chained = RcBin::from_iter(chain_slices);
     /// assert_eq!("static value, another binary".as_bytes(), chained.as_slice());
     /// ```
-    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T;
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T;
 
     /// Creates a reference counted binary from a vector while trying to avoid memory allocation &
     /// memory copy (best effort).

@@ -11,6 +11,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
+/// Demonstrates how to use serde;
 #[test]
 fn serialize_deserialize() {
     deserialize_serialize_small();

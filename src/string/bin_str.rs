@@ -1,20 +1,29 @@
-use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, SyncStr};
+use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, SyncStr, StaticBin};
 
 /// A string backed by [Bin](struct.Bin.html) (not `Sync + Send`).
 pub type Str = AnyStr<Bin>;
+
+impl Str {
+    /// Static string backed by [StaticBin](struct.StaticBin.html).
+    #[inline]
+    pub fn from_static(string: &'static str) -> Self {
+        let static_bin = StaticBin::from(string.as_bytes()).un_sync();
+        unsafe { Self::from_utf8_unchecked(static_bin) }
+    }
+}
 
 impl From<String> for Str {
     fn from(string: String) -> Self {
         let bytes = string.into_bytes();
         let bin = RcBin::from_vec(bytes);
-        unsafe { Str::from_utf8_unchecked(bin) }
+        unsafe { Self::from_utf8_unchecked(bin) }
     }
 }
 
 impl<'a> From<&'a str> for Str {
     fn from(string: &'a str) -> Self {
         let bin = RcBin::copy_from_slice(string.as_bytes());
-        unsafe { Str::from_utf8_unchecked(bin) }
+        unsafe { Self::from_utf8_unchecked(bin) }
     }
 }
 

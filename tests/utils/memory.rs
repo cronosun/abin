@@ -11,10 +11,10 @@ pub fn mem_scoped<'b, TGa, A, TFn, TRet>(
     mem_assert: &A,
     fun: TFn,
 ) -> TRet
-    where
-        TGa: GlobalAlloc + 'b,
-        A: MemAssert,
-        TFn: FnOnce() -> TRet,
+where
+    TGa: GlobalAlloc + 'b,
+    A: MemAssert,
+    TFn: FnOnce() -> TRet,
 {
     let this = Memory::new(alloc);
     this.scoped(mem_assert, fun)
@@ -26,9 +26,9 @@ impl<'a, T: GlobalAlloc + 'a> Memory<'a, T> {
     }
 
     pub fn scoped<A, TFn, TRet>(&self, mem_assert: &A, fun: TFn) -> TRet
-        where
-            A: MemAssert,
-            TFn: FnOnce() -> TRet,
+    where
+        A: MemAssert,
+        TFn: FnOnce() -> TRet,
     {
         let region = Region::new(self.alloc);
         let ret = fun();
