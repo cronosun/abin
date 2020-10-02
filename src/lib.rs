@@ -55,8 +55,16 @@
 //! ```
 
 pub use {serde_support::*, binary::*, interface::*, string::*};
+use proc_macro::TokenStream;
 
 mod binary;
 mod interface;
 mod serde_support;
 mod string;
+
+#[proc_macro_attribute]
+pub fn re_integrate(attr: TokenStream, item: TokenStream) -> TokenStream {
+    //#[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+}
+
+

@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, SyncBin, maybe_shrink_vec, DefaultVecCapShrink};
+use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, DefaultVecCapShrink, maybe_shrink_vec, SyncBin, serde_re_integrate};
 use utils::*;
 
 #[global_allocator]
@@ -11,26 +11,30 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-/// This demonstrates that it's possible to have a zero-allocation de-serialization.
+/// This demonstrates that it's possible to have a zero-allocation de-serialization. It's
+/// a client-server example.
 #[test]
 fn zero_allocation_deserialization() {
-    // serialization (this allocates) -> this happens on the client-side
-    let vec = {
-        let request = create_server_request();
-        // serialize
-        let mut vec = serde_cbor::to_vec(&request).unwrap();
-        // we need to 'tweak' the vec a bit to make sure there's no allocation and no re-allocation:
-        //  - if the excess is too large we'd get a re-allocation.
-        //  - if the excess is too small we'd get a allocation.
-        vec.reserve(ArcBin::overhead_bytes());
-        maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec, ArcBin::overhead_bytes());
-        vec
-    };
+    // no memory-leak is allowed of course
+    mem_scoped(&GLOBAL, &MaNoLeak, || {
+        // serialization (this allocates) -> this happens on the client-side
+        let vec = {
+            let request = create_server_request();
+            // serialize
+            let mut vec = serde_cbor::to_vec(&request).unwrap();
+            // we need to 'tweak' the vec a bit to make sure there's no allocation and no re-allocation:
+            //  - if the excess is too large we'd get a re-allocation.
+            //  - if the excess is too small we'd get a allocation.
+            vec.reserve(ArcBin::overhead_bytes());
+            maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec, ArcBin::overhead_bytes());
+            vec
+        };
 
-    // here the server gets the request (Vec<u8>) from the client...
-    // this is the de-serialization (it does not allocate).
-    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        server_process_message(vec);
+        // here the server gets the request (Vec<u8>) from the client...
+        // this is the de-serialization (it does not allocate).
+        mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
+            server_process_message(vec);
+        });
     });
 }
 
@@ -79,7 +83,8 @@ fn database_process_message(command: DatabaseCommand) {
 #[derive(Deserialize, Serialize, Eq, PartialEq, Clone, Debug)]
 pub struct ServerRequest {
     pub request_id: u64,
-    #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+    //#[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+    #[serde_re_integrate]
     pub huge_binary_1: SyncBin,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
     pub huge_binary_2: SyncBin,
