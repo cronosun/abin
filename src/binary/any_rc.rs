@@ -45,10 +45,14 @@ pub trait AnyRc {
     /// let chained = RcBin::from_iter(chain_slices);
     /// assert_eq!("static value, another binary".as_bytes(), chained.as_slice());
     /// ```
-    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T;
+    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T;
 
     /// Creates a reference counted binary from a vector while trying to avoid memory allocation &
     /// memory copy (best effort).
+    ///
+    /// Important: Make sure the given `Vec<u8>` has at least an excess (capacity - len) of
+    /// `Self::overhead_bytes`. If not, the binary can be created, but this function might allocate
+    /// memory and also some operations might need to allocate later (like `to_vec`, `into_sync`).
     ///
     ///  * Note 1: The given vector is used to store the reference count - this avoids (in
     /// most cases) another indirection and memory copy (best effort).
@@ -59,7 +63,7 @@ pub trait AnyRc {
     ///
     ///  * Note 3: If you manually create the vector using `Vec::with_capacity` make sure you
     /// reserve additional space for the reference count to avoid a re-allocation.
-    /// See `Self::overhead_bytes`.
+    /// See `Self::overhead_bytes`;
     ///
     /// ```rust
     /// use abin::{AnyRc, AnyBin, StackBin, ArcBin};

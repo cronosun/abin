@@ -91,7 +91,7 @@ impl ShrinkResult {
 ///
 /// `never_below_excess`: Makes sure to never shrink the vector below given excess.
 #[inline]
-pub(crate) fn maybe_shrink_vec<T: VecCapShrink>(
+pub fn maybe_shrink_vec<T: VecCapShrink>(
     vec: &mut Vec<u8>,
     never_below_excess: usize,
 ) -> bool {

@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, SyncBin};
+use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, SyncBin, maybe_shrink_vec, DefaultVecCapShrink};
 use utils::*;
 
 #[global_allocator]
@@ -19,7 +19,11 @@ fn zero_allocation_deserialization() {
         let request = create_server_request();
         // serialize
         let mut vec = serde_cbor::to_vec(&request).unwrap();
+        // we need to 'tweak' the vec a bit to make sure there's no allocation and no re-allocation:
+        //  - if the excess is too large we'd get a re-allocation.
+        //  - if the excess is too small we'd get a allocation.
         vec.reserve(ArcBin::overhead_bytes());
+        maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec, ArcBin::overhead_bytes());
         vec
     };
 

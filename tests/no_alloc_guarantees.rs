@@ -81,8 +81,8 @@ fn convert_into_sync_un_sync() {
 
     let bin_1 = EmptyBin::new().un_sync();
     let bin_2 = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::from_vec(vec.clone());
-    let bin_4 = ArcBin::from_vec(vec.clone()).un_sync();
+    let bin_3 = RcBin::copy_from_slice(vec.as_slice());
+    let bin_4 = ArcBin::copy_from_slice(vec.as_slice()).un_sync();
     let bin_5 = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
     let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7 = VecBin::from_vec(vec, false).un_sync();
@@ -180,8 +180,8 @@ fn into_vec_does_not_allocate() {
 
     let bin_1 = EmptyBin::new().un_sync();
     let bin_2_allocates = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::from_vec(vec.clone());
-    let bin_4 = ArcBin::from_vec(vec.clone()).un_sync();
+    let bin_3 = RcBin::copy_from_slice(vec.as_slice());
+    let bin_4 = ArcBin::copy_from_slice(vec.as_slice()).un_sync();
     let bin_5_allocates = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
     let bin_6_allocates = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7 = VecBin::from_vec(vec, false).un_sync();
@@ -215,7 +215,7 @@ fn into_vec_does_not_allocate() {
 
 /// Creating a rc is alloc free under some conditions:
 ///
-///   * Enough capacity (see `AnyRc::overhead_bytes()`)
+///   * Given vec has enough capacity (see `AnyRc::overhead_bytes()`)
 ///   * Do not use a capacity shrinker (or use a vec that does not have too much excess).
 fn rc_from_vec() {
     let generator = BinGen::new(0, 1024 * 32);
