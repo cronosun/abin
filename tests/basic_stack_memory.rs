@@ -43,7 +43,7 @@ fn rc_uses_stack_no_alloc<T: AnyRc<T = TBin>, TBin: AnyBin>() {
 fn vec_uses_stack_no_alloc() {
     let slice = [15u8; StackBin::max_len()];
     let vec = slice.to_vec();
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         VecBin::from_vec(vec, true);
     });
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {

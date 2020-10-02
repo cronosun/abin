@@ -1,15 +1,21 @@
 use serde::Deserializer;
 
+use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
 use crate::{AnyRc, ArcBin, Bin, RcBin, SyncBin};
-use crate::serde::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
 
-/// Performs re-integration de-serialization for `Bin`, see `#[serde(serialize_with = "path")]`.
-pub fn ri_deserialize_bin<'de, D>(deserialize: D) -> Result<Bin, D::Error> where D: Deserializer<'de> {
+/// Performs re-integration de-serialization for `Bin`, see `#[serde(deserialize_with = "path")]`.
+pub fn ri_deserialize_bin<'de, D>(deserialize: D) -> Result<Bin, D::Error>
+where
+    D: Deserializer<'de>,
+{
     deserialize.deserialize_bytes(ReIntegrationBytesVisitor::<BinReIntegrator>::new())
 }
 
-/// Performs re-integration de-serialization for `SyncBin`, see `#[serde(serialize_with = "path")]`.
-pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SyncBin, D::Error> where D: Deserializer<'de> {
+/// Performs re-integration de-serialization for `SyncBin`, see `#[serde(deserialize_with = "path")]`.
+pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SyncBin, D::Error>
+where
+    D: Deserializer<'de>,
+{
     deserialize.deserialize_bytes(ReIntegrationBytesVisitor::<SyncBinReIntegrator>::new())
 }
 
@@ -41,7 +47,6 @@ impl ReIntegrator for BinReIntegrator {
         RcBin::overhead_bytes()
     }
 }
-
 
 /// re-integrator for `SyncBin`.
 struct SyncBinReIntegrator {}

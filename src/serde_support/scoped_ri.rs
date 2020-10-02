@@ -1,5 +1,5 @@
-use core::mem;
 use core::cell::RefCell;
+use core::mem;
 use std::{marker::PhantomData, ops::Deref};
 
 use crate::{Bin, SyncBin};
@@ -11,7 +11,7 @@ std::thread_local! {
 /// This struct contains functions that give access to the re-integration scope.
 pub struct RiScope {
     // pure static
-    _phantom: PhantomData<()>
+    _phantom: PhantomData<()>,
 }
 
 impl RiScope {
@@ -65,9 +65,11 @@ pub struct ScopedRiSetup<'a> {
 }
 
 impl<'a> ScopedRiSetup<'a> {
-    pub fn new(binaries: Binaries<'a>,
-               re_integration_fn: ReIntegrationFn,
-               sync_re_integration_fn: SyncReIntegrationSync) -> Self {
+    pub fn new(
+        binaries: Binaries<'a>,
+        re_integration_fn: ReIntegrationFn,
+        sync_re_integration_fn: SyncReIntegrationSync,
+    ) -> Self {
         Self {
             binaries,
             re_integration_fn,
@@ -79,8 +81,8 @@ impl<'a> ScopedRiSetup<'a> {
 impl<'a> ScopedRiSetup<'a> {
     #[inline]
     pub fn scoped<TFn, TRet>(&self, fun: TFn) -> TRet
-        where
-            TFn: FnOnce() -> TRet,
+    where
+        TFn: FnOnce() -> TRet,
     {
         THREAD_LOCAL_BIN.with(|tl_value| {
             // save the previous value (in case we nest scopes).
@@ -90,10 +92,15 @@ impl<'a> ScopedRiSetup<'a> {
             // is important, since we messed with lifetimes -> 'a to 'static ... so we have
             // to make sure it is NEVER accesses outside the scope). This is dropped at the
             // end of this scope.
-            let cleanup_on_drop = CleanupOnDrop { cell: tl_value, previous_value };
+            let cleanup_on_drop = CleanupOnDrop {
+                cell: tl_value,
+                previous_value,
+            };
 
             // new thread-local-value
-            let this = unsafe { mem::transmute::<&ScopedRiSetup<'a>, *const ScopedRiSetup<'static>>(self) };
+            let this = unsafe {
+                mem::transmute::<&ScopedRiSetup<'a>, *const ScopedRiSetup<'static>>(self)
+            };
             tl_value.replace(Some(this));
 
             let result = fun();
@@ -114,8 +121,7 @@ pub struct Binaries<'a> {
 }
 
 impl<'a> Binaries<'a> {
-    pub fn new(bin: Option<&'a Bin>,
-               sync_bin: Option<&'a SyncBin>, ) -> Self {
+    pub fn new(bin: Option<&'a Bin>, sync_bin: Option<&'a SyncBin>) -> Self {
         Self { bin, sync_bin }
     }
 

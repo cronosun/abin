@@ -12,7 +12,7 @@ static SAFE_MAX_LEN: usize = 256 * 1024;
 static GUESSED_LEN: usize = 256;
 
 pub struct ReIntegrationBytesVisitor<TReIntegrator> {
-    _phantom: PhantomData<TReIntegrator>
+    _phantom: PhantomData<TReIntegrator>,
 }
 
 impl<TReIntegrator> ReIntegrationBytesVisitor<TReIntegrator> {
@@ -31,8 +31,8 @@ pub trait ReIntegrator {
 }
 
 impl<'de, TReIntegrator> Visitor<'de> for ReIntegrationBytesVisitor<TReIntegrator>
-    where
-        TReIntegrator: ReIntegrator,
+where
+    TReIntegrator: ReIntegrator,
 {
     type Value = TReIntegrator::TBin;
 
@@ -42,40 +42,40 @@ impl<'de, TReIntegrator> Visitor<'de> for ReIntegrationBytesVisitor<TReIntegrato
 
     #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::re_integrate(v.as_bytes()))
     }
 
     #[inline]
     fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::vec(v.into_bytes()))
     }
 
     #[inline]
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::re_integrate(v))
     }
 
     #[inline]
     fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::vec(v))
     }
 
     #[inline]
     fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-        where
-            V: de::SeqAccess<'de>,
+    where
+        V: de::SeqAccess<'de>,
     {
         let capacity = if let Some(known_len) = seq.size_hint() {
             // note: We limit it to 'SAFE_MAX_LEN' in case there's a problem with the input data.

@@ -11,10 +11,10 @@ pub fn mem_scoped<'b, TGa, A, TFn, TRet>(
     mem_assert: &A,
     fun: TFn,
 ) -> TRet
-where
-    TGa: GlobalAlloc + 'b,
-    A: MemAssert,
-    TFn: FnOnce() -> TRet,
+    where
+        TGa: GlobalAlloc + 'b,
+        A: MemAssert,
+        TFn: FnOnce() -> TRet,
 {
     let this = Memory::new(alloc);
     this.scoped(mem_assert, fun)
@@ -26,9 +26,9 @@ impl<'a, T: GlobalAlloc + 'a> Memory<'a, T> {
     }
 
     pub fn scoped<A, TFn, TRet>(&self, mem_assert: &A, fun: TFn) -> TRet
-    where
-        A: MemAssert,
-        TFn: FnOnce() -> TRet,
+        where
+            A: MemAssert,
+            TFn: FnOnce() -> TRet,
     {
         let region = Region::new(self.alloc);
         let ret = fun();
@@ -81,16 +81,35 @@ impl MemAssert for MaNoAllocNoDealloc {
     }
 }
 
-/// Only de-allocations allowed.
-pub struct MaOnlyDeAllocation;
+/// No allocation allowed.
+pub struct MaNoAlloc;
 
-impl MemAssert for MaOnlyDeAllocation {
+impl MemAssert for MaNoAlloc {
     fn assert(&self, change: Stats) -> Result<(), String> {
         let num_allocations = change.allocations;
         if num_allocations != 0 {
             Err(format!(
                 "Expected to have no allocation (#op alloc: {})",
                 num_allocations
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// No allocation allowed, no re-allocation allowed.
+pub struct MaNoAllocNoReAlloc;
+
+impl MemAssert for MaNoAllocNoReAlloc {
+    fn assert(&self, change: Stats) -> Result<(), String> {
+        let num_allocations = change.allocations;
+        let num_re_allocations = change.reallocations;
+        if num_allocations != 0 || num_re_allocations != 0 {
+            Err(format!(
+                "Expected to have no allocation & no re-allocation (#op alloc: {}, # op re-alloc: {})",
+                num_allocations,
+                num_re_allocations
             ))
         } else {
             Ok(())

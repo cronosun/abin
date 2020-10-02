@@ -42,7 +42,7 @@ fn small_binaries_are_stack_allocated() {
     let max_stack_alloc_vec_1 = generate_small_vec_that_fits_on_stack();
     let max_stack_alloc_vec_2 = generate_small_vec_that_fits_on_stack();
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         RcBin::from_vec(empty_vec_1);
         RcBin::copy_from_slice(empty_slice);
         ArcBin::from_vec(empty_vec_2);
@@ -63,7 +63,7 @@ fn vec_bin_create_and_into_vec() {
     // this of course needs to allocate, that's why it's outside 'mem_scoped'.
     let vec_bin_copy_from_slice = VecBin::copy_from_slice(vec.as_slice(), false);
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // no allocation
         let vec_bin = VecBin::from_vec(vec, false);
         // and get the vector back
@@ -89,7 +89,7 @@ fn convert_into_sync_un_sync() {
     let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7 = VecBin::from_vec(vec, false).un_sync();
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // convert to sync
         let sync_bin1 = bin_1.into_sync();
         let sync_bin2 = bin_2.into_sync();
@@ -125,7 +125,7 @@ fn no_alloc_clone() {
     let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7_allocates = VecBin::from_vec(vec, false).un_sync();
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // empty bin is stack-only; so never allocates.
         let _ignored = bin_1.clone();
         let _ignored = bin_2.clone();
@@ -157,7 +157,7 @@ fn slice_does_not_allocate() {
     let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7_allocates = VecBin::from_vec(vec, false).un_sync();
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // empty bin is stack-only; so never allocates.
         assert_eq!(&[] as &[u8], bin_1.slice(0..0).unwrap().as_slice());
         assert_eq!("ello".as_bytes(), bin_2.slice(1..5).unwrap().as_slice());
@@ -188,7 +188,7 @@ fn into_vec_does_not_allocate() {
     let bin_6_allocates = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
     let bin_7 = VecBin::from_vec(vec, false).un_sync();
 
-    mem_scoped(&GLOBAL, &MaOnlyDeAllocation, || {
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // returns an empty vec
         assert_eq!(bin_1.into_vec(), Vec::new());
         // reference-counted binaries do not allocate unless there are multiple references pointing to them.
