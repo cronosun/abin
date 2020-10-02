@@ -1,11 +1,8 @@
 use std::alloc::System;
 
-use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
+use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{
-    AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, RcBin, StackBin,
-    StaticBin, VecBin,
-};
+use abin::{AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NoVecCapShrink, RcBin, StackBin, StaticBin, VecBin};
 use utils::*;
 
 #[global_allocator]
@@ -23,6 +20,7 @@ fn no_alloc_guarantees() {
     no_alloc_clone();
     slice_does_not_allocate();
     into_vec_does_not_allocate();
+    rc_from_vec();
 }
 
 /// The empty binary is stored on the stack; so no allocation here.
@@ -212,6 +210,35 @@ fn into_vec_does_not_allocate() {
         // THIS DOES ALLOCATE
         // it's saved on the stack, so we have to allocate.
         bin_6_allocates.into_vec();
+    });
+}
+
+/// Creating a rc is alloc free under some conditions:
+///
+///   * Enough capacity (see `AnyRc::overhead_bytes()`)
+///   * Do not use a capacity shrinker (or use a vec that does not have too much excess).
+fn rc_from_vec() {
+    let generator = BinGen::new(0, 1024 * 32);
+
+    let vec_for_sync = generator.generate_to_vec_shrink(ArcBin::overhead_bytes());
+    let vec_for_non_sync = generator.generate_to_vec_shrink(RcBin::overhead_bytes());
+
+    // reserve additional 64k (excess)
+    let mut vec_for_sync_much_excess = generator.generate_to_vec();
+    vec_for_sync_much_excess.reserve(1024 * 64);
+    let mut vec_for_non_sync_much_excess = generator.generate_to_vec();
+    vec_for_non_sync_much_excess.reserve(1024 * 64);
+
+    let (_, _, _, _) = mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
+        let bin1 = ArcBin::from_vec(vec_for_sync);
+        let bin2 = RcBin::from_vec(vec_for_non_sync);
+
+        // can also construct from a vec with much excess (but in this case, we have to choose a
+        // different shrinker).
+        let bin3 = ArcBin::from_with_cap_shrink::<NoVecCapShrink>(vec_for_sync_much_excess);
+        let bin4 = ArcBin::from_with_cap_shrink::<NoVecCapShrink>(vec_for_non_sync_much_excess);
+
+        (bin1, bin2, bin3, bin4)
     });
 }
 
