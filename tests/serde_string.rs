@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{AnyBin, AnyRc, Bin, EmptyBin, RcBin, StackBin, Str};
+use abin::{AnyBin, Bin, Str};
 use utils::*;
 
 #[global_allocator]

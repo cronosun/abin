@@ -1,6 +1,7 @@
 use crate::{AnyBin, ExcessShrink};
 
 pub trait Factory {
+    /// The type this factory produces.
     type T: AnyBin;
 
     fn empty() -> Self::T;

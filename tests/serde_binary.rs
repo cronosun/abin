@@ -3,13 +3,16 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, Bin, EmptyBin, RcBin, StackBin};
+use abin::{AnyBin, Bin, New, Factory};
 use utils::*;
 
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
+
+/// Conservative length (to make sure this fits on the stack on every platform).
+const STACK_BIN_LEN : usize = 3;
 
 /// Demonstrates how to use serde;
 #[test]
@@ -21,13 +24,13 @@ fn serialize_deserialize() {
 /// De-serialization / serialization with small binaries that can be stack-allocated
 /// (no allocation).
 fn deserialize_serialize_small() {
-    let item_vec = BinGen::new(0, StackBin::max_len()).generate_to_vec();
-    let item_2_vec = EmptyBin::new();
+    let item_vec = BinGen::new(0, STACK_BIN_LEN).generate_to_vec();
+    let item_2_vec = New::empty();
 
     let original = Entity {
         id: 45,
-        item: RcBin::copy_from_slice(item_vec.as_slice()),
-        item_2: RcBin::copy_from_slice(item_2_vec.as_slice()),
+        item: New::copy_from_slice(item_vec.as_slice()),
+        item_2: New::copy_from_slice(item_2_vec.as_slice()),
     };
 
     let as_vec = serde_cbor::to_vec(&original).unwrap();
@@ -55,8 +58,8 @@ fn deserialize_serialize_large() {
 
     let original = Entity {
         id: 55,
-        item: RcBin::copy_from_slice(item_vec.as_slice()),
-        item_2: RcBin::copy_from_slice(item_2_vec.as_slice()),
+        item: New::copy_from_slice(item_vec.as_slice()),
+        item_2: New::copy_from_slice(item_2_vec.as_slice()),
     };
 
     let as_vec = serde_cbor::to_vec(&original).unwrap();

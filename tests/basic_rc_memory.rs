@@ -3,7 +3,7 @@ use std::cmp::max;
 
 use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, SBin};
+use abin::{AnyBin, Bin, SBin, Factory, SNew, New};
 use utils::*;
 
 #[global_allocator]
@@ -13,53 +13,53 @@ pub mod utils;
 
 #[test]
 fn basic_rc_memory_test() {
-    basic_rc_memory::<ArcBin, SBin>();
-    basic_rc_memory::<RcBin, Bin>();
+    basic_rc_memory::<New>();
+    basic_rc_memory::<SNew>();
 }
 
-fn basic_rc_memory<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn basic_rc_memory<T: Factory>() {
     // some simple leak tests
-    no_leak_1::<T, TBin>();
-    no_leak_2::<T, TBin>();
-    no_leak_3::<T, TBin>();
-    no_leak_4::<T, TBin>();
+    no_leak_1::<T>();
+    no_leak_2::<T>();
+    no_leak_3::<T>();
+    no_leak_4::<T>();
 
-    into_vec_does_not_allocate_when_single_reference::<T, TBin>();
-    assert_no_leak::<T, TBin>();
+    into_vec_does_not_allocate_when_single_reference::<T>();
+    assert_no_leak::<T>();
 }
 
 /// Simple test that there's no leak.
-fn no_leak_1<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn no_leak_1<T: Factory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let _vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
+        let _vec1 = create_huge_allocation(vec_len, T::vec_excess());
     })
 }
 
 /// Simple test that there's no leak.
-fn no_leak_2<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn no_leak_2<T: Factory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
+        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
         let _bin1 = T::from_vec(vec1);
     })
 }
 
 /// Simple test that there's no leak.
-fn no_leak_3<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn no_leak_3<T: Factory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
+        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
         let bin1 = T::from_vec(vec1);
         let _bin11 = bin1.clone();
     })
 }
 
 /// Simple test that there's no leak.
-fn no_leak_4<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn no_leak_4<T: Factory>() {
     let vec_len = 1024 * 255;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
+        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
         let bin1 = T::from_vec(vec1);
         {
             let _bin11 = bin1.clone();
@@ -76,9 +76,9 @@ fn no_leak_4<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     })
 }
 
-fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn into_vec_does_not_allocate_when_single_reference<T: Factory>() {
     let vec_len = 1024 * 1024 * 32;
-    let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
+    let vec1 = create_huge_allocation(vec_len, T::vec_excess());
     let bin1 = T::from_vec(vec1);
     let _vec = mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         // no allocation, since 'bin1' is single reference
@@ -86,7 +86,7 @@ fn into_vec_does_not_allocate_when_single_reference<T: AnyRc<T = TBin>, TBin: An
     });
 }
 
-fn assert_no_leak<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn assert_no_leak<T: Factory>() {
     let mut reg = Region::new(&GLOBAL);
     let vec_len = 1024 * 1024 * 32;
 
@@ -94,9 +94,9 @@ fn assert_no_leak<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     let change1 = reg.change_and_reset();
 
     let (change2, change3, change4) = {
-        let vec1 = create_huge_allocation(vec_len, T::overhead_bytes());
-        let vec2 = create_huge_allocation(vec_len, T::overhead_bytes());
-        let vec3 = create_huge_allocation(vec_len, T::overhead_bytes());
+        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec2 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec3 = create_huge_allocation(vec_len, T::vec_excess());
 
         let bin1 = T::from_vec(vec1);
         let bin2 = T::from_vec(vec2);

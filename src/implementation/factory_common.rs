@@ -1,10 +1,8 @@
-use serde::export::PhantomData;
+use crate::{AnyBin, AnyRc, ArcBin, Bin, DefaultExcessShrink, EmptyBin, ExcessShrink, Factory, IntoUnSyncView, maybe_shrink, New, RcBin, SBin, SNew, StackBin, StaticBin, VecBin};
 
-use crate::{AnyBin, AnyRc, Bin, DefaultExcessShrink, EmptyBin, ExcessShrink, Factory, maybe_shrink, SBin, StackBin, StaticBin, VecBin};
-
-pub struct CommonFactory<TAnyRc, TSyncToUnSyncConverter> {
-    _phantom1: PhantomData<TAnyRc>,
-    _phantom2: PhantomData<TSyncToUnSyncConverter>,
+pub trait CommonFactory {
+    type TAnyRc: AnyRc;
+    type TSyncToUnSyncConverter: SyncToUnSyncConverter<TSync=SBin, TUnSync=<Self::TAnyRc as AnyRc>::T>;
 }
 
 pub trait SyncToUnSyncConverter {
@@ -13,28 +11,27 @@ pub trait SyncToUnSyncConverter {
     fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync;
 }
 
-impl<TAnyRc, TSyncToUnSyncConverter> Factory for CommonFactory<TAnyRc, TSyncToUnSyncConverter>
-    where TAnyRc: AnyRc, TSyncToUnSyncConverter: SyncToUnSyncConverter<TSync=SBin, TUnSync=TAnyRc::T>, TAnyRc::T: AnyBin,
+impl<TCf> Factory for TCf where TCf: CommonFactory, <TCf::TAnyRc as AnyRc>::T: AnyBin
 {
-    type T = TAnyRc::T;
+    type T = <TCf::TAnyRc as AnyRc>::T;
 
     #[inline]
     fn empty() -> Self::T {
-        TSyncToUnSyncConverter::convert_to_un_sync(EmptyBin::new())
+        TCf::TSyncToUnSyncConverter::convert_to_un_sync(EmptyBin::new())
     }
 
     #[inline]
     fn from_static(slice: &'static [u8]) -> Self::T {
-        TSyncToUnSyncConverter::convert_to_un_sync(StaticBin::from(slice))
+        TCf::TSyncToUnSyncConverter::convert_to_un_sync(StaticBin::from(slice))
     }
 
     #[inline]
     fn copy_from_slice(slice: &[u8]) -> Self::T {
         // use stack if it's small
         if let Some(stack_bin) = StackBin::try_from(slice) {
-            TSyncToUnSyncConverter::convert_to_un_sync(stack_bin)
+            TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack_bin)
         } else {
-            TAnyRc::copy_from_slice(slice)
+            TCf::TAnyRc::copy_from_slice(slice)
         }
     }
 
@@ -42,21 +39,21 @@ impl<TAnyRc, TSyncToUnSyncConverter> Factory for CommonFactory<TAnyRc, TSyncToUn
     fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T {
         let iter = iter.into_iter();
         match StackBin::try_from_iter(iter) {
-            Ok(stack) => TSyncToUnSyncConverter::convert_to_un_sync(stack),
+            Ok(stack) => TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack),
             Err(iterator) => {
-                TAnyRc::from_iter(iterator)
+                TCf::TAnyRc::from_iter(iterator)
             }
         }
     }
 
     #[inline]
     fn vec_excess() -> usize {
-        TAnyRc::overhead_bytes()
+        TCf::TAnyRc::overhead_bytes()
     }
 
     #[inline]
     fn from_vec(vec: Vec<u8>) -> Self::T {
-        Self::from_vec_reduce_excess::<DefaultExcessShrink>(vec)
+        TCf::from_vec_reduce_excess::<DefaultExcessShrink>(vec)
     }
 
     #[inline]
@@ -66,14 +63,49 @@ impl<TAnyRc, TSyncToUnSyncConverter> Factory for CommonFactory<TAnyRc, TSyncToUn
         let excess = vec.capacity() - vec.len();
         if excess >= Self::vec_excess() {
             // sufficient excess for reference-counting
-            TAnyRc::from_vec(vec)
+            TCf::TAnyRc::from_vec(vec)
         } else {
             // that's not good... not enough excess, use a vector instead ... or stack
             if let Some(stack) = StackBin::try_from(vec.as_slice()) {
-                TSyncToUnSyncConverter::convert_to_un_sync(stack)
+                TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack)
             } else {
-                TSyncToUnSyncConverter::convert_to_un_sync(VecBin::from_vec(vec, false))
+                TCf::TSyncToUnSyncConverter::convert_to_un_sync(VecBin::from_vec(vec, false))
             }
         }
+    }
+}
+
+impl CommonFactory for New {
+    type TAnyRc = RcBin;
+    type TSyncToUnSyncConverter = SyncToUnSyncConverterForNew;
+}
+
+pub struct SyncToUnSyncConverterForNew {}
+
+impl SyncToUnSyncConverter for SyncToUnSyncConverterForNew {
+    type TSync = SBin;
+    type TUnSync = Bin;
+
+    #[inline]
+    fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync {
+        value.un_sync()
+    }
+}
+
+impl CommonFactory for SNew {
+    type TAnyRc = ArcBin;
+    type TSyncToUnSyncConverter = SyncToUnSyncConverterForSNew;
+}
+
+pub struct SyncToUnSyncConverterForSNew {}
+
+impl SyncToUnSyncConverter for SyncToUnSyncConverterForSNew {
+    type TSync = SBin;
+    type TUnSync = SBin;
+
+    #[inline]
+    fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync {
+        // does nothing
+        value
     }
 }

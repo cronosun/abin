@@ -3,8 +3,7 @@ use std::alloc::System;
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    AnyBin, AnyRc, ArcBin, Bin, ChainSlicesIter, EmptyBin, RcBin, StackBin, StaticBin, SBin,
-    VecBin,
+    AnyBin, Bin, ChainSlicesIter, SBin,
 };
 use utils::*;
 

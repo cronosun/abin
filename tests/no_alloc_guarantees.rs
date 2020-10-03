@@ -2,13 +2,15 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, RcBin, StackBin, StaticBin, VecBin, SNew, New, Factory};
+use abin::{AnyBin, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, SNew, New, Factory};
 use utils::*;
 
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
+
+const STACK_BIN_LEN : usize = 3;
 
 /// This tests some guarantees that are given that do not heap-allocate.
 #[test]
@@ -155,8 +157,8 @@ fn slice_does_not_allocate() {
         assert_eq!("ello".as_bytes(), bin_2.slice(1..5).unwrap().as_slice());
         assert!(bin_3.slice(10..len - 5).is_some());
         assert!(bin_4.slice(10..len - 5).is_some());
-        assert!(bin_5.slice(1..StackBin::max_len() - 1).is_some());
-        assert!(bin_6.slice(1..StackBin::max_len() - 1).is_some());
+        assert!(bin_5.slice(1..STACK_BIN_LEN - 1).is_some());
+        assert!(bin_6.slice(1..STACK_BIN_LEN - 1).is_some());
     });
 }
 
@@ -209,8 +211,8 @@ fn into_vec_does_not_allocate() {
 fn rc_from_vec() {
     let generator = BinGen::new(0, 1024 * 32);
 
-    let vec_for_sync = generator.generate_to_vec_shrink(ArcBin::overhead_bytes());
-    let vec_for_non_sync = generator.generate_to_vec_shrink(RcBin::overhead_bytes());
+    let vec_for_sync = generator.generate_to_vec_shrink(New::vec_excess());
+    let vec_for_non_sync = generator.generate_to_vec_shrink(SNew::vec_excess());
 
     // reserve additional 64k (excess)
     let mut vec_for_sync_much_excess = generator.generate_to_vec();
@@ -219,8 +221,8 @@ fn rc_from_vec() {
     vec_for_non_sync_much_excess.reserve(1024 * 64);
 
     let (_, _, _, _) = mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        let bin1 = ArcBin::from_vec(vec_for_sync);
-        let bin2 = RcBin::from_vec(vec_for_non_sync);
+        let bin1 = SNew::from_vec(vec_for_sync);
+        let bin2 = New::from_vec(vec_for_non_sync);
 
         // can also construct from a vec with much excess (but in this case, we have to choose a
         // different shrinker).
@@ -233,6 +235,6 @@ fn rc_from_vec() {
 
 /// See `StackBin::max_len()`: That's the maximum that fits on stack.
 fn generate_small_vec_that_fits_on_stack() -> Vec<u8> {
-    let bin_gen = BinGen::new(0, StackBin::max_len());
+    let bin_gen = BinGen::new(0, STACK_BIN_LEN);
     bin_gen.generate_to_vec()
 }

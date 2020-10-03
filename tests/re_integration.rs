@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, SBin, UnSyncRef};
+use abin::{AnyBin, Bin, SBin, UnSyncRef, Factory, SNew, New};
 use utils::*;
 
 #[global_allocator]
@@ -13,11 +13,11 @@ pub mod utils;
 #[test]
 fn test_re_integration() {
     static_re_integration();
-    rc_re_integration::<RcBin, Bin>();
-    rc_re_integration::<ArcBin, SBin>();
+    rc_re_integration::<New>();
+    rc_re_integration::<SNew>();
 }
 
-fn rc_re_integration<T: AnyRc<T = TBin>, TBin: AnyBin>() {
+fn rc_re_integration<T: Factory>() {
     let some_demo_slice = "This is some binary used for this test (the content does not \
     really matter - it just has to have some length)."
         .as_bytes();
@@ -26,9 +26,9 @@ fn rc_re_integration<T: AnyRc<T = TBin>, TBin: AnyBin>() {
 
     // this MUST NOT allocate
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        rc_re_integration_stage_2::<T, TBin>(&bin_a, bin_a.as_slice(), some_demo_slice);
-        rc_re_integration_stage_2::<T, TBin>(&bin_a, &bin_a.as_slice()[1..], &some_demo_slice[1..]);
-        rc_re_integration_stage_2::<T, TBin>(
+        rc_re_integration_stage_2::<T>(&bin_a, bin_a.as_slice(), some_demo_slice);
+        rc_re_integration_stage_2::<T>(&bin_a, &bin_a.as_slice()[1..], &some_demo_slice[1..]);
+        rc_re_integration_stage_2::<T>(
             &bin_a,
             &bin_a.as_slice()[5..20],
             &some_demo_slice[5..20],
@@ -39,8 +39,8 @@ fn rc_re_integration<T: AnyRc<T = TBin>, TBin: AnyBin>() {
     assert_eq!(None, bin_a.try_to_re_integrate(&something_unrelated));
 }
 
-fn rc_re_integration_stage_2<T: AnyRc<T = TBin>, TBin: AnyBin>(
-    bin: &TBin,
+fn rc_re_integration_stage_2<T: Factory>(
+    bin: &T::T,
     sub_item: &[u8],
     expected: &[u8],
 ) {
@@ -50,16 +50,16 @@ fn rc_re_integration_stage_2<T: AnyRc<T = TBin>, TBin: AnyBin>(
 
 fn static_re_integration() {
     let binary = "This is some static text. Hello, world!".as_bytes();
-    let static_bin = StaticBin::from(binary);
+    let static_bin = New::from_static(binary);
 
     // must not allocate
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         let sub_item_1 = binary;
-        static_re_integration_stage_2(static_bin.un_sync_ref(), sub_item_1, binary);
+        static_re_integration_stage_2(&static_bin, sub_item_1, binary);
         let sub_item_2 = &binary[1..];
-        static_re_integration_stage_2(static_bin.un_sync_ref(), sub_item_2, &binary[1..]);
+        static_re_integration_stage_2(&static_bin, sub_item_2, &binary[1..]);
         let sub_item_3 = &binary[4..8];
-        static_re_integration_stage_2(static_bin.un_sync_ref(), sub_item_3, &binary[4..8]);
+        static_re_integration_stage_2(&static_bin, sub_item_3, &binary[4..8]);
     });
 
     // this cannot be re-integrated, since is a completely unrelated binary.

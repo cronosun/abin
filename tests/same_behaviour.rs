@@ -1,11 +1,11 @@
 use std::alloc::System;
-use std::cmp::Ordering;
+use std::cmp::{Ordering, max};
 use std::hash::{Hash, Hasher};
 use std::ops::Range;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, IntoUnSyncView, RcBin, StaticBin, VecBin};
+use abin::{AnyBin, Bin, IntoUnSyncView, New, Factory, SNew};
 use utils::*;
 
 #[global_allocator]
@@ -18,6 +18,8 @@ pub mod utils;
 fn test_same_behaviour_basics() {
     // make sure there are no leaks
     mem_scoped(&GLOBAL, &MaNoLeak, || {
+        let excess = max(New::vec_excess(), SNew::vec_excess());
+
         same_behaviour_basics_static(&[]);
         same_behaviour_basics_static(&[3]);
         same_behaviour_basics_static(&[4, 8]);
@@ -26,7 +28,7 @@ fn test_same_behaviour_basics() {
         // small
         for index in 0..1024 {
             let bin_gen = BinGen::new(index as u8, index as usize);
-            let vec = bin_gen.generate_to_vec_shrink(RcBin::overhead_bytes());
+            let vec = bin_gen.generate_to_vec_shrink(excess);
             same_behaviour_non_static(vec);
         }
 
@@ -34,24 +36,20 @@ fn test_same_behaviour_basics() {
         for step in 1..15 {
             let index = step * 2007;
             let bin_gen = BinGen::new(index as u8, index as usize);
-            let vec = bin_gen.generate_to_vec_shrink(RcBin::overhead_bytes());
+            let vec = bin_gen.generate_to_vec_shrink(excess);
             same_behaviour_non_static(vec);
         }
     });
 }
 
 fn same_behaviour_basics_static(original: &'static [u8]) {
-    same_behaviour(original, StaticBin::from(original).un_sync());
+    same_behaviour(original, New::from_static(original).un_sync());
 }
 
 fn same_behaviour_non_static(original: Vec<u8>) {
-    let vec_bin_1 = VecBin::from_vec(original.clone(), true).un_sync();
-    let vec_bin_2 = VecBin::from_vec(original.clone(), false).un_sync();
-    let rc_bin = RcBin::from_vec(original.clone());
-    let arc_bin = ArcBin::from_vec(original.clone()).un_sync();
+    let rc_bin = New::from_vec(original.clone());
+    let arc_bin = SNew::from_vec(original.clone()).un_sync();
 
-    same_behaviour(original.as_slice(), vec_bin_1);
-    same_behaviour(original.as_slice(), vec_bin_2);
     same_behaviour(original.as_slice(), rc_bin);
     same_behaviour(original.as_slice(), arc_bin);
 }

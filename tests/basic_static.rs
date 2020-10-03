@@ -1,4 +1,4 @@
-use abin::{AnyBin, IntoUnSyncView, StaticBin};
+use abin::{AnyBin, IntoUnSyncView, New, Factory};
 
 const EMPTY: &[u8] = &[];
 const ONE: &[u8] = &[15];
@@ -21,7 +21,7 @@ fn basic_static() {
 
 fn test_static(slice: &'static [u8]) {
     let slice_ptr = slice.as_ptr();
-    let bin = StaticBin::from(slice).un_sync();
+    let bin = New::from_static(slice);
     assert_eq!(slice.len(), bin.len());
     assert_eq!(slice, bin.as_slice());
 

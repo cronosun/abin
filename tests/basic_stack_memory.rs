@@ -1,52 +1,51 @@
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StackBin, SBin, VecBin};
-
-use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 use std::alloc::System;
+
+use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+
+use abin::{AnyBin, Bin, Factory, New, SBin, SNew};
+use utils::*;
 
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
-use utils::*;
+
+/// take a "conservative" length (depending on the platform; 32-bit; 64-bit this
+/// is different; but 2 should be small enough for any platform).
+const FITS_STACK: usize = 2;
 
 #[test]
 pub fn stack_memory() {
-    no_alloc();
-    rc_uses_stack_no_alloc::<RcBin, Bin>();
-    rc_uses_stack_no_alloc::<ArcBin, SBin>();
-    vec_uses_stack_no_alloc();
-}
-
-/// Does not stack-allocate
-fn no_alloc() {
-    let slice = [15u8; StackBin::max_len()];
-    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        StackBin::try_from(&slice).expect("Max len must be stack-allocated");
-    });
-    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        StackBin::try_from(&[]).expect("Empty must be stack-allocated");
-    });
+    copy_from_slice::<New>();
+    copy_from_slice::<SNew>();
+    from_vec::<New>();
+    from_vec::<SNew>();
+    from_iter::<New>();
+    from_iter::<SNew>();
 }
 
 /// rc also uses stack and does not allocate for small binaries.
-fn rc_uses_stack_no_alloc<T: AnyRc<T = TBin>, TBin: AnyBin>() {
-    let slice = [15u8; StackBin::max_len()];
+fn copy_from_slice<T: Factory>() {
+    let slice = [15u8; FITS_STACK];
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         T::copy_from_slice(&slice);
-    });
-    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        T::copy_from_slice(&[]);
     });
 }
 
 /// vec also uses stack and does not allocate for small binaries.
-fn vec_uses_stack_no_alloc() {
-    let slice = [15u8; StackBin::max_len()];
+fn from_vec<T: Factory>() {
+    let slice = [15u8; FITS_STACK];
     let vec = slice.to_vec();
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        VecBin::from_vec(vec, true);
+        T::from_vec(vec);
     });
-    mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        VecBin::from_vec(Vec::new(), true);
+}
+
+/// vec also uses stack and does not allocate for small binaries.
+fn from_iter<T: Factory>() {
+    let slice = [15u8; FITS_STACK];
+    let vec = Vec::from(&slice as &[u8]);
+    mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
+        T::from_iter(vec);
     });
 }

@@ -1,10 +1,9 @@
 pub use {
-    // TODO: Move this to pub(crate)
-    internal::*,
     factory_new::*,
     factory_s_new::*,
 };
 pub(crate) use {
+    internal::*,
     rc::*,
     factory_common::*,
 };

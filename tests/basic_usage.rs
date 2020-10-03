@@ -1,4 +1,4 @@
-use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, IntoUnSyncView, RcBin, StaticBin, VecBin, New, Factory, SNew};
+use abin::{AnyBin, Bin, IntoUnSyncView, New, Factory, SNew};
 
 #[test]
 pub fn usage() {
