@@ -1,4 +1,4 @@
-use abin::{Str, SStr};
+use abin::{NewSStr, NewStr, SStr, Str, StrFactory};
 use std::collections::HashMap;
 
 /// string is compatible with hash map.
@@ -6,9 +6,9 @@ use std::collections::HashMap;
 fn use_string_in_hash_map() {
     let mut map = HashMap::<Str, String>::default();
 
-    map.insert("entry 1".into(), "hello".to_owned());
-    map.insert("other_entry".to_owned().into(), "world".to_owned());
-    map.insert("daa".to_owned().into(), "ok".to_owned());
+    map.insert(NewStr::from_static("entry 1"), "hello".to_owned());
+    map.insert(NewStr::from_static("other_entry"), "world".to_owned());
+    map.insert(NewStr::from_string("daa".to_owned()), "ok".to_owned());
 
     assert_eq!(map.get("entry 1"), Some(&"hello".to_owned()));
     assert_eq!(map.get("other_entry"), Some(&"world".to_owned()));
@@ -20,9 +20,12 @@ fn use_string_in_hash_map() {
 fn use_sync_string_in_hash_map() {
     let mut map = HashMap::<SStr, String>::default();
 
-    map.insert("entry 1".into(), "hello".to_owned());
-    map.insert("other_entry".to_owned().into(), "world".to_owned());
-    map.insert("daa".to_owned().into(), "ok".to_owned());
+    map.insert(NewSStr::from_static("entry 1"), "hello".to_owned());
+    map.insert(
+        NewSStr::from_string("other_entry".to_owned()),
+        "world".to_owned(),
+    );
+    map.insert(NewSStr::from_string("daa".to_owned()), "ok".to_owned());
 
     assert_eq!(map.get("entry 1"), Some(&"hello".to_owned()));
     assert_eq!(map.get("other_entry"), Some(&"world".to_owned()));

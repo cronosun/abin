@@ -7,23 +7,23 @@ use crate::{Bin, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef};
 
 /// Common trait implemented by [Bin](struct.Bin.html) and [SyncBin](struct.SyncBin.html).
 pub trait AnyBin:
-Clone
-+ Debug
-+ Eq
-+ PartialEq
-+ Hash
-+ Ord
-+ PartialOrd
-+ Borrow<[u8]>
-+ AsRef<[u8]>
-+ IntoIterator<Item=u8>
-+ LowerHex
-+ UpperHex
-+ Into<Vec<u8>>
-+ UnSyncRef<Target=Bin>
-+ IntoUnSyncView<Target=Bin>
-+ IntoUnSync<Target=Bin>
-+ IntoSync<Target=SBin>
+    Clone
+    + Debug
+    + Eq
+    + PartialEq
+    + Hash
+    + Ord
+    + PartialOrd
+    + Borrow<[u8]>
+    + AsRef<[u8]>
+    + IntoIterator<Item = u8>
+    + LowerHex
+    + UpperHex
+    + Into<Vec<u8>>
+    + UnSyncRef<Target = Bin>
+    + IntoUnSyncView<Target = Bin>
+    + IntoUnSync<Target = Bin>
+    + IntoSync<Target = SBin>
 {
     /// Returns a view into this binary.
     fn as_slice(&self) -> &[u8];
@@ -69,8 +69,8 @@ Clone
     /// assert_eq!(None, bin1.slice(0..19));
     /// ```
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
-        where
-            TRange: RangeBounds<usize>;
+    where
+        TRange: RangeBounds<usize>;
 
     /// Tries to re-integrate the given slice into `self`. To some extent (not 100%), this is the
     /// reverse of `as_slice`.

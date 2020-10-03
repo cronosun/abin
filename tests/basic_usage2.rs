@@ -11,7 +11,7 @@ pub fn usage() {
     // reference-counted binary (non-synchronized; like Rc);
     let bin3 = New::copy_from_slice(example_slice);
     // reference-counted binary (synchronized; like Arc);
-    let bin4 = SNew::from_vec(example_slice.to_vec());
+    let bin4 = SNew::from_given_vec(example_slice.to_vec());
     // no allocation for static data.
     let bin5 = New::from_static(example_slice);
 

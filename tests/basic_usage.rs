@@ -9,7 +9,7 @@ pub fn usage() {
     // reference-counted binary (not synchronized);
     let bin3 = New::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
     // reference-counted binary (synchronized);
-    let bin4 = SNew::from_vec(
+    let bin4 = SNew::from_given_vec(
         "This is a binary; too large for the stack."
             .to_owned()
             .into_bytes(),

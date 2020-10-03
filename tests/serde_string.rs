@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::Str;
+use abin::{NewStr, Str, StrFactory};
 use utils::*;
 
 #[global_allocator]
@@ -35,9 +35,9 @@ fn deserialize_serialize_small() {
             Entity {
                 id: 45,
                 // here we create a short string (stack-allocated)
-                string_a: short.into(),
+                string_a: NewStr::from_static(short),
                 // empty: so stack allocated
-                string_b: Str::from_static(""),
+                string_b: NewStr::from_static(""),
             }
         },
     );
@@ -72,11 +72,11 @@ fn deserialize_serialize_large() {
         ]),
         || Entity {
             id: 45,
-            string_a: Str::from_static(
+            string_a: NewStr::from_static(
                 "This is somewhat longer; this will not fit \
                 on stack - longer - even longer.",
             ),
-            string_b: Str::from_static(
+            string_b: NewStr::from_static(
                 "Longer and longer and longer and longer and \
                 even longer... again, even longer. Longer and longer.",
             ),

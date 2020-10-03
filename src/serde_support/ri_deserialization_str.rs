@@ -2,7 +2,8 @@ use serde::Deserializer;
 
 use crate::serde_support::RiScope;
 use crate::{
-    AnyStr, Bin, ReIntegrationStrVisitor, SBin, Str, StrReIntegrator, SStr,
+    AnyStr, Bin, NewSStr, NewStr, ReIntegrationStrVisitor, SBin, SStr, Str, StrFactory,
+    StrReIntegrator,
 };
 
 /// Performs re-integration de-serialization for `Str`, see `#[serde(deserialize_with = "path")]`.
@@ -57,13 +58,13 @@ impl StrReIntegrator for NonSyncStrReIntegrator {
             unsafe { Str::from_utf8_unchecked(bin) }
         } else {
             // bad!
-            Str::from(str)
+            NewStr::copy_from_str(str)
         }
     }
 
     fn re_integrate_string(string: String) -> AnyStr<Self::TBin> {
         // can't do much here...
-        Str::from(string)
+        NewStr::from_string(string)
     }
 }
 
@@ -79,12 +80,12 @@ impl StrReIntegrator for SyncStrReIntegrator {
             unsafe { SStr::from_utf8_unchecked(bin) }
         } else {
             // bad!
-            SStr::from(str)
+            NewSStr::copy_from_str(str)
         }
     }
 
     fn re_integrate_string(string: String) -> AnyStr<Self::TBin> {
         // can't do much here...
-        SStr::from(string)
+        NewSStr::from_string(string)
     }
 }

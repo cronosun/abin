@@ -37,7 +37,7 @@ fn from_vec<T: Factory>() {
     let slice = [15u8; FITS_STACK];
     let vec = slice.to_vec();
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        T::from_vec(vec);
+        T::from_given_vec(vec);
     });
 }
 

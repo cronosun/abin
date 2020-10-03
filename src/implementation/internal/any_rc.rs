@@ -32,14 +32,14 @@ pub trait AnyRc {
     /// A more reallistic example:
     ///
     /// ```rust
-    /// use abin::{StaticBin, EmptyBin, RcBin, AnyRc, ChainSlicesIter, AnyBin};
+    /// use abin::{StaticBin, EmptyBin, RcBin, AnyRc, SegmentsSlice, AnyBin};
     ///
     /// let bin1 = StaticBin::from("static value, ".as_bytes());
     /// let bin2 = RcBin::copy_from_slice("another binary".as_bytes());
     ///
     /// // the rest of the code needs just one single allocation (RcBin::from_iter allocates).
     /// let slice = [bin1.as_slice(), bin2.as_slice()];
-    /// let chain_slices = ChainSlicesIter::from(&slice as &[&[u8]]);
+    /// let chain_slices = SegmentsSlice::from(&slice as &[&[u8]]);
     /// let chained = RcBin::from_iter(chain_slices);
     /// assert_eq!("static value, another binary".as_bytes(), chained.as_slice());
     /// ```

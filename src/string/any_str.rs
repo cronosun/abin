@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::str::Utf8Error;
 
-use crate::AnyBin;
+use crate::{AnyBin, Bin, Factory, IntoSync, IntoUnSync, IntoUnSyncView, SBin};
 
 /// A utf-8 string backed by [AnyBin](trait.AnyBin.html) ([Bin](struct.Bin.html) or
 /// [SyncBin](struct.SyncBin.html)), see also [Str](type.Str.html) and
@@ -14,7 +14,6 @@ use crate::AnyBin;
 pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
-// TODO implement: From<'static str> -> From<String> -> Self::from_str()
 where
     TBin: AnyBin,
 {
@@ -48,6 +47,37 @@ where
     #[inline]
     pub fn into_bin(self) -> TBin {
         self.0
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    #[inline]
+    pub fn into_string(self) -> String {
+        let vec = self.0.into_vec();
+        unsafe { String::from_utf8_unchecked(vec) }
+    }
+
+    #[inline]
+    pub fn to_string(&self) -> String {
+        String::from(self.as_str())
+    }
+}
+
+impl<TBin> Into<String> for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
+    #[inline]
+    fn into(self) -> String {
+        self.into_string()
     }
 }
 
@@ -107,18 +137,6 @@ where
     }
 }
 
-impl<TBin> Into<String> for AnyStr<TBin>
-where
-    TBin: AnyBin,
-{
-    #[inline]
-    fn into(self) -> String {
-        let vec = self.0.into_vec();
-        // we already know it's valid UTF-8
-        unsafe { String::from_utf8_unchecked(vec) }
-    }
-}
-
 impl<TBin> Clone for AnyStr<TBin>
 where
     TBin: AnyBin,
@@ -151,7 +169,40 @@ where
     }
 }
 
+impl<TBin> IntoUnSyncView for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
+    type Target = AnyStr<Bin>;
 
+    fn un_sync(self) -> Self::Target {
+        unsafe { Self::Target::from_utf8_unchecked(self.0.un_sync()) }
+    }
+}
+
+impl<TBin> IntoUnSync for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
+    type Target = AnyStr<Bin>;
+
+    fn un_sync_convert(self) -> Self::Target {
+        unsafe { Self::Target::from_utf8_unchecked(self.0.un_sync_convert()) }
+    }
+}
+
+impl<TBin> IntoSync for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
+    type Target = AnyStr<SBin>;
+
+    fn into_sync(self) -> Self::Target {
+        let bin = self.0;
+        let sync_bin = bin.into_sync();
+        unsafe { Self::Target::from_utf8_unchecked(sync_bin) }
+    }
+}
 
 pub struct AnyStrUtf8Error<TBin> {
     utf8_error: Utf8Error,

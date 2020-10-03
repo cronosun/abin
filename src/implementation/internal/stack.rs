@@ -46,6 +46,7 @@ impl StackBin {
     /// a stack bin if the given iter returns a `size_hint` (min & Some(max)) within the
     /// stack range (still this can fail if the `size_hint` returns invalid value).
     ///
+    // TODO: Maybe better use small vec here? -> Can we use StackBinBuilder?
     #[inline]
     pub fn try_from_iter<'a>(
         iter: impl IntoIterator<Item = u8>,

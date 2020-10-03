@@ -47,8 +47,8 @@ fn same_behaviour_basics_static(original: &'static [u8]) {
 }
 
 fn same_behaviour_non_static(original: Vec<u8>) {
-    let rc_bin = New::from_vec(original.clone());
-    let arc_bin = SNew::from_vec(original.clone()).un_sync();
+    let rc_bin = New::from_given_vec(original.clone());
+    let arc_bin = SNew::from_given_vec(original.clone()).un_sync();
 
     same_behaviour(original.as_slice(), rc_bin);
     same_behaviour(original.as_slice(), arc_bin);

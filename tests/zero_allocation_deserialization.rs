@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, SBin, SNew, SStr,
+    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, NewSStr, SBin, SNew, SStr,
+    StrFactory,
 };
 use utils::*;
 
@@ -48,7 +49,7 @@ fn zero_allocation_deserialization() {
 /// The server gets the message from the client/from network as `Vec<u8>`.
 fn server_process_message(msg: Vec<u8>) {
     // Convert that to arc-bin
-    let msg_as_bin = SNew::from_vec(msg);
+    let msg_as_bin = SNew::from_given_vec(msg);
 
     // create a scope for re-integration
     let scope_setup = DefaultScopes::sync(&msg_as_bin);
@@ -105,14 +106,14 @@ pub struct DatabaseCommand {
 fn create_server_request() -> ServerRequest {
     ServerRequest {
         request_id: 25,
-        user_name: SStr::from_static(
+        user_name: NewSStr::from_static(
             "a_very_long_user_name_that_does_not_fit_on_stack@my_long_server.com \
             ['The user also has a readable name - this name is long too']",
         ),
-        huge_binary_1: SNew::from_vec(
+        huge_binary_1: SNew::from_given_vec(
             BinGen::new(0, 1024 * 32).generate_to_vec_shrink(SNew::vec_excess()),
         ),
-        huge_binary_2: SNew::from_vec(
+        huge_binary_2: SNew::from_given_vec(
             BinGen::new(0, 1024 * 16).generate_to_vec_shrink(SNew::vec_excess()),
         ),
     }
