@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, New, SBin, SNew};
+use abin::{Factory, New, SNew};
 use utils::*;
 
 #[global_allocator]

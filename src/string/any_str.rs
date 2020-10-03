@@ -3,10 +3,10 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
-use std::ops::{Deref, RangeBounds};
+use std::ops::Deref;
 use std::str::Utf8Error;
 
-use crate::{AnyBin, StaticBin};
+use crate::AnyBin;
 
 /// A utf-8 string backed by [AnyBin](trait.AnyBin.html) ([Bin](struct.Bin.html) or
 /// [SyncBin](struct.SyncBin.html)), see also [Str](type.Str.html) and
@@ -150,6 +150,8 @@ where
         self.as_str()
     }
 }
+
+
 
 pub struct AnyStrUtf8Error<TBin> {
     utf8_error: Utf8Error,

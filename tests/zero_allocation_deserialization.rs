@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, SBin, SNew, SyncStr,
+    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, SBin, SNew, SStr,
 };
 use utils::*;
 
@@ -90,7 +90,7 @@ fn database_process_message(command: DatabaseCommand) {
 pub struct ServerRequest {
     pub request_id: u64,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_str")]
-    pub user_name: SyncStr,
+    pub user_name: SStr,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
     pub huge_binary_1: SBin,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
@@ -105,7 +105,7 @@ pub struct DatabaseCommand {
 fn create_server_request() -> ServerRequest {
     ServerRequest {
         request_id: 25,
-        user_name: SyncStr::from_static(
+        user_name: SStr::from_static(
             "a_very_long_user_name_that_does_not_fit_on_stack@my_long_server.com \
             ['The user also has a readable name - this name is long too']",
         ),

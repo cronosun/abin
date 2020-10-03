@@ -1,9 +1,9 @@
 use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, SBin, StaticBin, Str};
 
 /// A string backed by [SyncBin](struct.SyncBin.html) (`Sync + Send`).
-pub type SyncStr = AnyStr<SBin>;
+pub type SStr = AnyStr<SBin>;
 
-impl SyncStr {
+impl SStr {
     /// Static string backed by [StaticBin](struct.StaticBin.html).
     #[inline]
     pub fn from_static(string: &'static str) -> Self {
@@ -12,22 +12,22 @@ impl SyncStr {
     }
 }
 
-impl From<String> for SyncStr {
+impl From<String> for SStr {
     fn from(string: String) -> Self {
         let bytes = string.into_bytes();
         let bin = ArcBin::from_vec(bytes);
-        unsafe { SyncStr::from_utf8_unchecked(bin) }
+        unsafe { SStr::from_utf8_unchecked(bin) }
     }
 }
 
-impl<'a> From<&'a str> for SyncStr {
+impl<'a> From<&'a str> for SStr {
     fn from(string: &'a str) -> Self {
         let bin = ArcBin::copy_from_slice(string.as_bytes());
-        unsafe { SyncStr::from_utf8_unchecked(bin) }
+        unsafe { SStr::from_utf8_unchecked(bin) }
     }
 }
 
-impl IntoUnSyncView for SyncStr {
+impl IntoUnSyncView for SStr {
     type Target = Str;
 
     fn un_sync(self) -> Self::Target {

@@ -1,4 +1,4 @@
-use crate::{AnyRc, ExcessShrink};
+use crate::AnyRc;
 use crate::{AnyRcConfigForSync, AnyRcImpl, SBin, UnsafeBin};
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this

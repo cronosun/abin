@@ -1,8 +1,8 @@
 use serde::Deserializer;
 
-use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
+use crate::serde_support::RiScope;
 use crate::{
-    AnyRc, AnyStr, ArcBin, Bin, RcBin, ReIntegrationStrVisitor, SBin, Str, StrReIntegrator, SyncStr,
+    AnyStr, Bin, ReIntegrationStrVisitor, SBin, Str, StrReIntegrator, SStr,
 };
 
 /// Performs re-integration de-serialization for `Str`, see `#[serde(deserialize_with = "path")]`.
@@ -38,7 +38,7 @@ where
 ///     pub user_name: SyncStr,
 /// }
 /// ```
-pub fn ri_deserialize_sync_str<'de, D>(deserialize: D) -> Result<SyncStr, D::Error>
+pub fn ri_deserialize_sync_str<'de, D>(deserialize: D) -> Result<SStr, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -76,15 +76,15 @@ impl StrReIntegrator for SyncStrReIntegrator {
     fn re_integrate_str(str: &str) -> AnyStr<Self::TBin> {
         if let Some(bin) = RiScope::try_re_integrate_sync(str.as_bytes()) {
             // nice, could re-integrate
-            unsafe { SyncStr::from_utf8_unchecked(bin) }
+            unsafe { SStr::from_utf8_unchecked(bin) }
         } else {
             // bad!
-            SyncStr::from(str)
+            SStr::from(str)
         }
     }
 
     fn re_integrate_string(string: String) -> AnyStr<Self::TBin> {
         // can't do much here...
-        SyncStr::from(string)
+        SStr::from(string)
     }
 }

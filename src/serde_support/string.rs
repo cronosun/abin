@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, AnyStr, ArcBin, Bin, RcBin, SBin, Str, SyncStr};
+use crate::{AnyBin, AnyRc, AnyStr, ArcBin, RcBin, Str, SStr};
 
 impl Serialize for Str {
     #[inline]
@@ -27,7 +27,7 @@ impl<'de> Deserialize<'de> for Str {
     }
 }
 
-impl Serialize for SyncStr {
+impl Serialize for SStr {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -37,7 +37,7 @@ impl Serialize for SyncStr {
     }
 }
 
-impl<'de> Deserialize<'de> for SyncStr {
+impl<'de> Deserialize<'de> for SStr {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where

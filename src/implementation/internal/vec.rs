@@ -1,10 +1,9 @@
 use core::{mem, slice};
 
 use crate::{
-    maybe_shrink, Bin, BinData, Factory, FnTable, IntoUnSyncView, NeverShrink, New, SBin, SNew,
+    Bin, BinData, Factory, FnTable, IntoUnSyncView, New, SBin, SNew,
     UnsafeBin,
 };
-use crate::{AnyRc, ArcBin, DefaultExcessShrink, ExcessShrink, StackBin};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted:
 /// If you clone it or slice it, it will be converted to a reference-counted version.

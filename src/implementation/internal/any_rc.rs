@@ -1,5 +1,3 @@
-use crate::ExcessShrink;
-
 /// Common trait for the synchronized and the non-synchronized reference counted binary
 /// ([RcBin](struct.RcBin.html) and [ArcBin](struct.ArcBin.html)).
 pub trait AnyRc {

@@ -3,7 +3,7 @@ use std::cmp::max;
 
 use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, New, SBin, SNew};
+use abin::{AnyBin, Factory, New, SNew};
 use utils::*;
 
 #[global_allocator]

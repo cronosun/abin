@@ -5,16 +5,17 @@ use crate::{
 
 pub trait CommonFactory {
     type TAnyRc: AnyRc;
-    type TSyncToUnSyncConverter: SyncToUnSyncConverter<
+    type TFunctions: CommonFactoryFunctions<
         TSync = SBin,
         TUnSync = <Self::TAnyRc as AnyRc>::T,
     >;
 }
 
-pub trait SyncToUnSyncConverter {
+pub trait CommonFactoryFunctions {
     type TSync;
     type TUnSync;
     fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync;
+    fn is_sync() -> bool;
 }
 
 impl<TCf> Factory for TCf
@@ -26,19 +27,19 @@ where
 
     #[inline]
     fn empty() -> Self::T {
-        TCf::TSyncToUnSyncConverter::convert_to_un_sync(EmptyBin::new())
+        TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
     }
 
     #[inline]
     fn from_static(slice: &'static [u8]) -> Self::T {
-        TCf::TSyncToUnSyncConverter::convert_to_un_sync(StaticBin::from(slice))
+        TCf::TFunctions::convert_to_un_sync(StaticBin::from(slice))
     }
 
     #[inline]
     fn copy_from_slice(slice: &[u8]) -> Self::T {
         // use stack if it's small
         if let Some(stack_bin) = StackBin::try_from(slice) {
-            TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack_bin)
+            TCf::TFunctions::convert_to_un_sync(stack_bin)
         } else {
             TCf::TAnyRc::copy_from_slice(slice)
         }
@@ -48,7 +49,7 @@ where
     fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
         let iter = iter.into_iter();
         match StackBin::try_from_iter(iter) {
-            Ok(stack) => TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack),
+            Ok(stack) => TCf::TFunctions::convert_to_un_sync(stack),
             Err(iterator) => TCf::TAnyRc::from_iter(iterator),
         }
     }
@@ -74,9 +75,9 @@ where
         } else {
             // that's not good... not enough excess, use a vector instead ... or stack
             if let Some(stack) = StackBin::try_from(vec.as_slice()) {
-                TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack)
+                TCf::TFunctions::convert_to_un_sync(stack)
             } else {
-                TCf::TSyncToUnSyncConverter::convert_to_un_sync(VecBin::from_vec(vec, false))
+                TCf::TFunctions::convert_to_un_sync(VecBin::from_vec(vec, TCf::TFunctions::is_sync()))
             }
         }
     }
@@ -84,12 +85,12 @@ where
 
 impl CommonFactory for New {
     type TAnyRc = RcBin;
-    type TSyncToUnSyncConverter = SyncToUnSyncConverterForNew;
+    type TFunctions = FunctionsForNew;
 }
 
-pub struct SyncToUnSyncConverterForNew {}
+pub struct FunctionsForNew {}
 
-impl SyncToUnSyncConverter for SyncToUnSyncConverterForNew {
+impl CommonFactoryFunctions for FunctionsForNew {
     type TSync = SBin;
     type TUnSync = Bin;
 
@@ -97,16 +98,21 @@ impl SyncToUnSyncConverter for SyncToUnSyncConverterForNew {
     fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync {
         value.un_sync()
     }
+
+    #[inline]
+    fn is_sync() -> bool {
+        false
+    }
 }
 
 impl CommonFactory for SNew {
     type TAnyRc = ArcBin;
-    type TSyncToUnSyncConverter = SyncToUnSyncConverterForSNew;
+    type TFunctions = FunctonsForSNew;
 }
 
-pub struct SyncToUnSyncConverterForSNew {}
+pub struct FunctonsForSNew {}
 
-impl SyncToUnSyncConverter for SyncToUnSyncConverterForSNew {
+impl CommonFactoryFunctions for FunctonsForSNew {
     type TSync = SBin;
     type TUnSync = SBin;
 
@@ -114,5 +120,9 @@ impl SyncToUnSyncConverter for SyncToUnSyncConverterForSNew {
     fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync {
         // does nothing
         value
+    }
+
+    fn is_sync() -> bool {
+        true
     }
 }

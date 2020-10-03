@@ -73,7 +73,7 @@ impl StackBin {
 }
 
 // TODO: Use
-pub struct TryFromIterData {
+/*pub struct TryFromIterData {
     data: [u8; STACK_MAX_LEN],
     len: usize,
 }
@@ -85,7 +85,7 @@ impl Default for TryFromIterData {
             len: 0,
         }
     }
-}
+}*/
 
 #[inline]
 fn data_raw(data: &BinData) -> *const u8 {

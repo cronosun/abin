@@ -1,4 +1,4 @@
-use crate::{AnyRc, AnyRcConfigForNonSync, AnyRcImpl, Bin, ExcessShrink};
+use crate::{AnyRc, AnyRcConfigForNonSync, AnyRcImpl, Bin};
 
 /// A reference-counted binary. Note: The reference counter is not synchronized, so this
 /// is not `Send + Sync` but there's less overhead. Cloning is cheap. See [AnyRc](trait.AnyRc.html).

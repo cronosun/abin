@@ -1,4 +1,4 @@
-use abin::{Str, SyncStr};
+use abin::{Str, SStr};
 use std::collections::HashMap;
 
 /// string is compatible with hash map.
@@ -18,7 +18,7 @@ fn use_string_in_hash_map() {
 /// string is compatible with hash map.
 #[test]
 fn use_sync_string_in_hash_map() {
-    let mut map = HashMap::<SyncStr, String>::default();
+    let mut map = HashMap::<SStr, String>::default();
 
     map.insert("entry 1".into(), "hello".to_owned());
     map.insert("other_entry".to_owned().into(), "world".to_owned());

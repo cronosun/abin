@@ -1,4 +1,3 @@
-use core::cmp::min;
 use core::fmt;
 use std::fmt::Formatter;
 use std::marker::PhantomData;

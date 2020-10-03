@@ -1,4 +1,4 @@
-use abin::{Bin, Factory, IntoUnSyncView, New, SBin, SNew};
+use abin::{Bin, Factory, New, SBin, SNew};
 use std::collections::HashMap;
 
 /// binary is compatible with hash map.
