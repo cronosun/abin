@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, New, Factory};
+use abin::{AnyBin, Bin, Factory, New};
 use utils::*;
 
 #[global_allocator]
@@ -12,7 +12,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 pub mod utils;
 
 /// Conservative length (to make sure this fits on the stack on every platform).
-const STACK_BIN_LEN : usize = 3;
+const STACK_BIN_LEN: usize = 3;
 
 /// Demonstrates how to use serde;
 #[test]

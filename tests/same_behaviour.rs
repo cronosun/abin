@@ -1,11 +1,11 @@
 use std::alloc::System;
-use std::cmp::{Ordering, max};
+use std::cmp::{max, Ordering};
 use std::hash::{Hash, Hasher};
 use std::ops::Range;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, IntoUnSyncView, New, Factory, SNew};
+use abin::{AnyBin, Bin, Factory, IntoUnSyncView, New, SNew};
 use utils::*;
 
 #[global_allocator]

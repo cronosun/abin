@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, SNew, New, Factory};
+use abin::{AnyBin, Factory, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, New, SNew};
 use utils::*;
 
 #[global_allocator]
@@ -10,7 +10,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-const STACK_BIN_LEN : usize = 3;
+const STACK_BIN_LEN: usize = 3;
 
 /// This tests some guarantees that are given that do not heap-allocate.
 #[test]

@@ -1,6 +1,6 @@
 use serde::export::PhantomData;
 
-use crate::{AnyBin, Bin, Binaries, IntoUnSyncView, ScopedRiSetup, SBin};
+use crate::{AnyBin, Bin, Binaries, IntoUnSyncView, SBin, ScopedRiSetup};
 
 /// Constructs [ScopedRiSetup] with sane defaults.
 pub struct DefaultScopes {

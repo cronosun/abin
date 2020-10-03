@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, SBin, UnSyncRef, Factory, SNew, New};
+use abin::{AnyBin, Bin, Factory, New, SBin, SNew, UnSyncRef};
 use utils::*;
 
 #[global_allocator]
@@ -28,22 +28,14 @@ fn rc_re_integration<T: Factory>() {
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         rc_re_integration_stage_2::<T>(&bin_a, bin_a.as_slice(), some_demo_slice);
         rc_re_integration_stage_2::<T>(&bin_a, &bin_a.as_slice()[1..], &some_demo_slice[1..]);
-        rc_re_integration_stage_2::<T>(
-            &bin_a,
-            &bin_a.as_slice()[5..20],
-            &some_demo_slice[5..20],
-        );
+        rc_re_integration_stage_2::<T>(&bin_a, &bin_a.as_slice()[5..20], &some_demo_slice[5..20]);
     });
 
     let something_unrelated = "unrelated binary".as_bytes();
     assert_eq!(None, bin_a.try_to_re_integrate(&something_unrelated));
 }
 
-fn rc_re_integration_stage_2<T: Factory>(
-    bin: &T::T,
-    sub_item: &[u8],
-    expected: &[u8],
-) {
+fn rc_re_integration_stage_2<T: Factory>(bin: &T::T, sub_item: &[u8], expected: &[u8]) {
     let re_integrated_bin = bin.try_to_re_integrate(sub_item).unwrap();
     assert_eq!(expected, re_integrated_bin.as_slice());
 }

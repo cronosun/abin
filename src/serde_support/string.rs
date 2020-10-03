@@ -2,16 +2,16 @@ use core::fmt;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::Visitor;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, AnyStr, ArcBin, Bin, RcBin, Str, SBin, SyncStr};
+use crate::{AnyBin, AnyRc, AnyStr, ArcBin, Bin, RcBin, SBin, Str, SyncStr};
 
 impl Serialize for Str {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         serializer.serialize_str(self.as_str())
     }
@@ -20,8 +20,8 @@ impl Serialize for Str {
 impl<'de> Deserialize<'de> for Str {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_str(RcStrVisitor::<RcBin>::new())
     }
@@ -30,8 +30,8 @@ impl<'de> Deserialize<'de> for Str {
 impl Serialize for SyncStr {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         serializer.serialize_str(self.as_str())
     }
@@ -40,8 +40,8 @@ impl Serialize for SyncStr {
 impl<'de> Deserialize<'de> for SyncStr {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_str(RcStrVisitor::<ArcBin>::new())
     }
@@ -60,9 +60,9 @@ impl<T> RcStrVisitor<T> {
 }
 
 impl<'de, T> Visitor<'de> for RcStrVisitor<T>
-    where
-        T: AnyRc,
-        T::T : AnyBin,
+where
+    T: AnyRc,
+    T::T: AnyBin,
 {
     type Value = AnyStr<T::T>;
 
@@ -72,8 +72,8 @@ impl<'de, T> Visitor<'de> for RcStrVisitor<T>
 
     #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         let bin = T::copy_from_slice(v.as_bytes());
         // we know it's safe (we just got the valid str)
@@ -82,8 +82,8 @@ impl<'de, T> Visitor<'de> for RcStrVisitor<T>
 
     #[inline]
     fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         let bin = T::from_vec(v.into_bytes());
         // we know it's safe (we just got the valid str)

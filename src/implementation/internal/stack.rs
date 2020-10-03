@@ -47,7 +47,9 @@ impl StackBin {
     /// stack range (still this can fail if the `size_hint` returns invalid value).
     ///
     #[inline]
-    pub fn try_from_iter<'a>(iter: impl IntoIterator<Item=u8>) -> Result<SBin, impl Iterator<Item=u8>> {
+    pub fn try_from_iter<'a>(
+        iter: impl IntoIterator<Item = u8>,
+    ) -> Result<SBin, impl Iterator<Item = u8>> {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         if let Some(max) = max {

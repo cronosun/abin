@@ -1,9 +1,11 @@
 use std::alloc::System;
 
 use serde::{Deserialize, Serialize};
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, DefaultScopes, DefaultExcessShrink, maybe_shrink, SBin, SyncStr, SNew, Factory};
+use abin::{
+    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, SBin, SNew, SyncStr,
+};
 use utils::*;
 
 #[global_allocator]
@@ -105,7 +107,8 @@ fn create_server_request() -> ServerRequest {
         request_id: 25,
         user_name: SyncStr::from_static(
             "a_very_long_user_name_that_does_not_fit_on_stack@my_long_server.com \
-            ['The user also has a readable name - this name is long too']"),
+            ['The user also has a readable name - this name is long too']",
+        ),
         huge_binary_1: SNew::from_vec(
             BinGen::new(0, 1024 * 32).generate_to_vec_shrink(SNew::vec_excess()),
         ),

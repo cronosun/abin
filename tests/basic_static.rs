@@ -1,4 +1,4 @@
-use abin::{AnyBin, IntoUnSyncView, New, Factory};
+use abin::{AnyBin, Factory, IntoUnSyncView, New};
 
 const EMPTY: &[u8] = &[];
 const ONE: &[u8] = &[15];

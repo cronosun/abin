@@ -17,8 +17,8 @@ use crate::{AnyRc, ArcBin, Bin, RcBin, SBin};
 /// }
 /// ```
 pub fn ri_deserialize_bin<'de, D>(deserialize: D) -> Result<Bin, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     deserialize.deserialize_bytes(ReIntegrationBytesVisitor::<BinReIntegrator>::new())
 }
@@ -37,8 +37,8 @@ pub fn ri_deserialize_bin<'de, D>(deserialize: D) -> Result<Bin, D::Error>
 /// }
 /// ```
 pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SBin, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     deserialize.deserialize_bytes(ReIntegrationBytesVisitor::<SyncBinReIntegrator>::new())
 }

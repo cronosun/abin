@@ -1,7 +1,7 @@
 use std::alloc::System;
 
 use serde::{Deserialize, Serialize};
-use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{AnyBin, Bin, Str};
 use utils::*;
@@ -30,7 +30,8 @@ fn deserialize_serialize_small() {
             &MaExactNumberOfAllocations(0),
             &MaExactNumberOfReAllocations(0),
             &MaExactNumberOfDeAllocations(0),
-        ]), || {
+        ]),
+        || {
             Entity {
                 id: 45,
                 // here we create a short string (stack-allocated)
@@ -38,7 +39,8 @@ fn deserialize_serialize_small() {
                 // empty: so stack allocated
                 string_b: Str::from_static(""),
             }
-        });
+        },
+    );
 
     let as_vec = serde_cbor::to_vec(&entity).unwrap();
 
@@ -67,15 +69,19 @@ fn deserialize_serialize_large() {
             &MaExactNumberOfAllocations(0),
             &MaExactNumberOfReAllocations(0),
             &MaExactNumberOfDeAllocations(0),
-        ]), || {
-            Entity {
-                id: 45,
-                string_a: Str::from_static("This is somewhat longer; this will not fit \
-                on stack - longer - even longer."),
-                string_b: Str::from_static("Longer and longer and longer and longer and \
-                even longer... again, even longer. Longer and longer."),
-            }
-        });
+        ]),
+        || Entity {
+            id: 45,
+            string_a: Str::from_static(
+                "This is somewhat longer; this will not fit \
+                on stack - longer - even longer.",
+            ),
+            string_b: Str::from_static(
+                "Longer and longer and longer and longer and \
+                even longer... again, even longer. Longer and longer.",
+            ),
+        },
+    );
 
     let as_vec = serde_cbor::to_vec(&entity).unwrap();
 

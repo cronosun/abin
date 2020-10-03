@@ -27,8 +27,8 @@ pub trait StrReIntegrator {
 }
 
 impl<'de, TReIntegrator> Visitor<'de> for ReIntegrationStrVisitor<TReIntegrator>
-    where
-        TReIntegrator: StrReIntegrator,
+where
+    TReIntegrator: StrReIntegrator,
 {
     type Value = AnyStr<TReIntegrator::TBin>;
 
@@ -38,16 +38,16 @@ impl<'de, TReIntegrator> Visitor<'de> for ReIntegrationStrVisitor<TReIntegrator>
 
     #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::re_integrate_str(v))
     }
 
     #[inline]
     fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         Ok(TReIntegrator::re_integrate_string(v))
     }

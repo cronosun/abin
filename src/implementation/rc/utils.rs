@@ -1,7 +1,7 @@
 use core::mem;
 use std::iter::FromIterator;
 
-use crate::{maybe_shrink, RcCounter, RcMeta, SizeHintExtendingIter, ExcessShrink};
+use crate::{maybe_shrink, ExcessShrink, RcCounter, RcMeta, SizeHintExtendingIter};
 
 pub struct RcUtils;
 

@@ -1,8 +1,14 @@
-use crate::{AnyBin, AnyRc, ArcBin, Bin, DefaultExcessShrink, EmptyBin, ExcessShrink, Factory, IntoUnSyncView, maybe_shrink, New, RcBin, SBin, SNew, StackBin, StaticBin, VecBin};
+use crate::{
+    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, DefaultExcessShrink, EmptyBin, ExcessShrink, Factory,
+    IntoUnSyncView, New, RcBin, SBin, SNew, StackBin, StaticBin, VecBin,
+};
 
 pub trait CommonFactory {
     type TAnyRc: AnyRc;
-    type TSyncToUnSyncConverter: SyncToUnSyncConverter<TSync=SBin, TUnSync=<Self::TAnyRc as AnyRc>::T>;
+    type TSyncToUnSyncConverter: SyncToUnSyncConverter<
+        TSync = SBin,
+        TUnSync = <Self::TAnyRc as AnyRc>::T,
+    >;
 }
 
 pub trait SyncToUnSyncConverter {
@@ -11,7 +17,10 @@ pub trait SyncToUnSyncConverter {
     fn convert_to_un_sync(value: Self::TSync) -> Self::TUnSync;
 }
 
-impl<TCf> Factory for TCf where TCf: CommonFactory, <TCf::TAnyRc as AnyRc>::T: AnyBin
+impl<TCf> Factory for TCf
+where
+    TCf: CommonFactory,
+    <TCf::TAnyRc as AnyRc>::T: AnyBin,
 {
     type T = <TCf::TAnyRc as AnyRc>::T;
 
@@ -36,13 +45,11 @@ impl<TCf> Factory for TCf where TCf: CommonFactory, <TCf::TAnyRc as AnyRc>::T: A
     }
 
     #[inline]
-    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T {
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
         let iter = iter.into_iter();
         match StackBin::try_from_iter(iter) {
             Ok(stack) => TCf::TSyncToUnSyncConverter::convert_to_un_sync(stack),
-            Err(iterator) => {
-                TCf::TAnyRc::from_iter(iterator)
-            }
+            Err(iterator) => TCf::TAnyRc::from_iter(iterator),
         }
     }
 

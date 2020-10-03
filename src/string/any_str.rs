@@ -15,8 +15,8 @@ pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
 // TODO implement: From<'static str> -> From<String> -> Self::from_str()
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     /// Converts the given value to a string.
     ///
@@ -54,8 +54,8 @@ impl<TBin> AnyStr<TBin>
 impl<TBin> Eq for AnyStr<TBin> where TBin: AnyBin {}
 
 impl<TBin> PartialEq for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn eq(&self, other: &Self) -> bool {
         self.as_str() == other.as_str()
@@ -63,8 +63,8 @@ impl<TBin> PartialEq for AnyStr<TBin>
 }
 
 impl<TBin> Ord for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_str().cmp(other.as_str())
@@ -72,8 +72,8 @@ impl<TBin> Ord for AnyStr<TBin>
 }
 
 impl<TBin> PartialOrd for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_str().partial_cmp(other.as_str())
@@ -81,8 +81,8 @@ impl<TBin> PartialOrd for AnyStr<TBin>
 }
 
 impl<TBin> Hash for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
@@ -90,8 +90,8 @@ impl<TBin> Hash for AnyStr<TBin>
 }
 
 impl<TBin> Debug for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Debug::fmt(self.as_str(), f)
@@ -99,8 +99,8 @@ impl<TBin> Debug for AnyStr<TBin>
 }
 
 impl<TBin> Display for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self.as_str(), f)
@@ -108,8 +108,8 @@ impl<TBin> Display for AnyStr<TBin>
 }
 
 impl<TBin> Into<String> for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn into(self) -> String {
@@ -120,8 +120,8 @@ impl<TBin> Into<String> for AnyStr<TBin>
 }
 
 impl<TBin> Clone for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn clone(&self) -> Self {
@@ -130,8 +130,8 @@ impl<TBin> Clone for AnyStr<TBin>
 }
 
 impl<TBin> Deref for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     type Target = str;
 
@@ -142,8 +142,8 @@ impl<TBin> Deref for AnyStr<TBin>
 }
 
 impl<TBin> Borrow<str> for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn borrow(&self) -> &str {

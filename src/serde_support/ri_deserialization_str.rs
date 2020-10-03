@@ -1,7 +1,9 @@
 use serde::Deserializer;
 
-use crate::{AnyRc, AnyStr, ArcBin, Bin, RcBin, ReIntegrationStrVisitor, Str, StrReIntegrator, SBin, SyncStr};
 use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
+use crate::{
+    AnyRc, AnyStr, ArcBin, Bin, RcBin, ReIntegrationStrVisitor, SBin, Str, StrReIntegrator, SyncStr,
+};
 
 /// Performs re-integration de-serialization for `Str`, see `#[serde(deserialize_with = "path")]`.
 ///
@@ -17,8 +19,8 @@ use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
 /// }
 /// ```
 pub fn ri_deserialize_str<'de, D>(deserialize: D) -> Result<Str, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     deserialize.deserialize_str(ReIntegrationStrVisitor::<NonSyncStrReIntegrator>::new())
 }
@@ -37,8 +39,8 @@ pub fn ri_deserialize_str<'de, D>(deserialize: D) -> Result<Str, D::Error>
 /// }
 /// ```
 pub fn ri_deserialize_sync_str<'de, D>(deserialize: D) -> Result<SyncStr, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     deserialize.deserialize_str(ReIntegrationStrVisitor::<SyncStrReIntegrator>::new())
 }

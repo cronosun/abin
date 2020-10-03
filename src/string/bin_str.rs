@@ -1,4 +1,4 @@
-use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, SyncStr, StaticBin};
+use crate::{AnyRc, AnyStr, Bin, IntoSync, IntoUnSyncView, RcBin, StaticBin, SyncStr};
 
 /// A string backed by [Bin](struct.Bin.html) (not `Sync + Send`).
 pub type Str = AnyStr<Bin>;

@@ -18,7 +18,7 @@ impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
     }
 
     #[inline]
-    pub(crate) fn from_iter(iter: impl IntoIterator<Item=u8>) -> Bin {
+    pub(crate) fn from_iter(iter: impl IntoIterator<Item = u8>) -> Bin {
         let vec = RcUtils::vec_with_capacity_for_rc_from_iter::<TConfig::TCounter, _>(iter);
         Self::from_vec(vec)
     }

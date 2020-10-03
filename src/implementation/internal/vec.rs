@@ -1,6 +1,9 @@
 use core::{mem, slice};
 
-use crate::{Bin, BinData, Factory, FnTable, IntoUnSyncView, maybe_shrink, NeverShrink, New, SBin, SNew, UnsafeBin};
+use crate::{
+    maybe_shrink, Bin, BinData, Factory, FnTable, IntoUnSyncView, NeverShrink, New, SBin, SNew,
+    UnsafeBin,
+};
 use crate::{AnyRc, ArcBin, DefaultExcessShrink, ExcessShrink, StackBin};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted:
@@ -10,9 +13,7 @@ pub struct VecBin;
 impl VecBin {
     /// Creates a new binary based on a vector.
     #[inline]
-    pub fn from_vec(
-        vec: Vec<u8>,
-        synchronized: bool) -> SBin {
+    pub fn from_vec(vec: Vec<u8>, synchronized: bool) -> SBin {
         let len = vec.len();
         let capacity = vec.capacity();
 
