@@ -1,4 +1,4 @@
-use crate::VecCapShrink;
+use crate::ExcessShrink;
 
 /// Common trait for the synchronized and the non-synchronized reference counted binary
 /// ([RcBin](struct.RcBin.html) and [ArcBin](struct.ArcBin.html)).
@@ -111,8 +111,4 @@ pub trait AnyRc {
     /// }
     /// ```
     fn overhead_bytes() -> usize;
-
-    /// This is the same as `Self::from` but allows custom configuration whether to shrink
-    /// the given vector.
-    fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Self::T;
 }

@@ -10,9 +10,9 @@ pub trait IntoUnSyncView {
     /// changed. It's still backed by a synchronized implementation.
     ///
     /// ```rust
-    /// use abin::{SyncBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, IntoSync};
+    /// use abin::{SBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, IntoSync};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SyncBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync());
     ///
     /// fn function_wants_bin(value : Bin) {
@@ -21,7 +21,7 @@ pub trait IntoUnSyncView {
     ///     assert_eq!("This is some string; content of the binary.".as_bytes(), value.as_slice());
     ///     // we can also un-wrap it to be a synchronized bin again... in this case, this is
     ///     // a cheap operation (but it's not always a cheap operation).
-    ///     let _synchronized_again : SyncBin = value.into_sync();
+    ///     let _synchronized_again : SBin = value.into_sync();
     /// }
     /// ```
     fn un_sync(self) -> Self::Target;
@@ -39,9 +39,9 @@ pub trait UnSyncRef {
     /// changed. It's still backed by a synchronized implementation.
     ///
     /// ```rust
-    /// use abin::{SyncBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, UnSyncRef};
+    /// use abin::{SBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, UnSyncRef};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SyncBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync_ref());
     ///
     /// fn function_wants_bin(value : &Bin) {
@@ -68,9 +68,9 @@ pub trait IntoUnSync {
     /// there's no good reason to use this, better use the `IntoUnSyncView`.
     ///
     /// ```rust
-    /// use abin::{SyncBin, ArcBin, AnyRc, Bin, AnyBin, IntoSync, IntoUnSync};
+    /// use abin::{SBin, ArcBin, AnyRc, Bin, AnyBin, IntoSync, IntoUnSync};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SyncBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync_convert());
     ///
     /// fn function_wants_bin(value : Bin) {
@@ -79,7 +79,7 @@ pub trait IntoUnSync {
     ///     assert_eq!("This is some string; content of the binary.".as_bytes(), value.as_slice());
     ///     // we can also un-wrap it to be a synchronized bin again... in this case, this is
     ///     // a cheap operation (since there are no other references to `value`).
-    ///     let _synchronized_again : SyncBin = value.into_sync();
+    ///     let _synchronized_again : SBin = value.into_sync();
     /// }
     /// ```
     fn un_sync_convert(self) -> Self::Target;

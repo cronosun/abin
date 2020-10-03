@@ -1,6 +1,6 @@
 use core::slice;
 
-use crate::{AnyBin, Bin, BinData, FnTable, SyncBin, UnsafeBin};
+use crate::{AnyBin, Bin, BinData, FnTable, SBin, UnsafeBin};
 use crate::{EmptyBin, IntoUnSyncView};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
@@ -19,22 +19,8 @@ impl StackBin {
     ///  * If it's empty, returns [EmptyBin](struct.EmptyBin.html)`::new()`.
     ///  * If the slice is small (<= `max_len`) returns a stack binary.
     ///  * ...otherwise returns `None`.
-    ///
-    /// ```rust
-    /// use abin::{StackBin, SyncBin, AnyBin};
-    ///
-    /// let maximum_for_stack : Vec<u8> = (0..StackBin::max_len())
-    ///   .map(|item| (item*2) as u8).collect();
-    /// let bin : SyncBin = StackBin::try_from(maximum_for_stack.as_slice())
-    ///   .expect("StackBin::max_len() must fit onto the stack.");
-    /// assert_eq!(bin.as_slice(), maximum_for_stack.as_slice());
-    ///
-    /// let too_long_for_stack : Vec<u8> = (0..StackBin::max_len() + 1)
-    ///   .map(|item| (item*2) as u8).collect();
-    /// assert_eq!(None, StackBin::try_from(too_long_for_stack.as_slice()));
-    /// ```
     #[inline]
-    pub fn try_from(slice: &[u8]) -> Option<SyncBin> {
+    pub fn try_from(slice: &[u8]) -> Option<SBin> {
         let len = slice.len();
         if len == 0 {
             // no problem, empty can always be stored on the stack
@@ -56,11 +42,46 @@ impl StackBin {
         }
     }
 
+    /// It tries to construct a stack bin based on given iter. It will only try to construct
+    /// a stack bin if the given iter returns a `size_hint` (min & Some(max)) within the
+    /// stack range (still this can fail if the `size_hint` returns invalid value).
+    ///
+    #[inline]
+    pub fn try_from_iter<'a>(iter: impl IntoIterator<Item=u8>) -> Result<SBin, impl Iterator<Item=u8>> {
+        let iter = iter.into_iter();
+        let (min, max) = iter.size_hint();
+        if let Some(max) = max {
+            if min < Self::max_len() && max <= Self::max_len() {
+                // TODO: Implement this...
+                unimplemented!()
+            } else {
+                Err(iter)
+            }
+        } else {
+            Err(iter)
+        }
+    }
+
     /// The maximum number of bytes that can be stored on the stack.
     ///
     /// Note: This is platform-dependant: It's less on 32-bit machines, more on 64-bit machines.
     pub const fn max_len() -> usize {
         STACK_MAX_LEN
+    }
+}
+
+// TODO: Use
+pub struct TryFromIterData {
+    data: [u8; STACK_MAX_LEN],
+    len: usize,
+}
+
+impl Default for TryFromIterData {
+    fn default() -> Self {
+        Self {
+            data: [0; STACK_MAX_LEN],
+            len: 0,
+        }
     }
 }
 

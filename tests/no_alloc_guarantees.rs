@@ -2,10 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{
-    AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NoVecCapShrink, RcBin,
-    StackBin, StaticBin, VecBin,
-};
+use abin::{AnyBin, AnyRc, ArcBin, EmptyBin, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, RcBin, StackBin, StaticBin, VecBin, SNew, New, Factory};
 use utils::*;
 
 #[global_allocator]
@@ -18,7 +15,7 @@ pub mod utils;
 fn no_alloc_guarantees() {
     empty();
     small_binaries_are_stack_allocated();
-    vec_bin_create_and_into_vec();
+    vec_can_be_extracted_without_allocation();
     convert_into_sync_un_sync();
     no_alloc_clone();
     slice_does_not_allocate();
@@ -29,7 +26,8 @@ fn no_alloc_guarantees() {
 /// The empty binary is stored on the stack; so no allocation here.
 fn empty() {
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        EmptyBin::new();
+        New::empty();
+        SNew::empty();
     });
 }
 
@@ -44,34 +42,37 @@ fn small_binaries_are_stack_allocated() {
     let max_stack_alloc_vec_2 = generate_small_vec_that_fits_on_stack();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        RcBin::from_vec(empty_vec_1);
-        RcBin::copy_from_slice(empty_slice);
-        ArcBin::from_vec(empty_vec_2);
-        ArcBin::copy_from_slice(empty_slice);
+        New::from_vec(empty_vec_1);
+        New::copy_from_slice(empty_slice);
+        SNew::from_vec(empty_vec_2);
+        SNew::copy_from_slice(empty_slice);
 
-        RcBin::copy_from_slice(max_stack_alloc_vec_1.as_slice());
-        RcBin::from_vec(max_stack_alloc_vec_1);
-        ArcBin::copy_from_slice(max_stack_alloc_vec_2.as_slice());
-        ArcBin::from_vec(max_stack_alloc_vec_2);
+        New::copy_from_slice(max_stack_alloc_vec_1.as_slice());
+        New::from_vec(max_stack_alloc_vec_1);
+        SNew::copy_from_slice(max_stack_alloc_vec_2.as_slice());
+        SNew::from_vec(max_stack_alloc_vec_2);
     });
 }
 
-/// VecBin just wraps a vec and returns the same vec when `into_vec` is called (so no
-/// allocation in that case).
-fn vec_bin_create_and_into_vec() {
-    let bin_gen = BinGen::new(0, 200);
+/// As long as there are not multiple references pointing to the binary, a vec can always be
+/// extracted without allocation.
+fn vec_can_be_extracted_without_allocation() {
+    let bin_gen = BinGen::new(0, 800);
     let vec = bin_gen.generate_to_vec();
-    // this of course needs to allocate, that's why it's outside 'mem_scoped'.
-    let vec_bin_copy_from_slice = VecBin::copy_from_slice(vec.as_slice(), false);
+    let vec_clone = vec.clone();
+    let small_vec: Vec<u8> = Vec::from(&[4u8, 8u8] as &[u8]);
+    let small_vec_clone = small_vec.clone();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        // no allocation
-        let vec_bin = VecBin::from_vec(vec, false);
+        let large = New::from_vec(vec);
+        let small = New::from_vec(small_vec);
+
         // and get the vector back
-        let extracted_vec = vec_bin.into_vec();
-        // also this does not allocate
-        let extracted_vec_from_other = vec_bin_copy_from_slice.into_vec();
-        assert_eq!(extracted_vec, extracted_vec_from_other);
+        let large_vec = large.into_vec();
+        let small_vec = small.into_vec();
+
+        assert_eq!(vec_clone, large_vec);
+        assert_eq!(small_vec_clone, small_vec);
     });
 }
 
@@ -82,13 +83,13 @@ fn convert_into_sync_un_sync() {
     let bin_gen = BinGen::new(0, 200);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = EmptyBin::new().un_sync();
-    let bin_2 = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::copy_from_slice(vec.as_slice());
-    let bin_4 = ArcBin::copy_from_slice(vec.as_slice()).un_sync();
-    let bin_5 = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = VecBin::from_vec(vec, false).un_sync();
+    let bin_1 = New::empty();
+    let bin_2 = New::from_static("Hello, slice!".as_bytes());
+    let bin_3 = New::copy_from_slice(vec.as_slice());
+    let bin_4 = SNew::copy_from_slice(vec.as_slice()).un_sync();
+    let bin_5 = New::from_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = SNew::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_7 = SNew::from_vec(vec).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // convert to sync
@@ -113,50 +114,40 @@ fn convert_into_sync_un_sync() {
     });
 }
 
-/// Cloning is usually allocation-free. Exception: `VecBin`.
+/// Cloning is usually allocation-free.
 fn no_alloc_clone() {
     let bin_gen = BinGen::new(0, 200);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = EmptyBin::new().un_sync();
-    let bin_2 = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::from_vec(vec.clone());
-    let bin_4 = ArcBin::from_vec(vec.clone()).un_sync();
-    let bin_5 = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7_allocates = VecBin::from_vec(vec, false).un_sync();
+    let bin_1 = New::empty();
+    let bin_2 = New::from_static("Hello, slice!".as_bytes());
+    let bin_3 = New::from_vec(vec.clone());
+    let bin_4 = SNew::from_vec(vec.clone()).un_sync();
+    let bin_5 = New::from_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = SNew::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        // empty bin is stack-only; so never allocates.
         let _ignored = bin_1.clone();
         let _ignored = bin_2.clone();
-        // reference-counted binaries never allocate.
         let _ignored = bin_3.clone();
-        // reference-counted binaries never allocate.
         let _ignored = bin_4.clone();
         let _ignored = bin_5.clone();
         let _ignored = bin_6.clone();
     });
-
-    mem_scoped(&GLOBAL, &MaDoesAllocate, || {
-        // THIS DOES ALLOCATE
-        let _ignored = bin_7_allocates.clone();
-    });
 }
 
-/// Slicing is usually allocation-free. Exception: `VecBin`.
+/// Slicing is usually allocation-free.
 fn slice_does_not_allocate() {
     let len = 200;
     let bin_gen = BinGen::new(0, len);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = EmptyBin::new().un_sync();
-    let bin_2 = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::from_vec(vec.clone());
-    let bin_4 = ArcBin::from_vec(vec.clone()).un_sync();
-    let bin_5 = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7_allocates = VecBin::from_vec(vec, false).un_sync();
+    let bin_1 = New::empty();
+    let bin_2 = New::from_static("Hello, slice!".as_bytes());
+    let bin_3 = New::from_vec(vec.clone());
+    let bin_4 = SNew::from_vec(vec.clone()).un_sync();
+    let bin_5 = New::from_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = SNew::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // empty bin is stack-only; so never allocates.
@@ -167,27 +158,22 @@ fn slice_does_not_allocate() {
         assert!(bin_5.slice(1..StackBin::max_len() - 1).is_some());
         assert!(bin_6.slice(1..StackBin::max_len() - 1).is_some());
     });
-
-    mem_scoped(&GLOBAL, &MaDoesAllocate, || {
-        // THIS DOES ALLOCATE
-        assert!(bin_7_allocates.slice(10..len - 5).is_some());
-    });
 }
 
-/// `into_vec` is allocation-free for `EmptyBin`, `VecBin` and for reference-counted binaries
+/// `into_vec` is allocation-free for `EmptyBin`, ... and for reference-counted binaries
 /// with only one reference.
 fn into_vec_does_not_allocate() {
     let len = 200;
     let bin_gen = BinGen::new(0, len);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = EmptyBin::new().un_sync();
-    let bin_2_allocates = StaticBin::from("Hello, slice!".as_bytes()).un_sync();
-    let bin_3 = RcBin::copy_from_slice(vec.as_slice());
-    let bin_4 = ArcBin::copy_from_slice(vec.as_slice()).un_sync();
-    let bin_5_allocates = RcBin::from_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6_allocates = ArcBin::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = VecBin::from_vec(vec, false).un_sync();
+    let bin_1 = New::empty();
+    let bin_2_allocates = New::from_static("Hello, slice!".as_bytes());
+    let bin_3 = New::copy_from_slice(vec.as_slice());
+    let bin_4 = SNew::copy_from_slice(vec.as_slice()).un_sync();
+    let bin_5_allocates = New::from_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6_allocates = SNew::from_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_7 = New::from_vec(vec);
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // returns an empty vec
@@ -216,7 +202,7 @@ fn into_vec_does_not_allocate() {
     });
 }
 
-/// Creating a rc is alloc free under some conditions:
+/// Creating a bin is alloc free under some conditions:
 ///
 ///   * Given vec has enough capacity (see `AnyRc::overhead_bytes()`)
 ///   * Do not use a capacity shrinker (or use a vec that does not have too much excess).
@@ -238,8 +224,8 @@ fn rc_from_vec() {
 
         // can also construct from a vec with much excess (but in this case, we have to choose a
         // different shrinker).
-        let bin3 = ArcBin::from_with_cap_shrink::<NoVecCapShrink>(vec_for_sync_much_excess);
-        let bin4 = ArcBin::from_with_cap_shrink::<NoVecCapShrink>(vec_for_non_sync_much_excess);
+        let bin3 = SNew::from_vec_reduce_excess::<NeverShrink>(vec_for_sync_much_excess);
+        let bin4 = SNew::from_vec_reduce_excess::<NeverShrink>(vec_for_non_sync_much_excess);
 
         (bin1, bin2, bin3, bin4)
     });

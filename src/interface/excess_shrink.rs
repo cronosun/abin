@@ -1,27 +1,27 @@
 use std::cmp::max;
 
-/// Gives information whether the system should shrink a vector.
-pub trait VecCapShrink {
+/// Gives information whether the system should shrink a vector's excess (capacity - len).
+pub trait ExcessShrink {
     /// Returns a result whether the vector should be shrunk.
     ///
     /// `excess`: `Vec::len() - Vec::capacity()`.
     fn shrink(len: usize, excess: usize) -> ShrinkResult;
 }
 
-/// Default implementation of `VecCapShrink` - should be ok for most use cases.
+/// Default implementation of `ExcessShrink` - should be ok for most use cases.
 ///
 /// Tolerated excess:
 ///
-/// * 48 bytes for tiny vectors below 1k len.
+/// * 96 bytes for tiny vectors below 1k len.
 /// * 256 bytes for 1k-4k len vectors;
 /// * 1kb for 4k - 32k len vectors;
 /// * 4kb for for 32k+ len vectors;
-pub struct DefaultVecCapShrink;
+pub struct DefaultExcessShrink;
 
-impl VecCapShrink for DefaultVecCapShrink {
+impl ExcessShrink for DefaultExcessShrink {
     #[inline]
     fn shrink(len: usize, excess: usize) -> ShrinkResult {
-        if excess < 48 + 1 {
+        if excess < 96 + 1 {
             // fast path: 99% case
             ShrinkResult::do_not_shrink()
         } else {
@@ -54,10 +54,10 @@ impl VecCapShrink for DefaultVecCapShrink {
     }
 }
 
-/// Never performs a capacity shrink.
-pub struct NoVecCapShrink;
+/// Never performs an excess shrink.
+pub struct NeverShrink;
 
-impl VecCapShrink for NoVecCapShrink {
+impl ExcessShrink for NeverShrink {
     fn shrink(_len: usize, _capacity: usize) -> ShrinkResult {
         ShrinkResult::do_not_shrink()
     }
@@ -91,7 +91,7 @@ impl ShrinkResult {
 ///
 /// `never_below_excess`: Makes sure to never shrink the vector below given excess.
 #[inline]
-pub fn maybe_shrink_vec<T: VecCapShrink>(vec: &mut Vec<u8>, never_below_excess: usize) -> bool {
+pub fn maybe_shrink<T: ExcessShrink>(vec: &mut Vec<u8>, never_below_excess: usize) -> bool {
     let len = vec.len();
     let capacity = vec.capacity();
     let excess = capacity - len;

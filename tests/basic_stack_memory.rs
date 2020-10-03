@@ -1,4 +1,4 @@
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StackBin, SyncBin, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StackBin, SBin, VecBin};
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 use std::alloc::System;
@@ -13,7 +13,7 @@ use utils::*;
 pub fn stack_memory() {
     no_alloc();
     rc_uses_stack_no_alloc::<RcBin, Bin>();
-    rc_uses_stack_no_alloc::<ArcBin, SyncBin>();
+    rc_uses_stack_no_alloc::<ArcBin, SBin>();
     vec_uses_stack_no_alloc();
 }
 

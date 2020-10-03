@@ -1,7 +1,7 @@
 use core::mem;
 use std::iter::FromIterator;
 
-use crate::{maybe_shrink_vec, RcCounter, RcMeta, SizeHintExtendingIter, VecCapShrink};
+use crate::{maybe_shrink, RcCounter, RcMeta, SizeHintExtendingIter, ExcessShrink};
 
 pub struct RcUtils;
 
@@ -21,9 +21,9 @@ impl RcUtils {
 
     /// Shrinks the vector (if T says to do so) but sill keeps enough capacity for the metadata.
     #[inline]
-    pub fn maybe_shrink_vec<TCounter: RcCounter, T: VecCapShrink>(vec: &mut Vec<u8>) {
+    pub fn maybe_shrink_vec<TCounter: RcCounter, T: ExcessShrink>(vec: &mut Vec<u8>) {
         let overhead = Self::meta_overhead::<TCounter>();
-        maybe_shrink_vec::<T>(vec, overhead);
+        maybe_shrink::<T>(vec, overhead);
     }
 
     /// adds padding and metadata but without altering the vector len. Returns a pointer to the

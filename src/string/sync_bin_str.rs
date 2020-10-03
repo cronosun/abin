@@ -1,7 +1,7 @@
-use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, StaticBin, Str, SyncBin};
+use crate::{AnyRc, AnyStr, ArcBin, IntoUnSyncView, StaticBin, Str, SBin};
 
 /// A string backed by [SyncBin](struct.SyncBin.html) (`Sync + Send`).
-pub type SyncStr = AnyStr<SyncBin>;
+pub type SyncStr = AnyStr<SBin>;
 
 impl SyncStr {
     /// Static string backed by [StaticBin](struct.StaticBin.html).
@@ -31,7 +31,7 @@ impl IntoUnSyncView for SyncStr {
     type Target = Str;
 
     fn un_sync(self) -> Self::Target {
-        let binary: SyncBin = self.into_bin();
+        let binary: SBin = self.into_bin();
         let binary = binary.un_sync();
         unsafe { Str::from_utf8_unchecked(binary) }
     }

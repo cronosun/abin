@@ -1,4 +1,4 @@
-use crate::{AnyRc, AnyRcConfigForNonSync, AnyRcImpl, Bin, VecCapShrink};
+use crate::{AnyRc, AnyRcConfigForNonSync, AnyRcImpl, Bin, ExcessShrink};
 
 /// A reference-counted binary. Note: The reference counter is not synchronized, so this
 /// is not `Send + Sync` but there's less overhead. Cloning is cheap. See [AnyRc](trait.AnyRc.html).
@@ -25,10 +25,5 @@ impl AnyRc for RcBin {
     #[inline]
     fn overhead_bytes() -> usize {
         AnyRcImpl::<AnyRcConfigForNonSync>::overhead_bytes()
-    }
-
-    #[inline]
-    fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Self::T {
-        AnyRcImpl::<AnyRcConfigForNonSync>::from_with_cap_shrink::<T>(vec)
     }
 }

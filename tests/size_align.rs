@@ -1,4 +1,4 @@
-use abin::{Bin, SyncBin};
+use abin::{Bin, SBin};
 
 #[test]
 fn bin_size() {
@@ -12,7 +12,7 @@ fn bin_size() {
 fn sync_bin_size() {
     // should have a size of 4 words
     let word_size = core::mem::size_of::<usize>();
-    let sync_bin_size = core::mem::size_of::<SyncBin>();
+    let sync_bin_size = core::mem::size_of::<SBin>();
     assert_eq!(word_size * 4, sync_bin_size);
     assert_eq!(core::mem::size_of::<Bin>(), sync_bin_size);
 }
@@ -27,6 +27,6 @@ fn bin_align() {
 #[test]
 fn sync_bin_align() {
     let word_align = core::mem::align_of::<usize>();
-    let bin_align = core::mem::align_of::<SyncBin>();
+    let bin_align = core::mem::align_of::<SBin>();
     assert_eq!(word_align, bin_align)
 }

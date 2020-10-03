@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{INSTRUMENTED_SYSTEM, StatsAlloc};
 
-use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, DefaultVecCapShrink, maybe_shrink_vec, SyncBin, SyncStr};
+use abin::{AnyBin, AnyRc, ArcBin, DefaultScopes, DefaultExcessShrink, maybe_shrink, SBin, SyncStr};
 use utils::*;
 
 #[global_allocator]
@@ -31,7 +31,7 @@ fn zero_allocation_deserialization() {
             //  - if the excess is too large we'd get a re-allocation.
             //  - if the excess is too small we'd get a allocation.
             vec.reserve(ArcBin::overhead_bytes());
-            maybe_shrink_vec::<DefaultVecCapShrink>(&mut vec, ArcBin::overhead_bytes());
+            maybe_shrink::<DefaultExcessShrink>(&mut vec, ArcBin::overhead_bytes());
             vec
         };
 
@@ -90,14 +90,14 @@ pub struct ServerRequest {
     #[serde(deserialize_with = "abin::ri_deserialize_sync_str")]
     pub user_name: SyncStr,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
-    pub huge_binary_1: SyncBin,
+    pub huge_binary_1: SBin,
     #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
-    pub huge_binary_2: SyncBin,
+    pub huge_binary_2: SBin,
 }
 
 pub struct DatabaseCommand {
     pub command_type: u64,
-    pub huge_binary: SyncBin,
+    pub huge_binary: SBin,
 }
 
 fn create_server_request() -> ServerRequest {

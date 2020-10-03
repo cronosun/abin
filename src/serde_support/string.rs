@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::Visitor;
 
-use crate::{AnyBin, AnyRc, AnyStr, ArcBin, Bin, RcBin, Str, SyncBin, SyncStr};
+use crate::{AnyBin, AnyRc, AnyStr, ArcBin, Bin, RcBin, Str, SBin, SyncStr};
 
 impl Serialize for Str {
     #[inline]

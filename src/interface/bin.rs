@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 use std::ops::{Bound, RangeBounds};
 
 use crate::{
-    AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SyncBin, UnSyncRef,
+    AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,
     UnsafeBin,
 };
 
@@ -104,7 +104,7 @@ impl IntoUnSync for Bin {
 }
 
 impl IntoSync for Bin {
-    type Target = SyncBin;
+    type Target = SBin;
 
     #[inline]
     fn into_sync(self) -> Self::Target {
@@ -281,7 +281,7 @@ unsafe impl UnsafeBin for Bin {
     }
 
     #[inline]
-    unsafe fn _into_sync(self) -> SyncBin {
-        SyncBin(self)
+    unsafe fn _into_sync(self) -> SBin {
+        SBin(self)
     }
 }

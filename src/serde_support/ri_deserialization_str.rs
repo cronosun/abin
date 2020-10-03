@@ -1,6 +1,6 @@
 use serde::Deserializer;
 
-use crate::{AnyRc, AnyStr, ArcBin, Bin, RcBin, ReIntegrationStrVisitor, Str, StrReIntegrator, SyncBin, SyncStr};
+use crate::{AnyRc, AnyStr, ArcBin, Bin, RcBin, ReIntegrationStrVisitor, Str, StrReIntegrator, SBin, SyncStr};
 use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
 
 /// Performs re-integration de-serialization for `Str`, see `#[serde(deserialize_with = "path")]`.
@@ -69,7 +69,7 @@ impl StrReIntegrator for NonSyncStrReIntegrator {
 struct SyncStrReIntegrator {}
 
 impl StrReIntegrator for SyncStrReIntegrator {
-    type TBin = SyncBin;
+    type TBin = SBin;
 
     fn re_integrate_str(str: &str) -> AnyStr<Self::TBin> {
         if let Some(bin) = RiScope::try_re_integrate_sync(str.as_bytes()) {

@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, SyncBin, UnSyncRef};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, RcBin, StaticBin, SBin, UnSyncRef};
 use utils::*;
 
 #[global_allocator]
@@ -14,7 +14,7 @@ pub mod utils;
 fn test_re_integration() {
     static_re_integration();
     rc_re_integration::<RcBin, Bin>();
-    rc_re_integration::<ArcBin, SyncBin>();
+    rc_re_integration::<ArcBin, SBin>();
 }
 
 fn rc_re_integration<T: AnyRc<T = TBin>, TBin: AnyBin>() {

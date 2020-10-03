@@ -1,7 +1,7 @@
 use core::slice;
 use std::mem;
 
-use crate::{Bin, BinData, EmptyBin, FnTable, IntoUnSyncView, SyncBin, UnsafeBin};
+use crate::{Bin, BinData, EmptyBin, FnTable, IntoUnSyncView, SBin, UnsafeBin};
 
 /// A binary from a static slice.
 pub struct StaticBin;
@@ -16,14 +16,14 @@ impl StaticBin {
     /// let bin = StaticBin::from(slice);
     /// assert_eq!(bin.as_slice(), slice);
     /// ```
-    pub fn from(slice: &'static [u8]) -> SyncBin {
+    pub fn from(slice: &'static [u8]) -> SBin {
         let len = slice.len();
         if len == 0 {
             EmptyBin::new()
         } else {
             let ptr = slice.as_ptr();
             let data = StaticBinData::new(ptr, len);
-            SyncBin(unsafe { Bin::_new(data.to_bin_data(), &FN_TABLE) })
+            SBin(unsafe { Bin::_new(data.to_bin_data(), &FN_TABLE) })
         }
     }
 }

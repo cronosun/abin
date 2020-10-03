@@ -4,7 +4,7 @@ use core::fmt;
 use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, ArcBin, Bin, RcBin, SyncBin};
+use crate::{AnyBin, AnyRc, ArcBin, Bin, RcBin, SBin};
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 
@@ -30,7 +30,7 @@ impl<'de> Deserialize<'de> for Bin {
     }
 }
 
-impl Serialize for SyncBin {
+impl Serialize for SBin {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -40,7 +40,7 @@ impl Serialize for SyncBin {
     }
 }
 
-impl<'de> Deserialize<'de> for SyncBin {
+impl<'de> Deserialize<'de> for SBin {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where

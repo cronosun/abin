@@ -1,12 +1,12 @@
-use crate::{AnyRc, VecCapShrink};
-use crate::{AnyRcConfigForSync, AnyRcImpl, SyncBin, UnsafeBin};
+use crate::{AnyRc, ExcessShrink};
+use crate::{AnyRcConfigForSync, AnyRcImpl, SBin, UnsafeBin};
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this
 /// is `Send + Sync`. Cloning is cheap. See [AnyRc](trait.AnyRc.html) for details.
 pub struct ArcBin;
 
 impl AnyRc for ArcBin {
-    type T = SyncBin;
+    type T = SBin;
 
     #[inline]
     fn copy_from_slice(slice: &[u8]) -> Self::T {
@@ -26,10 +26,5 @@ impl AnyRc for ArcBin {
     #[inline]
     fn overhead_bytes() -> usize {
         AnyRcImpl::<AnyRcConfigForSync>::overhead_bytes()
-    }
-
-    #[inline]
-    fn from_with_cap_shrink<T: VecCapShrink>(vec: Vec<u8>) -> Self::T {
-        unsafe { AnyRcImpl::<AnyRcConfigForSync>::from_with_cap_shrink::<T>(vec)._into_sync() }
     }
 }

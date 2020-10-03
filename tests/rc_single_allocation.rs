@@ -3,7 +3,7 @@ use std::alloc::System;
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    AnyBin, AnyRc, ArcBin, Bin, ChainSlicesIter, EmptyBin, RcBin, StackBin, StaticBin, SyncBin,
+    AnyBin, AnyRc, ArcBin, Bin, ChainSlicesIter, EmptyBin, RcBin, StackBin, StaticBin, SBin,
     VecBin,
 };
 use utils::*;
@@ -23,12 +23,12 @@ fn rc_single_allocation() {
             let vec = BinGen::new(index as u8, index as usize).generate_to_vec();
             copy_from_slice::<RcBin, Bin>(vec.as_slice());
             from_iter::<RcBin, Bin>(vec.as_slice());
-            copy_from_slice::<ArcBin, SyncBin>(vec.as_slice());
-            from_iter::<ArcBin, SyncBin>(vec.as_slice());
+            copy_from_slice::<ArcBin, SBin>(vec.as_slice());
+            from_iter::<ArcBin, SBin>(vec.as_slice());
         }
 
         rc_from_multiple_parts::<RcBin, Bin>();
-        rc_from_multiple_parts::<ArcBin, SyncBin>();
+        rc_from_multiple_parts::<ArcBin, SBin>();
     });
 }
 

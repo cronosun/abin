@@ -1,4 +1,4 @@
-use abin::{Bin, IntoUnSyncView, StaticBin, SyncBin};
+use abin::{Bin, IntoUnSyncView, StaticBin, SBin};
 use std::collections::HashMap;
 
 /// binary is compatible with hash map.
@@ -18,7 +18,7 @@ fn use_bin_slice_in_hash_map() {
 /// binary is compatible with hash map.
 #[test]
 fn use_sync_bin_slice_in_hash_map() {
-    let mut map = HashMap::<SyncBin, String>::default();
+    let mut map = HashMap::<SBin, String>::default();
 
     map.insert(StaticBin::from(&[]), "empty".to_owned());
     map.insert(StaticBin::from(&[4]), "just 4".to_owned());

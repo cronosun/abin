@@ -1,7 +1,7 @@
 use serde::Deserializer;
 
 use crate::serde_support::{ReIntegrationBytesVisitor, ReIntegrator, RiScope};
-use crate::{AnyRc, ArcBin, Bin, RcBin, SyncBin};
+use crate::{AnyRc, ArcBin, Bin, RcBin, SBin};
 
 /// Performs re-integration de-serialization for `Bin`, see `#[serde(deserialize_with = "path")]`.
 ///
@@ -27,16 +27,16 @@ pub fn ri_deserialize_bin<'de, D>(deserialize: D) -> Result<Bin, D::Error>
 ///
 /// ```rust
 /// use serde::{Deserialize, Serialize};
-/// use abin::SyncBin;
+/// use abin::SBin;
 ///
 /// #[derive(Deserialize, Serialize)]
 /// struct SomeData {
 ///   some_number : usize,
 ///   #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
-///   binary : SyncBin
+///   binary : SBin
 /// }
 /// ```
-pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SyncBin, D::Error>
+pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SBin, D::Error>
     where
         D: Deserializer<'de>,
 {
@@ -76,7 +76,7 @@ impl ReIntegrator for BinReIntegrator {
 struct SyncBinReIntegrator {}
 
 impl ReIntegrator for SyncBinReIntegrator {
-    type TBin = SyncBin;
+    type TBin = SBin;
 
     #[inline]
     fn re_integrate(slice: &[u8]) -> Self::TBin {

@@ -1,7 +1,7 @@
 use core::{mem, slice};
 
 use crate::{
-    Bin, BinData, DefaultVecCapShrink, RcCounter, RcDecResult, RcMeta, RcUtils, UnsafeBin,
+    Bin, BinData, DefaultExcessShrink, RcCounter, RcDecResult, RcMeta, RcUtils, UnsafeBin,
 };
 
 #[repr(C)]
@@ -140,7 +140,7 @@ impl<TCounter: RcCounter> RcData<TCounter> {
                     let mut vec = unsafe { meta.extract_vec(self.data_len) };
                     // we also shrink the vector, why? If this is a slice, the vector might be
                     // way too large.
-                    RcUtils::maybe_shrink_vec::<TCounter, DefaultVecCapShrink>(&mut vec);
+                    RcUtils::maybe_shrink_vec::<TCounter, DefaultExcessShrink>(&mut vec);
                     vec
                 } else {
                     // no, unfortunately we can't use that vector. but extract it anyway, so

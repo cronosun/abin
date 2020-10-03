@@ -2,7 +2,7 @@ use core::cell::RefCell;
 use core::mem;
 use std::{marker::PhantomData, ops::Deref};
 
-use crate::{Bin, SyncBin};
+use crate::{Bin, SBin};
 
 std::thread_local! {
   static THREAD_LOCAL_BIN: RefCell<Option<*const ScopedRiSetup<'static>>> = RefCell::new(None);
@@ -41,7 +41,7 @@ impl RiScope {
     ///   * There's no RI scope set up.
     ///   * `SyncReIntegrationSync` returned `None`.
     #[inline]
-    pub fn try_re_integrate_sync(slice: &[u8]) -> Option<SyncBin> {
+    pub fn try_re_integrate_sync(slice: &[u8]) -> Option<SBin> {
         THREAD_LOCAL_BIN.with(|value| {
             let borrowed = value.borrow();
             if let Some(value) = borrowed.deref() {
@@ -55,7 +55,7 @@ impl RiScope {
 }
 
 pub type ReIntegrationFn = fn(binaries: &Binaries, slice: &[u8]) -> Option<Bin>;
-pub type SyncReIntegrationSync = fn(binaries: &Binaries, slice: &[u8]) -> Option<SyncBin>;
+pub type SyncReIntegrationSync = fn(binaries: &Binaries, slice: &[u8]) -> Option<SBin>;
 
 /// A re-integration scope setup.
 pub struct ScopedRiSetup<'a> {
@@ -117,11 +117,11 @@ impl<'a> ScopedRiSetup<'a> {
 
 pub struct Binaries<'a> {
     bin: Option<&'a Bin>,
-    sync_bin: Option<&'a SyncBin>,
+    sync_bin: Option<&'a SBin>,
 }
 
 impl<'a> Binaries<'a> {
-    pub fn new(bin: Option<&'a Bin>, sync_bin: Option<&'a SyncBin>) -> Self {
+    pub fn new(bin: Option<&'a Bin>, sync_bin: Option<&'a SBin>) -> Self {
         Self { bin, sync_bin }
     }
 
@@ -129,7 +129,7 @@ impl<'a> Binaries<'a> {
         Self::new(Some(bin), None)
     }
 
-    pub fn new_sync_bin(bin: &'a SyncBin) -> Self {
+    pub fn new_sync_bin(bin: &'a SBin) -> Self {
         Self::new(None, Some(bin))
     }
 
@@ -139,12 +139,12 @@ impl<'a> Binaries<'a> {
     }
 
     #[inline]
-    pub fn sync_bin(&self) -> Option<&'a SyncBin> {
+    pub fn sync_bin(&self) -> Option<&'a SBin> {
         self.sync_bin
     }
 
     #[inline]
-    pub fn both(&self) -> (Option<&'a Bin>, Option<&'a SyncBin>) {
+    pub fn both(&self) -> (Option<&'a Bin>, Option<&'a SBin>) {
         (self.bin, self.sync_bin)
     }
 }

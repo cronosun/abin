@@ -1,37 +1,28 @@
-use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, IntoUnSyncView, RcBin, StaticBin, VecBin};
+use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, IntoUnSyncView, RcBin, StaticBin, VecBin, New, Factory, SNew};
 
 #[test]
 pub fn usage() {
     // empty binary, stack-only.
-    let bin1 = EmptyBin::new();
+    let bin1 = New::empty();
     // small binary; stack-only.
-    let bin2 = RcBin::copy_from_slice(&[5, 10]);
-    // reference-counted binary (not synchronized); from a slice; can also be constructed from a vec.
-    let bin3 = RcBin::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
-    // reference-counted binary (synchronized); this time from a vector (does not allocate if the
-    // vector has enough capacity for the meta-data).
-    let bin4 = ArcBin::from_vec(
+    let bin2 = New::copy_from_slice(&[5, 10]);
+    // reference-counted binary (not synchronized);
+    let bin3 = New::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
+    // reference-counted binary (synchronized);
+    let bin4 = SNew::from_vec(
         "This is a binary; too large for the stack."
             .to_owned()
             .into_bytes(),
     );
-    // binary backed by a Vec<u8>.
-    let bin5 = VecBin::from_vec(
-        "This is a vector binary, backed by a vector"
-            .to_owned()
-            .into_bytes(),
-        true,
-    );
     // no allocation for static data.
-    let bin6 = StaticBin::from("Static data".as_bytes());
+    let bin5 = New::from_static("Static data".as_bytes());
 
-    // 'un_sync' is a cheap operation that converts SyncBin to Bin. You can also use `Into` instead.
-    use_bin(bin1.un_sync());
+    use_bin(bin1);
     use_bin(bin2);
     use_bin(bin3);
+    // 'un_sync' is a cheap operation that converts SyncBin to Bin. You can also use `Into` instead.
     use_bin(bin4.un_sync());
-    use_bin(bin5.un_sync());
-    use_bin(bin6.un_sync());
+    use_bin(bin5);
 }
 
 /// Just two interfaces for all binaries (`Bin`/`SyncBin`) - `SyncBin` can be converted to `Bin`.

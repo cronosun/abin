@@ -2,8 +2,8 @@ use core::mem;
 use std::marker::PhantomData;
 
 use crate::{
-    Bin, DefaultVecCapShrink, FnTable, IntoUnSyncView, NoVecCapShrink, NsRcCounter, RcCounter,
-    RcData, RcUtils, StackBin, SyncRcCounter, UnsafeBin, VecCapShrink,
+    Bin, DefaultExcessShrink, ExcessShrink, FnTable, IntoUnSyncView, NeverShrink, NsRcCounter,
+    RcCounter, RcData, RcUtils, StackBin, SyncRcCounter, UnsafeBin,
 };
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
@@ -13,35 +13,21 @@ pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
 impl<TConfig: AnyRcImplConfig> AnyRcImpl<TConfig> {
     #[inline]
     pub(crate) fn from_vec(vec: Vec<u8>) -> Bin {
-        Self::from_with_cap_shrink::<DefaultVecCapShrink>(vec)
+        let rc_data = unsafe { RcData::<TConfig::TCounter>::new_from_vec_raw(vec) };
+        unsafe { Bin::_new(rc_data.to_bin_data(), TConfig::table()) }
     }
 
     #[inline]
-    pub(crate) fn from_iter(iter: impl IntoIterator<Item = u8>) -> Bin {
+    pub(crate) fn from_iter(iter: impl IntoIterator<Item=u8>) -> Bin {
         let vec = RcUtils::vec_with_capacity_for_rc_from_iter::<TConfig::TCounter, _>(iter);
         Self::from_vec(vec)
     }
 
     #[inline]
-    pub(crate) fn from_with_cap_shrink<T: VecCapShrink>(mut vec: Vec<u8>) -> Bin {
-        if let Some(stack) = StackBin::try_from(vec.as_slice()) {
-            stack.un_sync()
-        } else {
-            RcUtils::maybe_shrink_vec::<TConfig::TCounter, T>(&mut vec);
-            let rc_data = unsafe { RcData::<TConfig::TCounter>::new_from_vec_raw(vec) };
-            unsafe { Bin::_new(rc_data.to_bin_data(), TConfig::table()) }
-        }
-    }
-
-    #[inline]
     pub(crate) fn copy_from_slice(slice: &[u8]) -> Bin {
-        if let Some(stack) = StackBin::try_from(slice) {
-            stack.un_sync()
-        } else {
-            let vec = RcUtils::slice_to_vec_with_meta_overhead::<TConfig::TCounter>(slice);
-            // we do not need capacity shrink (vector should already be ok).
-            Self::from_with_cap_shrink::<NoVecCapShrink>(vec)
-        }
+        let vec = RcUtils::slice_to_vec_with_meta_overhead::<TConfig::TCounter>(slice);
+        // we do not need capacity shrink (vector should already be ok).
+        Self::from_vec(vec)
     }
 
     #[inline]

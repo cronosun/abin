@@ -1,6 +1,6 @@
 use serde::export::PhantomData;
 
-use crate::{AnyBin, Bin, Binaries, IntoUnSyncView, ScopedRiSetup, SyncBin};
+use crate::{AnyBin, Bin, Binaries, IntoUnSyncView, ScopedRiSetup, SBin};
 
 /// Constructs [ScopedRiSetup] with sane defaults.
 pub struct DefaultScopes {
@@ -13,7 +13,7 @@ impl DefaultScopes {
     ///
     /// This is what you most likely want to use if you can't guarantee that you don't
     /// de-serialize only `Bin`.
-    pub fn sync(bin: &SyncBin) -> ScopedRiSetup {
+    pub fn sync(bin: &SBin) -> ScopedRiSetup {
         ScopedRiSetup::new(
             Binaries::new_sync_bin(bin),
             sync_re_integration_fn,
@@ -30,7 +30,7 @@ fn sync_re_integration_fn(binaries: &Binaries, slice: &[u8]) -> Option<Bin> {
     }
 }
 
-fn sync_sync_re_integration_fn(binaries: &Binaries, slice: &[u8]) -> Option<SyncBin> {
+fn sync_sync_re_integration_fn(binaries: &Binaries, slice: &[u8]) -> Option<SBin> {
     if let Some(bin) = binaries.sync_bin() {
         bin.try_to_re_integrate(slice)
     } else {
