@@ -1,13 +1,13 @@
 use crate::{
-    AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultExcessShrink, DefaultGivenVecConfig,
-    EmptyBin, ExcessShrink, Factory, GivenVecConfig, GivenVecOptimization, IntoUnSyncView,
-    maybe_shrink, New, RcBin, SBin, SegmentsIterator, SNew, StackBin, StackBinBuilder, StaticBin,
+    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultExcessShrink,
+    DefaultGivenVecConfig, EmptyBin, ExcessShrink, Factory, GivenVecConfig, GivenVecOptimization,
+    IntoUnSyncView, New, RcBin, SBin, SNew, SegmentsIterator, StackBin, StackBinBuilder, StaticBin,
     VecBin,
 };
 
 pub trait CommonFactory {
     type TAnyRc: AnyRc;
-    type TFunctions: CommonFactoryFunctions<TSync=SBin, TUnSync=<Self::TAnyRc as AnyRc>::T>;
+    type TFunctions: CommonFactoryFunctions<TSync = SBin, TUnSync = <Self::TAnyRc as AnyRc>::T>;
 }
 
 pub trait CommonFactoryFunctions {
@@ -17,10 +17,15 @@ pub trait CommonFactoryFunctions {
     fn is_sync() -> bool;
 }
 
+/// the vec capacity if the iter length is unknown.
+const VEC_CAPACITY_IF_UNKNOWN_ITER_LEN: usize = 128;
+/// If iterator returns some very high value, make sure to limit the capacity.
+const VEC_CAPACITY_FROM_ITER_SAFE_MAX: usize = 1024 * 1024;
+
 impl<TCf> Factory for TCf
-    where
-        TCf: CommonFactory,
-        <TCf::TAnyRc as AnyRc>::T: AnyBin,
+where
+    TCf: CommonFactory,
+    <TCf::TAnyRc as AnyRc>::T: AnyBin,
 {
     type T = <TCf::TAnyRc as AnyRc>::T;
 
@@ -45,25 +50,60 @@ impl<TCf> Factory for TCf
     }
 
     #[inline]
-    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T {
+    fn from_iter_with_config<T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
+    where
+        TIterator: IntoIterator<Item = u8>,
+    {
         let iter = iter.into_iter();
-        match StackBin::try_from_iter(iter) {
-            Ok(stack) => TCf::TFunctions::convert_to_un_sync(stack),
-            Err(iterator) => TCf::TAnyRc::from_iter(iterator),
+        match iter.size_hint() {
+            (min, Some(max)) if max <= StackBin::max_len() => {
+                // maybe will fit into stack
+                let mut stack_bin_builder = StackBinBuilder::new(Self::vec_excess());
+                for item in iter {
+                    stack_bin_builder.extend_from_slice(&[item]);
+                }
+                match stack_bin_builder.build() {
+                    Ok(stack) => TCf::TFunctions::convert_to_un_sync(stack),
+                    Err(vec) => {
+                        // returned wrong length
+                        Self::from_given_vec_with_config::<T>(vec)
+                    }
+                }
+            }
+            (min, Some(max)) => {
+                // does know length but it's too long for the stack
+                let limited_max = core::cmp::min(max, VEC_CAPACITY_FROM_ITER_SAFE_MAX);
+                let mut vec = Vec::with_capacity(limited_max + Self::vec_excess());
+                vec.extend(iter);
+                Self::from_given_vec_with_config::<T>(vec)
+            }
+            _ => {
+                // seems to be long or does not know length (use a normal vec).
+                let mut vec =
+                    Vec::with_capacity(Self::vec_excess() + VEC_CAPACITY_IF_UNKNOWN_ITER_LEN);
+                vec.extend(iter);
+                Self::from_given_vec_with_config::<T>(vec)
+            }
         }
     }
 
     #[inline]
-    fn from_iter_new_with_config<'a, T: GivenVecConfig, TIterator>(
-        iter: TIterator,
-    ) -> Self::T where TIterator: SegmentsIterator<'a, Self::T> {
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
+        Self::from_iter_with_config::<DefaultGivenVecConfig, _>(iter)
+    }
+
+    #[inline]
+    fn from_segments_with_config<'a, T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
+    where
+        TIterator: SegmentsIterator<'a, Self::T>,
+    {
         if iter.is_empty() {
             TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
         } else {
             match iter.single() {
                 Ok(single) => {
                     // nice, one single item
-                    Self::from_segment_with_config::<T>(single)
+                    Self::from_segment_with_config::<T, _>(single)
                 }
                 Err(iter) => {
                     // no, we have multiple segments ... would be nice if length is known
@@ -99,14 +139,16 @@ impl<TCf> Factory for TCf
     }
 
     #[inline]
-    fn from_iter_new<'a, TIterator>(
-        iter: TIterator,
-    ) -> Self::T where TIterator: SegmentsIterator<'a, Self::T> {
-        Self::from_iter_new_with_config::<'a, DefaultGivenVecConfig, TIterator>(iter)
+    fn from_segments<'a>(iter: impl SegmentsIterator<'a, Self::T>) -> Self::T {
+        Self::from_segments_with_config::<'a, DefaultGivenVecConfig, _>(iter)
     }
 
     #[inline]
-    fn from_segment_with_config<T: GivenVecConfig>(segment: BinSegment<Self::T>) -> Self::T {
+    fn from_segment_with_config<'a, T: GivenVecConfig, TSegment>(segment: TSegment) -> Self::T
+    where
+        TSegment: Into<BinSegment<'a, Self::T>>,
+    {
+        let segment = segment.into();
         match segment {
             BinSegment::Slice(slice) => Self::copy_from_slice(slice),
             BinSegment::Static(slice) => Self::from_static(slice),
@@ -117,8 +159,8 @@ impl<TCf> Factory for TCf
     }
 
     #[inline]
-    fn from_segment(segment: BinSegment<Self::T>) -> Self::T {
-        Self::from_segment_with_config::<DefaultGivenVecConfig>(segment)
+    fn from_segment<'a>(segment: impl Into<BinSegment<'a, Self::T>>) -> Self::T {
+        Self::from_segment_with_config::<'a, DefaultGivenVecConfig, _>(segment)
     }
 
     #[inline]

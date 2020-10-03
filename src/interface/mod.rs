@@ -15,6 +15,7 @@ mod un_sync;
 mod r#unsafe;
 
 pub use {
-    any_bin::*, bin::*, bin_builder::*, segments_slice::*, data::*, excess_shrink::*,
-    factory::*, fn_table::*, into_iter::*, r#unsafe::*, s_bin::*, segment::*, sync::*, un_sync::*, segments_iterator::*, segments_slice::*,
+    any_bin::*, bin::*, bin_builder::*, data::*, excess_shrink::*, factory::*, fn_table::*,
+    into_iter::*, r#unsafe::*, s_bin::*, segment::*, segments_iterator::*, segments_slice::*,
+    segments_slice::*, sync::*, un_sync::*,
 };

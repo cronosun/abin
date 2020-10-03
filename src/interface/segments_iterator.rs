@@ -1,8 +1,8 @@
 use crate::{AnyBin, BinSegment};
 
-pub trait SegmentsIterator<'a, TAnyBin>: IntoIterator<Item=BinSegment<'a, TAnyBin>>
-    where
-        TAnyBin: AnyBin,
+pub trait SegmentsIterator<'a, TAnyBin>: IntoIterator<Item = BinSegment<'a, TAnyBin>>
+where
+    TAnyBin: AnyBin,
 {
     type TAnyBin: AnyBin;
 
@@ -21,6 +21,6 @@ pub trait SegmentsIterator<'a, TAnyBin>: IntoIterator<Item=BinSegment<'a, TAnyBi
     /// If this iterator contains exactly one segment, returns this single segment. Returns
     /// `Err` otherwise. (note: empty segments can be ignored; they don't count).
     fn single(self) -> Result<BinSegment<'a, TAnyBin>, Self>
-        where
-            Self: Sized;
+    where
+        Self: Sized;
 }

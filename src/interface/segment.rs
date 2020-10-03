@@ -9,8 +9,8 @@ pub enum BinSegment<'a, TAnyBin: AnyBin> {
 }
 
 impl<'a, TAnyBin> BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
@@ -21,5 +21,36 @@ impl<'a, TAnyBin> BinSegment<'a, TAnyBin>
             BinSegment::GivenVec(vec) => vec.as_slice(),
             BinSegment::Empty => &[],
         }
+    }
+
+    pub fn from_slice(slice: &'a [u8]) -> Self {
+        Self::Slice(slice)
+    }
+}
+
+impl<'a, TAnyBin> From<&'static [u8]> for BinSegment<'a, TAnyBin>
+where
+    TAnyBin: AnyBin,
+{
+    fn from(slice: &'static [u8]) -> Self {
+        Self::Static(slice)
+    }
+}
+
+impl<'a, TAnyBin> From<TAnyBin> for BinSegment<'a, TAnyBin>
+where
+    TAnyBin: AnyBin,
+{
+    fn from(bin: TAnyBin) -> Self {
+        Self::Bin(bin)
+    }
+}
+
+impl<'a, TAnyBin> From<Vec<u8>> for BinSegment<'a, TAnyBin>
+where
+    TAnyBin: AnyBin,
+{
+    fn from(vec: Vec<u8>) -> Self {
+        Self::GivenVec(vec)
     }
 }

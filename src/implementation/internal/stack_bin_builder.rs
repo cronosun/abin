@@ -40,7 +40,9 @@ impl StackBinBuilder {
                     self.inner = Inner::Vec(vec);
                 } else {
                     // ok, still enough for the stack
-                    (&mut array[*len..]).copy_from_slice(other);
+                    let start_index = *len;
+                    let end_index = start_index + other.len();
+                    (&mut array[start_index..end_index]).copy_from_slice(other);
                     *len = resulting_len;
                 }
             }

@@ -42,29 +42,6 @@ impl StackBin {
         }
     }
 
-    /// It tries to construct a stack bin based on given iter. It will only try to construct
-    /// a stack bin if the given iter returns a `size_hint` (min & Some(max)) within the
-    /// stack range (still this can fail if the `size_hint` returns invalid value).
-    ///
-    // TODO: Maybe better use small vec here? -> Can we use StackBinBuilder?
-    #[inline]
-    pub fn try_from_iter<'a>(
-        iter: impl IntoIterator<Item = u8>,
-    ) -> Result<SBin, impl Iterator<Item = u8>> {
-        let iter = iter.into_iter();
-        let (min, max) = iter.size_hint();
-        if let Some(max) = max {
-            if min < Self::max_len() && max <= Self::max_len() {
-                // TODO: Implement this...
-                unimplemented!()
-            } else {
-                Err(iter)
-            }
-        } else {
-            Err(iter)
-        }
-    }
-
     /// The maximum number of bytes that can be stored on the stack.
     ///
     /// Note: This is platform-dependant: It's less on 32-bit machines, more on 64-bit machines.
@@ -72,21 +49,6 @@ impl StackBin {
         STACK_MAX_LEN
     }
 }
-
-// TODO: Use
-/*pub struct TryFromIterData {
-    data: [u8; STACK_MAX_LEN],
-    len: usize,
-}
-
-impl Default for TryFromIterData {
-    fn default() -> Self {
-        Self {
-            data: [0; STACK_MAX_LEN],
-            len: 0,
-        }
-    }
-}*/
 
 #[inline]
 fn data_raw(data: &BinData) -> *const u8 {

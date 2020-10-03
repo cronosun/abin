@@ -8,22 +8,23 @@ pub trait Factory {
     fn from_static(slice: &'static [u8]) -> Self::T;
     fn copy_from_slice(slice: &[u8]) -> Self::T;
 
-    // TODO: Denke das kann weg (from_iter_new)
-    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T;
+    fn from_iter_with_config<T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
+    where
+        TIterator: IntoIterator<Item = u8>;
 
-    // TODO: Rename ('new')
-    fn from_iter_new_with_config<'a, T: GivenVecConfig, TIterator>(
-        iter: TIterator,
-    ) -> Self::T where TIterator: SegmentsIterator<'a, Self::T>;
+    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T;
 
-    // TODO: Rename ('new')
-    fn from_iter_new<'a, TIterator>(
-        iter: TIterator,
-    ) -> Self::T where TIterator: SegmentsIterator<'a, Self::T>;
+    fn from_segments_with_config<'a, T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
+    where
+        TIterator: SegmentsIterator<'a, Self::T>;
 
-    fn from_segment_with_config<T: GivenVecConfig>(segment: BinSegment<Self::T>) -> Self::T;
+    fn from_segments<'a>(iter: impl SegmentsIterator<'a, Self::T>) -> Self::T;
 
-    fn from_segment(segment: BinSegment<Self::T>) -> Self::T;
+    fn from_segment_with_config<'a, T: GivenVecConfig, TSegment>(segment: TSegment) -> Self::T
+    where
+        TSegment: Into<BinSegment<'a, Self::T>>;
+
+    fn from_segment<'a>(segment: impl Into<BinSegment<'a, Self::T>>) -> Self::T;
 
     #[deprecated(note = "Exposes internal details; not required when builder is added")]
     fn vec_excess() -> usize;

@@ -1,7 +1,7 @@
 use core::mem;
 
-use crate::{AnyBin, BinSegment};
 use crate::interface::segments_iterator::SegmentsIterator;
+use crate::{AnyBin, BinSegment};
 
 pub struct SegmentsSlice<'a, TAnyBin: AnyBin> {
     slice: &'a mut [BinSegment<'a, TAnyBin>],
@@ -69,8 +69,10 @@ impl<'a, TAnyBin: AnyBin> SegmentsIterator<'a, TAnyBin> for SegmentsSlice<'a, TA
         self.number_of_bytes == 0
     }
 
-    fn single(mut self) -> Result<BinSegment<'a, TAnyBin>, Self> where
-        Self: Sized {
+    fn single(mut self) -> Result<BinSegment<'a, TAnyBin>, Self>
+    where
+        Self: Sized,
+    {
         if let Some(single_index) = self.single_index {
             let taken = SegmentsSlice::take(&mut self, single_index);
             Ok(taken.expect("Implementation error (single_index is invalid)"))
@@ -89,7 +91,6 @@ impl<'a, TAnyBin: AnyBin> Iterator for SegmentsSlice<'a, TAnyBin> {
         item
     }
 }
-
 
 impl<'a, TAnyBin: AnyBin> ExactSizeIterator for SegmentsSlice<'a, TAnyBin> {
     #[inline]
