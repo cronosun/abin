@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, NewSStr, SBin, SNew, SStr,
-    StrFactory,
+    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, NewSBin, NewSStr, SBin,
+    SStr, StrFactory,
 };
 use utils::*;
 
@@ -33,8 +33,8 @@ fn zero_allocation_deserialization() {
             // we need to 'tweak' the vec a bit to make sure there's no allocation and no re-allocation:
             //  - if the excess is too large we'd get a re-allocation.
             //  - if the excess is too small we'd get a allocation.
-            vec.reserve(SNew::vec_excess());
-            maybe_shrink::<DefaultExcessShrink>(&mut vec, SNew::vec_excess());
+            vec.reserve(NewSBin::vec_excess());
+            maybe_shrink::<DefaultExcessShrink>(&mut vec, NewSBin::vec_excess());
             vec
         };
 
@@ -49,7 +49,7 @@ fn zero_allocation_deserialization() {
 /// The server gets the message from the client/from network as `Vec<u8>`.
 fn server_process_message(msg: Vec<u8>) {
     // Convert that to arc-bin
-    let msg_as_bin = SNew::from_given_vec(msg);
+    let msg_as_bin = NewSBin::from_given_vec(msg);
 
     // create a scope for re-integration
     let scope_setup = DefaultScopes::sync(&msg_as_bin);
@@ -110,11 +110,11 @@ fn create_server_request() -> ServerRequest {
             "a_very_long_user_name_that_does_not_fit_on_stack@my_long_server.com \
             ['The user also has a readable name - this name is long too']",
         ),
-        huge_binary_1: SNew::from_given_vec(
-            BinGen::new(0, 1024 * 32).generate_to_vec_shrink(SNew::vec_excess()),
+        huge_binary_1: NewSBin::from_given_vec(
+            BinGen::new(0, 1024 * 32).generate_to_vec_shrink(NewSBin::vec_excess()),
         ),
-        huge_binary_2: SNew::from_given_vec(
-            BinGen::new(0, 1024 * 16).generate_to_vec_shrink(SNew::vec_excess()),
+        huge_binary_2: NewSBin::from_given_vec(
+            BinGen::new(0, 1024 * 16).generate_to_vec_shrink(NewSBin::vec_excess()),
         ),
     }
 }

@@ -1,21 +1,21 @@
-use abin::{AnyBin, Bin, Factory, IntoUnSyncView, New, SNew};
+use abin::{AnyBin, Bin, Factory, IntoUnSyncView, NewBin, NewSBin};
 
 #[test]
 pub fn usage() {
     // empty binary, stack-only.
-    let bin1 = New::empty();
+    let bin1 = NewBin::empty();
     // small binary; stack-only.
-    let bin2 = New::copy_from_slice(&[5, 10]);
+    let bin2 = NewBin::copy_from_slice(&[5, 10]);
     // reference-counted binary (not synchronized);
-    let bin3 = New::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
+    let bin3 = NewBin::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
     // reference-counted binary (synchronized);
-    let bin4 = SNew::from_given_vec(
+    let bin4 = NewSBin::from_given_vec(
         "This is a binary; too large for the stack."
             .to_owned()
             .into_bytes(),
     );
     // no allocation for static data.
-    let bin5 = New::from_static("Static data".as_bytes());
+    let bin5 = NewBin::from_static("Static data".as_bytes());
 
     use_bin(bin1);
     use_bin(bin2);

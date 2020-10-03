@@ -3,7 +3,7 @@ use std::cmp::max;
 
 use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Factory, New, SNew};
+use abin::{AnyBin, Factory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -13,8 +13,8 @@ pub mod utils;
 
 #[test]
 fn basic_rc_memory_test() {
-    basic_rc_memory::<New>();
-    basic_rc_memory::<SNew>();
+    basic_rc_memory::<NewBin>();
+    basic_rc_memory::<NewSBin>();
 }
 
 fn basic_rc_memory<T: Factory>() {

@@ -3,7 +3,7 @@ use std::alloc::System;
 use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, New};
+use abin::{AnyBin, Bin, Factory, NewBin};
 use utils::*;
 
 #[global_allocator]
@@ -25,12 +25,12 @@ fn serialize_deserialize() {
 /// (no allocation).
 fn deserialize_serialize_small() {
     let item_vec = BinGen::new(0, STACK_BIN_LEN).generate_to_vec();
-    let item_2_vec = New::empty();
+    let item_2_vec = NewBin::empty();
 
     let original = Entity {
         id: 45,
-        item: New::copy_from_slice(item_vec.as_slice()),
-        item_2: New::copy_from_slice(item_2_vec.as_slice()),
+        item: NewBin::copy_from_slice(item_vec.as_slice()),
+        item_2: NewBin::copy_from_slice(item_2_vec.as_slice()),
     };
 
     let as_vec = serde_cbor::to_vec(&original).unwrap();
@@ -58,8 +58,8 @@ fn deserialize_serialize_large() {
 
     let original = Entity {
         id: 55,
-        item: New::copy_from_slice(item_vec.as_slice()),
-        item_2: New::copy_from_slice(item_2_vec.as_slice()),
+        item: NewBin::copy_from_slice(item_vec.as_slice()),
+        item_2: NewBin::copy_from_slice(item_2_vec.as_slice()),
     };
 
     let as_vec = serde_cbor::to_vec(&original).unwrap();

@@ -1,4 +1,4 @@
-use crate::{AnyStr, Factory, New, SNew, SStr, Str};
+use crate::{AnyStr, Factory};
 
 pub trait StrFactory {
     type TBinFactory: Factory;

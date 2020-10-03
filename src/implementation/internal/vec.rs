@@ -1,6 +1,6 @@
 use core::{mem, slice};
 
-use crate::{Bin, BinData, Factory, FnTable, IntoUnSyncView, New, SBin, SNew, UnsafeBin};
+use crate::{Bin, BinData, Factory, FnTable, IntoUnSyncView, NewBin, NewSBin, SBin, UnsafeBin};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted:
 /// If you clone it or slice it, it will be converted to a reference-counted version.
@@ -111,13 +111,13 @@ fn is_empty(bin: &Bin) -> bool {
 fn clone_sync(bin: &Bin) -> Bin {
     // this involves copying memory
     let slice = as_slice(bin);
-    SNew::copy_from_slice(slice).un_sync()
+    NewSBin::copy_from_slice(slice).un_sync()
 }
 
 fn clone_non_sync(bin: &Bin) -> Bin {
     // this involves copying memory
     let slice = as_slice(bin);
-    New::copy_from_slice(slice)
+    NewBin::copy_from_slice(slice)
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {
@@ -139,7 +139,7 @@ fn slice_sync(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     } else {
         let slice = as_slice(bin).get(start..end_excluded);
         if let Some(slice) = slice {
-            Some(SNew::copy_from_slice(slice).un_sync())
+            Some(NewSBin::copy_from_slice(slice).un_sync())
         } else {
             None
         }
@@ -153,7 +153,7 @@ fn slice_non_sync(bin: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     } else {
         let slice = as_slice(bin).get(start..end_excluded);
         if let Some(slice) = slice {
-            Some(New::copy_from_slice(slice))
+            Some(NewBin::copy_from_slice(slice))
         } else {
             None
         }

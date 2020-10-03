@@ -1,8 +1,7 @@
 use crate::{
-    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultExcessShrink,
-    DefaultGivenVecConfig, EmptyBin, ExcessShrink, Factory, GivenVecConfig, GivenVecOptimization,
-    IntoUnSyncView, New, RcBin, SBin, SNew, SegmentsIterator, StackBin, StackBinBuilder, StaticBin,
-    VecBin,
+    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, Factory,
+    GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
+    SegmentsIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
 };
 
 pub trait CommonFactory {
@@ -56,7 +55,7 @@ where
     {
         let iter = iter.into_iter();
         match iter.size_hint() {
-            (min, Some(max)) if max <= StackBin::max_len() => {
+            (_, Some(max)) if max <= StackBin::max_len() => {
                 // maybe will fit into stack
                 let mut stack_bin_builder = StackBinBuilder::new(Self::vec_excess());
                 for item in iter {
@@ -70,7 +69,7 @@ where
                     }
                 }
             }
-            (min, Some(max)) => {
+            (_, Some(max)) => {
                 // does know length but it's too long for the stack
                 let limited_max = core::cmp::min(max, VEC_CAPACITY_FROM_ITER_SAFE_MAX);
                 let mut vec = Vec::with_capacity(limited_max + Self::vec_excess());
@@ -209,7 +208,7 @@ where
     }
 }
 
-impl CommonFactory for New {
+impl CommonFactory for NewBin {
     type TAnyRc = RcBin;
     type TFunctions = FunctionsForNew;
 }
@@ -231,7 +230,7 @@ impl CommonFactoryFunctions for FunctionsForNew {
     }
 }
 
-impl CommonFactory for SNew {
+impl CommonFactory for NewSBin {
     type TAnyRc = ArcBin;
     type TFunctions = FunctionsForSNew;
 }

@@ -5,7 +5,7 @@ use std::ops::Range;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, IntoUnSyncView, New, SNew};
+use abin::{AnyBin, Bin, Factory, IntoUnSyncView, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -18,7 +18,7 @@ pub mod utils;
 fn test_same_behaviour_basics() {
     // make sure there are no leaks
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let excess = max(New::vec_excess(), SNew::vec_excess());
+        let excess = max(NewBin::vec_excess(), NewSBin::vec_excess());
 
         same_behaviour_basics_static(&[]);
         same_behaviour_basics_static(&[3]);
@@ -43,12 +43,12 @@ fn test_same_behaviour_basics() {
 }
 
 fn same_behaviour_basics_static(original: &'static [u8]) {
-    same_behaviour(original, New::from_static(original).un_sync());
+    same_behaviour(original, NewBin::from_static(original).un_sync());
 }
 
 fn same_behaviour_non_static(original: Vec<u8>) {
-    let rc_bin = New::from_given_vec(original.clone());
-    let arc_bin = SNew::from_given_vec(original.clone()).un_sync();
+    let rc_bin = NewBin::from_given_vec(original.clone());
+    let arc_bin = NewSBin::from_given_vec(original.clone()).un_sync();
 
     same_behaviour(original.as_slice(), rc_bin);
     same_behaviour(original.as_slice(), arc_bin);

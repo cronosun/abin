@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, New, SNew};
+use abin::{AnyBin, Bin, Factory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -13,8 +13,8 @@ pub mod utils;
 #[test]
 fn test_re_integration() {
     static_re_integration();
-    rc_re_integration::<New>();
-    rc_re_integration::<SNew>();
+    rc_re_integration::<NewBin>();
+    rc_re_integration::<NewSBin>();
 }
 
 fn rc_re_integration<T: Factory>() {
@@ -42,7 +42,7 @@ fn rc_re_integration_stage_2<T: Factory>(bin: &T::T, sub_item: &[u8], expected: 
 
 fn static_re_integration() {
     let binary = "This is some static text. Hello, world!".as_bytes();
-    let static_bin = New::from_static(binary);
+    let static_bin = NewBin::from_static(binary);
 
     // must not allocate
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {

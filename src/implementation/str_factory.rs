@@ -1,13 +1,13 @@
 use serde::export::PhantomData;
 
-use crate::{New, SNew, StrFactory};
+use crate::{NewBin, NewSBin, StrFactory};
 
 pub struct NewStr {
     _phantom: PhantomData<()>,
 }
 
 impl StrFactory for NewStr {
-    type TBinFactory = New;
+    type TBinFactory = NewBin;
 }
 
 pub struct NewSStr {
@@ -15,5 +15,5 @@ pub struct NewSStr {
 }
 
 impl StrFactory for NewSStr {
-    type TBinFactory = SNew;
+    type TBinFactory = NewSBin;
 }

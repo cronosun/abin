@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
 
-pub struct New {
+pub struct NewBin {
     _phantom: PhantomData<()>,
 }

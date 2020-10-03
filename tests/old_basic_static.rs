@@ -1,4 +1,4 @@
-use abin::{AnyBin, Factory, New};
+use abin::{AnyBin, Factory, NewBin};
 
 const EMPTY: &[u8] = &[];
 const ONE: &[u8] = &[15];
@@ -21,7 +21,7 @@ fn basic_static() {
 
 fn test_static(slice: &'static [u8]) {
     let slice_ptr = slice.as_ptr();
-    let bin = New::from_static(slice);
+    let bin = NewBin::from_static(slice);
     assert_eq!(slice.len(), bin.len());
     assert_eq!(slice, bin.as_slice());
 

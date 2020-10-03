@@ -1,10 +1,7 @@
 use core::mem;
 use std::marker::PhantomData;
 
-use crate::{
-    Bin, DefaultExcessShrink, ExcessShrink, FnTable, IntoUnSyncView, NeverShrink, NsRcCounter,
-    RcCounter, RcData, RcUtils, StackBin, SyncRcCounter, UnsafeBin,
-};
+use crate::{Bin, FnTable, NsRcCounter, RcCounter, RcData, RcUtils, SyncRcCounter, UnsafeBin};
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
     _phantom: PhantomData<TConfig>,

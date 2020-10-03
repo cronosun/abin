@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Factory, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, New, SNew};
+use abin::{AnyBin, Factory, IntoSync, IntoUnSync, IntoUnSyncView, NeverShrink, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -28,8 +28,8 @@ fn no_alloc_guarantees() {
 /// The empty binary is stored on the stack; so no allocation here.
 fn empty() {
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        New::empty();
-        SNew::empty();
+        NewBin::empty();
+        NewSBin::empty();
     });
 }
 
@@ -44,15 +44,15 @@ fn small_binaries_are_stack_allocated() {
     let max_stack_alloc_vec_2 = generate_small_vec_that_fits_on_stack();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        New::from_given_vec(empty_vec_1);
-        New::copy_from_slice(empty_slice);
-        SNew::from_given_vec(empty_vec_2);
-        SNew::copy_from_slice(empty_slice);
+        NewBin::from_given_vec(empty_vec_1);
+        NewBin::copy_from_slice(empty_slice);
+        NewSBin::from_given_vec(empty_vec_2);
+        NewSBin::copy_from_slice(empty_slice);
 
-        New::copy_from_slice(max_stack_alloc_vec_1.as_slice());
-        New::from_given_vec(max_stack_alloc_vec_1);
-        SNew::copy_from_slice(max_stack_alloc_vec_2.as_slice());
-        SNew::from_given_vec(max_stack_alloc_vec_2);
+        NewBin::copy_from_slice(max_stack_alloc_vec_1.as_slice());
+        NewBin::from_given_vec(max_stack_alloc_vec_1);
+        NewSBin::copy_from_slice(max_stack_alloc_vec_2.as_slice());
+        NewSBin::from_given_vec(max_stack_alloc_vec_2);
     });
 }
 
@@ -66,8 +66,8 @@ fn vec_can_be_extracted_without_allocation() {
     let small_vec_clone = small_vec.clone();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        let large = New::from_given_vec(vec);
-        let small = New::from_given_vec(small_vec);
+        let large = NewBin::from_given_vec(vec);
+        let small = NewBin::from_given_vec(small_vec);
 
         // and get the vector back
         let large_vec = large.into_vec();
@@ -85,13 +85,13 @@ fn convert_into_sync_un_sync() {
     let bin_gen = BinGen::new(0, 200);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = New::empty();
-    let bin_2 = New::from_static("Hello, slice!".as_bytes());
-    let bin_3 = New::copy_from_slice(vec.as_slice());
-    let bin_4 = SNew::copy_from_slice(vec.as_slice()).un_sync();
-    let bin_5 = New::from_given_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = SNew::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = SNew::from_given_vec(vec).un_sync();
+    let bin_1 = NewBin::empty();
+    let bin_2 = NewBin::from_static("Hello, slice!".as_bytes());
+    let bin_3 = NewBin::copy_from_slice(vec.as_slice());
+    let bin_4 = NewSBin::copy_from_slice(vec.as_slice()).un_sync();
+    let bin_5 = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_7 = NewSBin::from_given_vec(vec).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // convert to sync
@@ -121,12 +121,12 @@ fn no_alloc_clone() {
     let bin_gen = BinGen::new(0, 200);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = New::empty();
-    let bin_2 = New::from_static("Hello, slice!".as_bytes());
-    let bin_3 = New::from_given_vec(vec.clone());
-    let bin_4 = SNew::from_given_vec(vec.clone()).un_sync();
-    let bin_5 = New::from_given_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = SNew::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_1 = NewBin::empty();
+    let bin_2 = NewBin::from_static("Hello, slice!".as_bytes());
+    let bin_3 = NewBin::from_given_vec(vec.clone());
+    let bin_4 = NewSBin::from_given_vec(vec.clone()).un_sync();
+    let bin_5 = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         let _ignored = bin_1.clone();
@@ -144,12 +144,12 @@ fn slice_does_not_allocate() {
     let bin_gen = BinGen::new(0, len);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = New::empty();
-    let bin_2 = New::from_static("Hello, slice!".as_bytes());
-    let bin_3 = New::from_given_vec(vec.clone());
-    let bin_4 = SNew::from_given_vec(vec.clone()).un_sync();
-    let bin_5 = New::from_given_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6 = SNew::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_1 = NewBin::empty();
+    let bin_2 = NewBin::from_static("Hello, slice!".as_bytes());
+    let bin_3 = NewBin::from_given_vec(vec.clone());
+    let bin_4 = NewSBin::from_given_vec(vec.clone()).un_sync();
+    let bin_5 = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6 = NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // empty bin is stack-only; so never allocates.
@@ -169,13 +169,14 @@ fn into_vec_does_not_allocate() {
     let bin_gen = BinGen::new(0, len);
     let vec = bin_gen.generate_to_vec();
 
-    let bin_1 = New::empty();
-    let bin_2_allocates = New::from_static("Hello, slice!".as_bytes());
-    let bin_3 = New::copy_from_slice(vec.as_slice());
-    let bin_4 = SNew::copy_from_slice(vec.as_slice()).un_sync();
-    let bin_5_allocates = New::from_given_vec(generate_small_vec_that_fits_on_stack());
-    let bin_6_allocates = SNew::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = New::from_given_vec(vec);
+    let bin_1 = NewBin::empty();
+    let bin_2_allocates = NewBin::from_static("Hello, slice!".as_bytes());
+    let bin_3 = NewBin::copy_from_slice(vec.as_slice());
+    let bin_4 = NewSBin::copy_from_slice(vec.as_slice()).un_sync();
+    let bin_5_allocates = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
+    let bin_6_allocates =
+        NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
+    let bin_7 = NewBin::from_given_vec(vec);
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // returns an empty vec

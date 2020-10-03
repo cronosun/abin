@@ -1,19 +1,19 @@
-use abin::{AnyBin, Bin, Factory, New, SNew};
+use abin::{AnyBin, Bin, Factory, NewBin, NewSBin};
 
 #[test]
 pub fn usage() {
     let example_slice = "This is some binary used for the following examples.".as_bytes();
 
     // empty binary, stack-only.
-    let bin1 = New::empty();
+    let bin1 = NewBin::empty();
     // small binary; stack-only.
-    let bin2 = New::copy_from_slice(&example_slice[2..5]);
+    let bin2 = NewBin::copy_from_slice(&example_slice[2..5]);
     // reference-counted binary (non-synchronized; like Rc);
-    let bin3 = New::copy_from_slice(example_slice);
+    let bin3 = NewBin::copy_from_slice(example_slice);
     // reference-counted binary (synchronized; like Arc);
-    let bin4 = SNew::from_given_vec(example_slice.to_vec());
+    let bin4 = NewSBin::from_given_vec(example_slice.to_vec());
     // no allocation for static data.
-    let bin5 = New::from_static(example_slice);
+    let bin5 = NewBin::from_static(example_slice);
 
     use_bin(bin1, &[]);
     use_bin(bin2, &example_slice[2..5]);

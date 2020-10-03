@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{Factory, New, SNew};
+use abin::{Factory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -16,12 +16,12 @@ const FITS_STACK: usize = 2;
 
 #[test]
 pub fn stack_memory() {
-    copy_from_slice::<New>();
-    copy_from_slice::<SNew>();
-    from_vec::<New>();
-    from_vec::<SNew>();
-    from_iter::<New>();
-    from_iter::<SNew>();
+    copy_from_slice::<NewBin>();
+    copy_from_slice::<NewSBin>();
+    from_vec::<NewBin>();
+    from_vec::<NewSBin>();
+    from_iter::<NewBin>();
+    from_iter::<NewSBin>();
 }
 
 /// rc also uses stack and does not allocate for small binaries.
