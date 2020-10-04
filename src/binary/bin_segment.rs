@@ -13,8 +13,8 @@ pub enum BinSegment<'a, TAnyBin: AnyBin> {
 }
 
 impl<'a, TAnyBin> Segment for BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     #[inline]
     fn number_of_bytes(&self) -> usize {
@@ -28,8 +28,8 @@ impl<'a, TAnyBin> Segment for BinSegment<'a, TAnyBin>
 }
 
 impl<'a, TAnyBin> BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     pub fn as_slice(&self) -> &[u8] {
         match self {
@@ -48,8 +48,8 @@ impl<'a, TAnyBin> BinSegment<'a, TAnyBin>
 }
 
 impl<'a, TAnyBin> From<&'static [u8]> for BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     fn from(slice: &'static [u8]) -> Self {
         Self::Static(slice)
@@ -57,8 +57,8 @@ impl<'a, TAnyBin> From<&'static [u8]> for BinSegment<'a, TAnyBin>
 }
 
 impl<'a, TAnyBin> From<TAnyBin> for BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     fn from(bin: TAnyBin) -> Self {
         Self::Bin(bin)
@@ -66,8 +66,8 @@ impl<'a, TAnyBin> From<TAnyBin> for BinSegment<'a, TAnyBin>
 }
 
 impl<'a, TAnyBin> From<Vec<u8>> for BinSegment<'a, TAnyBin>
-    where
-        TAnyBin: AnyBin,
+where
+    TAnyBin: AnyBin,
 {
     fn from(vec: Vec<u8>) -> Self {
         Self::GivenVec(vec)
@@ -129,7 +129,9 @@ impl From<char> for Bytes128 {
     fn from(chr: char) -> Self {
         let mut buf = [0u8; 4];
         let string = chr.encode_utf8(&mut buf);
-        Self::try_new(string.as_bytes()).expect("Implementation error: Converting from \
-        char cannot fail (since char takes 4 bytes whereas Bytes128 can take up to 16 bytes).")
+        Self::try_new(string.as_bytes()).expect(
+            "Implementation error: Converting from \
+        char cannot fail (since char takes 4 bytes whereas Bytes128 can take up to 16 bytes).",
+        )
     }
 }

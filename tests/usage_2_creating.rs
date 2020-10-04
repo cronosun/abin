@@ -130,7 +130,10 @@ fn from_segment() {
         NewBin::from_segment(bin_segment_3).as_ref()
     );
     let bin_segment_4 = BinSegment::Bytes128(158.into());
-    assert_eq!(&[158u8] as &[u8], NewBin::from_segment(bin_segment_4).as_ref());
+    assert_eq!(
+        &[158u8] as &[u8],
+        NewBin::from_segment(bin_segment_4).as_ref()
+    );
 
     let str_segment_1: StrSegment<'static, Bin> = "MZ".into();
     assert_eq!("MZ", NewStr::from_segment(str_segment_1).as_str());
@@ -162,7 +165,7 @@ fn create_dynamic_greeting_with_just_one_allocation() {
         efficient_greeting_string(GreetingCfg::GreetSomebodyNamed(NewStr::from_static(
             "world"
         )))
-            .as_str()
+        .as_str()
     );
     assert_eq!(
         "Hello, !",
@@ -174,7 +177,7 @@ fn create_dynamic_greeting_with_just_one_allocation() {
             NewStr::from_static("world"),
             NewStr::from_static("welt"),
         ))
-            .as_str()
+        .as_str()
     );
     // even zero-allocation:
     assert_eq!(
@@ -182,7 +185,7 @@ fn create_dynamic_greeting_with_just_one_allocation() {
         efficient_greeting_string(GreetingCfg::CustomGreeting(NewStr::from_static(
             "Hello, zero-allocation!"
         )))
-            .as_str()
+        .as_str()
     );
 }
 

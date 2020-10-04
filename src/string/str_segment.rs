@@ -59,4 +59,3 @@ impl<'a, TBin: AnyBin> Segment for StrSegment<'a, TBin> {
         Self::Empty
     }
 }
-
