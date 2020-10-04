@@ -129,6 +129,8 @@ fn from_segment() {
         &[77u8, 90u8] as &[u8],
         NewBin::from_segment(bin_segment_3).as_ref()
     );
+    let bin_segment_4 = BinSegment::Bytes128(158.into());
+    assert_eq!(&[158u8] as &[u8], NewBin::from_segment(bin_segment_4).as_ref());
 
     let str_segment_1: StrSegment<'static, Bin> = "MZ".into();
     assert_eq!("MZ", NewStr::from_segment(str_segment_1).as_str());
@@ -138,6 +140,9 @@ fn from_segment() {
 
     let str_segment_3 = StrSegment::from("MZ");
     assert_eq!("MZ", NewStr::from_segment(str_segment_3).as_str());
+
+    let str_segment_4 = StrSegment::Char('💣');
+    assert_eq!("💣", NewStr::from_segment(str_segment_4).as_str());
 }
 
 /// If you need to concatenate strings, use something like this. This guarantees one single

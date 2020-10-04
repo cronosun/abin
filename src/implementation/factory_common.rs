@@ -1,12 +1,12 @@
 use crate::{
-    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, Factory,
-    GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
+    AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, Factory, GivenVecConfig,
+    GivenVecOptimization, IntoUnSyncView, maybe_shrink, NewBin, NewSBin, RcBin, SBin,
     SegmentIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
 };
 
 pub trait CommonFactory {
     type TAnyRc: AnyRc;
-    type TFunctions: CommonFactoryFunctions<TSync = SBin, TUnSync = <Self::TAnyRc as AnyRc>::T>;
+    type TFunctions: CommonFactoryFunctions<TSync=SBin, TUnSync=<Self::TAnyRc as AnyRc>::T>;
 }
 
 pub trait CommonFactoryFunctions {
@@ -22,9 +22,9 @@ const VEC_CAPACITY_IF_UNKNOWN_ITER_LEN: usize = 128;
 const VEC_CAPACITY_FROM_ITER_SAFE_MAX: usize = 1024 * 1024;
 
 impl<TCf> Factory for TCf
-where
-    TCf: CommonFactory,
-    <TCf::TAnyRc as AnyRc>::T: AnyBin,
+    where
+        TCf: CommonFactory,
+        <TCf::TAnyRc as AnyRc>::T: AnyBin,
 {
     type T = <TCf::TAnyRc as AnyRc>::T;
 
@@ -50,8 +50,8 @@ where
 
     #[inline]
     fn from_iter_with_config<T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
-    where
-        TIterator: IntoIterator<Item = u8>,
+        where
+            TIterator: IntoIterator<Item=u8>,
     {
         let iter = iter.into_iter();
         match iter.size_hint() {
@@ -87,14 +87,14 @@ where
     }
 
     #[inline]
-    fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T {
+    fn from_iter(iter: impl IntoIterator<Item=u8>) -> Self::T {
         Self::from_iter_with_config::<DefaultGivenVecConfig, _>(iter)
     }
 
     #[inline]
     fn from_segments_with_config<'a, T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
-    where
-        TIterator: SegmentIterator<BinSegment<'a, Self::T>>,
+        where
+            TIterator: SegmentIterator<BinSegment<'a, Self::T>>,
     {
         if iter.is_empty() {
             TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
@@ -112,7 +112,7 @@ where
                             let mut vec: Vec<u8> =
                                 Vec::with_capacity(number_of_bytes + Self::vec_excess());
                             for item in iter {
-                                vec.extend_from_slice(item.as_slice());
+                                vec.extend_from_slice(item.as_slice())
                             }
                             Self::from_given_vec_with_config::<T>(vec)
                         }
@@ -121,7 +121,7 @@ where
                             // share the same code).
                             let mut stack_builder = StackBinBuilder::new(Self::vec_excess());
                             for item in iter {
-                                stack_builder.extend_from_slice(item.as_slice());
+                                stack_builder.extend_from_slice(item.as_slice())
                             }
                             match stack_builder.build() {
                                 Ok(stack_bin) => TCf::TFunctions::convert_to_un_sync(stack_bin),
@@ -144,8 +144,8 @@ where
 
     #[inline]
     fn from_segment_with_config<'a, T: GivenVecConfig, TSegment>(segment: TSegment) -> Self::T
-    where
-        TSegment: Into<BinSegment<'a, Self::T>>,
+        where
+            TSegment: Into<BinSegment<'a, Self::T>>,
     {
         let segment = segment.into();
         match segment {
@@ -154,6 +154,7 @@ where
             BinSegment::Bin(bin) => bin,
             BinSegment::GivenVec(vec) => Self::from_given_vec_with_config::<T>(vec),
             BinSegment::Empty => Self::empty(),
+            BinSegment::Bytes128(bytes) => Self::copy_from_slice(bytes.as_slice()),
         }
     }
 

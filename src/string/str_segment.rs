@@ -1,10 +1,12 @@
 use crate::{AnyBin, AnyStr, BinSegment, Segment};
 
+#[derive(Debug, Clone)]
 pub enum StrSegment<'a, TBin: AnyBin> {
     Slice(&'a str),
     Static(&'static str),
     Str(AnyStr<TBin>),
     GivenString(String),
+    Char(char),
     Empty,
 }
 
@@ -15,6 +17,7 @@ impl<'a, TBin: AnyBin> Into<BinSegment<'a, TBin>> for StrSegment<'a, TBin> {
             StrSegment::Static(slice) => BinSegment::Static(slice.as_bytes()),
             StrSegment::Str(string) => BinSegment::Bin(string.into_bin()),
             StrSegment::GivenString(string) => BinSegment::GivenVec(string.into_bytes()),
+            StrSegment::Char(chr) => BinSegment::Bytes128(chr.into()),
             StrSegment::Empty => BinSegment::Empty,
         }
     }
@@ -47,6 +50,7 @@ impl<'a, TBin: AnyBin> Segment for StrSegment<'a, TBin> {
             StrSegment::Str(string) => string.len(),
             StrSegment::GivenString(string) => string.len(),
             StrSegment::Empty => 0,
+            StrSegment::Char(char) => char.len_utf8(),
         }
     }
 
@@ -55,3 +59,4 @@ impl<'a, TBin: AnyBin> Segment for StrSegment<'a, TBin> {
         Self::Empty
     }
 }
+
