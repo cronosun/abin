@@ -1,6 +1,6 @@
 use crate::{AnyBin, BinSegment, ExcessShrink, SegmentIterator};
 
-pub trait Factory {
+pub trait BinFactory {
     /// The type this factory produces.
     type T: AnyBin;
 

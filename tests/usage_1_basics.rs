@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 use std::ops::Deref;
 
-use abin::{AnyBin, AnyStr, Bin, Factory, NewBin, NewStr, Str, StrFactory};
+use abin::{AnyBin, AnyStr, Bin, BinFactory, NewBin, NewStr, Str, StrFactory};
 
 #[test]
 fn usage_basics() {

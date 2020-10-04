@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{Factory, NewBin, NewSBin};
+use abin::{BinFactory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -25,7 +25,7 @@ pub fn stack_memory() {
 }
 
 /// rc also uses stack and does not allocate for small binaries.
-fn copy_from_slice<T: Factory>() {
+fn copy_from_slice<T: BinFactory>() {
     let slice = [15u8; FITS_STACK];
     mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
         T::copy_from_slice(&slice);
@@ -33,7 +33,7 @@ fn copy_from_slice<T: Factory>() {
 }
 
 /// vec also uses stack and does not allocate for small binaries.
-fn from_vec<T: Factory>() {
+fn from_vec<T: BinFactory>() {
     let slice = [15u8; FITS_STACK];
     let vec = slice.to_vec();
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
@@ -42,7 +42,7 @@ fn from_vec<T: Factory>() {
 }
 
 /// vec also uses stack and does not allocate for small binaries.
-fn from_iter<T: Factory>() {
+fn from_iter<T: BinFactory>() {
     let slice = [15u8; FITS_STACK];
     let vec = Vec::from(&slice as &[u8]);
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {

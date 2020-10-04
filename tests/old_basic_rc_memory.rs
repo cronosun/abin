@@ -3,7 +3,7 @@ use std::cmp::max;
 
 use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Factory, NewBin, NewSBin};
+use abin::{AnyBin, BinFactory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -17,7 +17,7 @@ fn basic_rc_memory_test() {
     basic_rc_memory::<NewSBin>();
 }
 
-fn basic_rc_memory<T: Factory>() {
+fn basic_rc_memory<T: BinFactory>() {
     // some simple leak tests
     no_leak_1::<T>();
     no_leak_2::<T>();
@@ -29,7 +29,7 @@ fn basic_rc_memory<T: Factory>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_1<T: Factory>() {
+fn no_leak_1<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let _vec1 = create_huge_allocation(vec_len, T::vec_excess());
@@ -37,7 +37,7 @@ fn no_leak_1<T: Factory>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_2<T: Factory>() {
+fn no_leak_2<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::vec_excess());
@@ -46,7 +46,7 @@ fn no_leak_2<T: Factory>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_3<T: Factory>() {
+fn no_leak_3<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::vec_excess());
@@ -56,7 +56,7 @@ fn no_leak_3<T: Factory>() {
 }
 
 /// Simple test that there's no leak.
-fn no_leak_4<T: Factory>() {
+fn no_leak_4<T: BinFactory>() {
     let vec_len = 1024 * 255;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
         let vec1 = create_huge_allocation(vec_len, T::vec_excess());
@@ -76,7 +76,7 @@ fn no_leak_4<T: Factory>() {
     })
 }
 
-fn into_vec_does_not_allocate_when_single_reference<T: Factory>() {
+fn into_vec_does_not_allocate_when_single_reference<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     let vec1 = create_huge_allocation(vec_len, T::vec_excess());
     let bin1 = T::from_given_vec(vec1);
@@ -86,7 +86,7 @@ fn into_vec_does_not_allocate_when_single_reference<T: Factory>() {
     });
 }
 
-fn assert_no_leak<T: Factory>() {
+fn assert_no_leak<T: BinFactory>() {
     let mut reg = Region::new(&GLOBAL);
     let vec_len = 1024 * 1024 * 32;
 

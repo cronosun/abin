@@ -3,7 +3,7 @@ use core::mem;
 use serde::export::PhantomData;
 use smallvec::SmallVec;
 
-use crate::{AnyBin, BinBuilder, BinSegment, Factory, SBin, Segment, StackBin, StackBinBuilder};
+use crate::{AnyBin, BinBuilder, BinSegment, BinFactory, SBin, Segment, StackBin, StackBinBuilder};
 
 /// There's two things we want to optimize:
 ///
@@ -15,12 +15,12 @@ use crate::{AnyBin, BinBuilder, BinSegment, Factory, SBin, Segment, StackBin, St
 ///
 /// ... for all other cases it's OK to allocate a `Vec<u8>` (since when converting to `Bin`
 /// this `Vec<u8>` must be allocated anyways).
-pub struct DefaultBinBuilder<'a, TFactory: Factory, TConfig> {
+pub struct DefaultBinBuilder<'a, TFactory: BinFactory, TConfig> {
     state: State<'a, TFactory::T>,
     _phantom: PhantomData<TConfig>,
 }
 
-impl<'a, TFactory: Factory, TConfig> DefaultBinBuilder<'a, TFactory, TConfig> {
+impl<'a, TFactory: BinFactory, TConfig> DefaultBinBuilder<'a, TFactory, TConfig> {
     pub fn new() -> Self {
         Self {
             state: State::State0Empty,
@@ -40,7 +40,7 @@ const SMALL_VEC_MAX_SEGMENTS: usize = 8;
 
 impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, TConfig>
 where
-    TFactory: Factory,
+    TFactory: BinFactory,
     TConfig: BuilderCfg<TFactory::T>,
 {
     type T = TFactory::T;

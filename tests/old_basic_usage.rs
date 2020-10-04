@@ -1,4 +1,4 @@
-use abin::{AnyBin, Bin, Factory, IntoUnSyncView, NewBin, NewSBin};
+use abin::{AnyBin, Bin, BinFactory, IntoUnSyncView, NewBin, NewSBin};
 
 #[test]
 pub fn usage() {

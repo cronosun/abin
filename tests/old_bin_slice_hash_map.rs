@@ -1,4 +1,4 @@
-use abin::{Bin, Factory, NewBin, NewSBin, SBin};
+use abin::{Bin, BinFactory, NewBin, NewSBin, SBin};
 use std::collections::HashMap;
 
 /// binary is compatible with hash map.

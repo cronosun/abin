@@ -5,7 +5,7 @@ use std::ops::Range;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, IntoUnSyncView, NewBin, NewSBin};
+use abin::{AnyBin, Bin, BinFactory, IntoUnSyncView, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]

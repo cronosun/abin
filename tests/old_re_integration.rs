@@ -2,7 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{AnyBin, Bin, Factory, NewBin, NewSBin};
+use abin::{AnyBin, Bin, BinFactory, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]
@@ -17,7 +17,7 @@ fn test_re_integration() {
     rc_re_integration::<NewSBin>();
 }
 
-fn rc_re_integration<T: Factory>() {
+fn rc_re_integration<T: BinFactory>() {
     let some_demo_slice = "This is some binary used for this test (the content does not \
     really matter - it just has to have some length)."
         .as_bytes();
@@ -35,7 +35,7 @@ fn rc_re_integration<T: Factory>() {
     assert_eq!(None, bin_a.try_to_re_integrate(&something_unrelated));
 }
 
-fn rc_re_integration_stage_2<T: Factory>(bin: &T::T, sub_item: &[u8], expected: &[u8]) {
+fn rc_re_integration_stage_2<T: BinFactory>(bin: &T::T, sub_item: &[u8], expected: &[u8]) {
     let re_integrated_bin = bin.try_to_re_integrate(sub_item).unwrap();
     assert_eq!(expected, re_integrated_bin.as_slice());
 }

@@ -1,5 +1,5 @@
 use crate::{
-    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, Factory,
+    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, BinFactory,
     GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
     SegmentIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
 };
@@ -21,7 +21,7 @@ const VEC_CAPACITY_IF_UNKNOWN_ITER_LEN: usize = 128;
 /// If iterator returns some very high value, make sure to limit the capacity.
 const VEC_CAPACITY_FROM_ITER_SAFE_MAX: usize = 1024 * 1024;
 
-impl<TCf> Factory for TCf
+impl<TCf> BinFactory for TCf
 where
     TCf: CommonFactory,
     <TCf::TAnyRc as AnyRc>::T: AnyBin,

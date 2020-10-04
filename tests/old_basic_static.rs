@@ -1,4 +1,4 @@
-use abin::{AnyBin, Factory, NewBin};
+use abin::{AnyBin, BinFactory, NewBin};
 
 const EMPTY: &[u8] = &[];
 const ONE: &[u8] = &[15];

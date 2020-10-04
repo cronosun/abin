@@ -3,7 +3,7 @@ use std::ops::Deref;
 use serde::de::Unexpected::NewtypeStruct;
 
 use abin::{
-    AnyBin, Bin, BinSegment, Factory, NewBin, NewStr, SegmentsSlice, Str, StrFactory, StrSegment,
+    AnyBin, Bin, BinSegment, BinFactory, NewBin, NewStr, SegmentsSlice, Str, StrFactory, StrSegment,
 };
 
 const MY_STATIC_STR: &'static str =

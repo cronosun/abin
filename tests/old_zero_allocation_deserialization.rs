@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, Factory, NewSBin, NewSStr, SBin,
+    maybe_shrink, AnyBin, DefaultExcessShrink, DefaultScopes, BinFactory, NewSBin, NewSStr, SBin,
     SStr, StrFactory,
 };
 use utils::*;

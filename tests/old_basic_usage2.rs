@@ -1,4 +1,4 @@
-use abin::{AnyBin, Bin, Factory, NewBin, NewSBin};
+use abin::{AnyBin, Bin, BinFactory, NewBin, NewSBin};
 
 #[test]
 pub fn usage() {
