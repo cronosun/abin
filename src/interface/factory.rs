@@ -1,4 +1,4 @@
-use crate::{AnyBin, BinSegment, ExcessShrink, SegmentsIterator};
+use crate::{AnyBin, BinSegment, ExcessShrink, SegmentIterator};
 
 pub trait Factory {
     /// The type this factory produces.
@@ -16,9 +16,9 @@ pub trait Factory {
 
     fn from_segments_with_config<'a, T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
     where
-        TIterator: SegmentsIterator<'a, Self::T>;
+        TIterator: SegmentIterator<BinSegment<'a, Self::T>>;
 
-    fn from_segments<'a>(iter: impl SegmentsIterator<'a, Self::T>) -> Self::T;
+    fn from_segments<'a>(iter: impl SegmentIterator<BinSegment<'a, Self::T>>) -> Self::T;
 
     fn from_segment_with_config<'a, T: GivenVecConfig, TSegment>(segment: TSegment) -> Self::T
     where

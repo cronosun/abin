@@ -8,7 +8,7 @@ fn use_string_in_hash_map() {
 
     map.insert(NewStr::from_static("entry 1"), "hello".to_owned());
     map.insert(NewStr::from_static("other_entry"), "world".to_owned());
-    map.insert(NewStr::from_string("daa".to_owned()), "ok".to_owned());
+    map.insert(NewStr::from_given_string("daa".to_owned()), "ok".to_owned());
 
     assert_eq!(map.get("entry 1"), Some(&"hello".to_owned()));
     assert_eq!(map.get("other_entry"), Some(&"world".to_owned()));
@@ -22,10 +22,13 @@ fn use_sync_string_in_hash_map() {
 
     map.insert(NewSStr::from_static("entry 1"), "hello".to_owned());
     map.insert(
-        NewSStr::from_string("other_entry".to_owned()),
+        NewSStr::from_given_string("other_entry".to_owned()),
         "world".to_owned(),
     );
-    map.insert(NewSStr::from_string("daa".to_owned()), "ok".to_owned());
+    map.insert(
+        NewSStr::from_given_string("daa".to_owned()),
+        "ok".to_owned(),
+    );
 
     assert_eq!(map.get("entry 1"), Some(&"hello".to_owned()));
     assert_eq!(map.get("other_entry"), Some(&"world".to_owned()));

@@ -64,7 +64,7 @@ impl StrReIntegrator for NonSyncStrReIntegrator {
 
     fn re_integrate_string(string: String) -> AnyStr<Self::TBin> {
         // can't do much here...
-        NewStr::from_string(string)
+        NewStr::from_given_string(string)
     }
 }
 
@@ -86,6 +86,6 @@ impl StrReIntegrator for SyncStrReIntegrator {
 
     fn re_integrate_string(string: String) -> AnyStr<Self::TBin> {
         // can't do much here...
-        NewSStr::from_string(string)
+        NewSStr::from_given_string(string)
     }
 }

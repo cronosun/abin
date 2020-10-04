@@ -1,7 +1,7 @@
 use crate::{
     maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, Factory,
     GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
-    SegmentsIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
+    SegmentIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
 };
 
 pub trait CommonFactory {
@@ -94,7 +94,7 @@ where
     #[inline]
     fn from_segments_with_config<'a, T: GivenVecConfig, TIterator>(iter: TIterator) -> Self::T
     where
-        TIterator: SegmentsIterator<'a, Self::T>,
+        TIterator: SegmentIterator<BinSegment<'a, Self::T>>,
     {
         if iter.is_empty() {
             TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
@@ -138,7 +138,7 @@ where
     }
 
     #[inline]
-    fn from_segments<'a>(iter: impl SegmentsIterator<'a, Self::T>) -> Self::T {
+    fn from_segments<'a>(iter: impl SegmentIterator<BinSegment<'a, Self::T>>) -> Self::T {
         Self::from_segments_with_config::<'a, DefaultGivenVecConfig, _>(iter)
     }
 

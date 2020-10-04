@@ -15,8 +15,8 @@ use crate::{AnyBin, Bin, IntoSync, IntoUnSync, IntoUnSyncView, SBin};
 pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     /// Converts the given value to a string.
     ///
@@ -79,8 +79,8 @@ impl<TBin> AnyStr<TBin>
     ///   - or if the range does not lie on UTF-8 boundaries (see also `str::get`).
     #[inline]
     pub fn slice<TRange>(&self, range: TRange) -> Option<Self>
-        where
-            TRange: RangeBounds<usize>,
+    where
+        TRange: RangeBounds<usize>,
     {
         let start = match range.start_bound() {
             Bound::Included(start) => *start,
@@ -114,8 +114,8 @@ impl<TBin> AnyStr<TBin>
 }
 
 impl<TBin> Into<String> for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn into(self) -> String {
@@ -126,8 +126,8 @@ impl<TBin> Into<String> for AnyStr<TBin>
 impl<TBin> Eq for AnyStr<TBin> where TBin: AnyBin {}
 
 impl<TBin> PartialEq for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn eq(&self, other: &Self) -> bool {
         self.as_str() == other.as_str()
@@ -135,8 +135,8 @@ impl<TBin> PartialEq for AnyStr<TBin>
 }
 
 impl<TBin> Ord for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_str().cmp(other.as_str())
@@ -144,8 +144,8 @@ impl<TBin> Ord for AnyStr<TBin>
 }
 
 impl<TBin> PartialOrd for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_str().partial_cmp(other.as_str())
@@ -153,8 +153,8 @@ impl<TBin> PartialOrd for AnyStr<TBin>
 }
 
 impl<TBin> Hash for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
@@ -162,8 +162,8 @@ impl<TBin> Hash for AnyStr<TBin>
 }
 
 impl<TBin> Debug for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Debug::fmt(self.as_str(), f)
@@ -171,8 +171,8 @@ impl<TBin> Debug for AnyStr<TBin>
 }
 
 impl<TBin> Display for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self.as_str(), f)
@@ -180,8 +180,8 @@ impl<TBin> Display for AnyStr<TBin>
 }
 
 impl<TBin> Clone for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn clone(&self) -> Self {
@@ -190,8 +190,8 @@ impl<TBin> Clone for AnyStr<TBin>
 }
 
 impl<TBin> Borrow<str> for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     #[inline]
     fn borrow(&self) -> &str {
@@ -199,21 +199,30 @@ impl<TBin> Borrow<str> for AnyStr<TBin>
     }
 }
 
-impl<TBin> AsRef<str> for AnyStr<TBin> where TBin: AnyBin {
+impl<TBin> AsRef<str> for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
     #[inline]
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl<TBin> AsRef<TBin> for AnyStr<TBin> where TBin: AnyBin {
+impl<TBin> AsRef<TBin> for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
     #[inline]
     fn as_ref(&self) -> &TBin {
         self.as_bin()
     }
 }
 
-impl<TBin> Deref for AnyStr<TBin> where TBin: AnyBin {
+impl<TBin> Deref for AnyStr<TBin>
+where
+    TBin: AnyBin,
+{
     type Target = str;
 
     #[inline]
@@ -223,8 +232,8 @@ impl<TBin> Deref for AnyStr<TBin> where TBin: AnyBin {
 }
 
 impl<TBin> IntoUnSyncView for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     type Target = AnyStr<Bin>;
 
@@ -234,8 +243,8 @@ impl<TBin> IntoUnSyncView for AnyStr<TBin>
 }
 
 impl<TBin> IntoUnSync for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     type Target = AnyStr<Bin>;
 
@@ -245,8 +254,8 @@ impl<TBin> IntoUnSync for AnyStr<TBin>
 }
 
 impl<TBin> IntoSync for AnyStr<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     type Target = AnyStr<SBin>;
 
@@ -280,8 +289,8 @@ impl<TBin> AnyStrUtf8Error<TBin> {
 impl<TBin> Error for AnyStrUtf8Error<TBin> where TBin: AnyBin {}
 
 impl<TBin> Display for AnyStrUtf8Error<TBin>
-    where
-        TBin: AnyBin,
+where
+    TBin: AnyBin,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.utf8_error, f)

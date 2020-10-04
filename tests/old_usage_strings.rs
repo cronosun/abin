@@ -12,7 +12,7 @@ fn create_strings() {
 
     // small strings (no allocation; stack only).
     let small = NewStr::copy_from_str(non_static.as_str());
-    let sync_small = NewSStr::from_string(non_static);
+    let sync_small = NewSStr::from_given_string(non_static);
 
     let non_static_bigger = "This is some bigger string that does not fit onto the stack.";
     // this allocates.

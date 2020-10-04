@@ -1,26 +1,29 @@
 use core::mem;
 
-use crate::interface::segments_iterator::SegmentsIterator;
-use crate::{AnyBin, BinSegment};
+use crate::interface::segment_iterator::SegmentIterator;
+use crate::{AnyBin, BinSegment, Segment};
 
-pub struct SegmentsSlice<'a, TAnyBin: AnyBin> {
-    slice: &'a mut [BinSegment<'a, TAnyBin>],
+pub struct SegmentsSlice<'a, TSegment> {
+    slice: &'a mut [TSegment],
     number_of_bytes: usize,
     pos: usize,
     /// this is set to the index of the single item (if there's just one single item).
     single_index: Option<usize>,
 }
 
-impl<'a, TAnyBin: AnyBin> SegmentsSlice<'a, TAnyBin> {
+impl<'a, TSegment> SegmentsSlice<'a, TSegment>
+where
+    TSegment: Segment,
+{
     /// Important: The given slice might be modified; do not use this slice.
     #[inline]
-    pub fn new(slice: &'a mut [BinSegment<'a, TAnyBin>]) -> Self {
+    pub fn new(slice: &'a mut [TSegment]) -> Self {
         // analyze content.
         let mut number_of_bytes = 0;
         let mut no_item_yet = true;
         let mut single_index = None;
         for (index, item) in slice.iter().enumerate() {
-            let item_len = item.as_slice().len();
+            let item_len = item.number_of_bytes();
             // ignore all empty items
             if item_len > 0 {
                 number_of_bytes += item_len;
@@ -52,18 +55,20 @@ impl<'a, TAnyBin: AnyBin> SegmentsSlice<'a, TAnyBin> {
         }
     }
 
-    fn take(&mut self, index: usize) -> Option<BinSegment<'a, TAnyBin>> {
+    fn take(&mut self, index: usize) -> Option<TSegment> {
         if index < self.slice.len() {
-            Some(mem::replace(&mut self.slice[index], BinSegment::Empty))
+            let empty = TSegment::empty();
+            Some(mem::replace(&mut self.slice[index], empty))
         } else {
             None
         }
     }
 }
 
-impl<'a, TAnyBin: AnyBin> SegmentsIterator<'a, TAnyBin> for SegmentsSlice<'a, TAnyBin> {
-    type TAnyBin = TAnyBin;
-
+impl<'a, TSegment> SegmentIterator<TSegment> for SegmentsSlice<'a, TSegment>
+where
+    TSegment: Segment,
+{
     fn exact_number_of_bytes(&self) -> Option<usize> {
         Some(self.number_of_bytes)
     }
@@ -72,7 +77,7 @@ impl<'a, TAnyBin: AnyBin> SegmentsIterator<'a, TAnyBin> for SegmentsSlice<'a, TA
         self.number_of_bytes == 0
     }
 
-    fn single(mut self) -> Result<BinSegment<'a, TAnyBin>, Self>
+    fn single(mut self) -> Result<TSegment, Self>
     where
         Self: Sized,
     {
@@ -85,8 +90,8 @@ impl<'a, TAnyBin: AnyBin> SegmentsIterator<'a, TAnyBin> for SegmentsSlice<'a, TA
     }
 }
 
-impl<'a, TAnyBin: AnyBin> Iterator for SegmentsSlice<'a, TAnyBin> {
-    type Item = BinSegment<'a, TAnyBin>;
+impl<'a, TSegment: Segment> Iterator for SegmentsSlice<'a, TSegment> {
+    type Item = TSegment;
 
     fn next(&mut self) -> Option<Self::Item> {
         let item = SegmentsSlice::take(self, self.pos);
@@ -95,7 +100,7 @@ impl<'a, TAnyBin: AnyBin> Iterator for SegmentsSlice<'a, TAnyBin> {
     }
 }
 
-impl<'a, TAnyBin: AnyBin> ExactSizeIterator for SegmentsSlice<'a, TAnyBin> {
+impl<'a, TSegment: Segment> ExactSizeIterator for SegmentsSlice<'a, TSegment> {
     #[inline]
     fn len(&self) -> usize {
         self.remaining()

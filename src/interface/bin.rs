@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::ops::{Bound, RangeBounds, Deref};
+use std::ops::{Bound, Deref, RangeBounds};
 
 use crate::{
     AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,

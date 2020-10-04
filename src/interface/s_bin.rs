@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
-use std::ops::{RangeBounds, Deref};
+use std::ops::{Deref, RangeBounds};
 
 use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
