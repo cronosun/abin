@@ -12,7 +12,7 @@ impl<T: AnyBin> IntoIter<T> {
     /// Creates an iterator over the bytes contained by the binary, starting at given
     /// position (`pos`). The position is usually `0` (if you want to read the binary from
     /// the start).
-    pub fn new(inner: T, pos: usize) -> Self {
+    pub(crate) fn new(inner: T, pos: usize) -> Self {
         let len = inner.len();
         Self { inner, pos, len }
     }

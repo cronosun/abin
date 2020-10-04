@@ -18,7 +18,8 @@ fn builder_with_single_item() {
     assert_eq!(built_str, NewStr::from_static("Hello, world!"));
 }
 
-/// How to build strings dynamically using a builder.
+/// How to build strings dynamically using a builder (each `process_action` should need just
+/// one allocation).
 #[test]
 fn text_from_action() {
     assert_eq!(
@@ -33,9 +34,9 @@ fn text_from_action() {
         "Nice to see you, Simon and Garfunkel!",
         process_action(GreetTwo(
             NewStr::from_static("Simon"),
-            NewStr::from_static("Garfunkel")
+            NewStr::from_static("Garfunkel"),
         ))
-        .as_str()
+            .as_str()
     );
     assert_eq!("", process_action(ShutUp).as_str());
 }
