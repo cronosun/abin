@@ -49,6 +49,39 @@ impl StackBinBuilder {
         }
     }
 
+    /// Tries to extend from slice. Returns `true` if there's still enough space to fit onto the
+    /// stack. Returns `false` if item has not been added, because it does not fit onto the stack.
+    pub fn try_extend_from_slice(&mut self, other: &[u8]) -> bool {
+        match &mut self.inner {
+            Inner::Vec(vec) => false,
+            Inner::Stack { len, array } => {
+                let other_len = other.len();
+                let resulting_len = len.checked_add(other_len).unwrap();
+                if resulting_len > MAX_LEN {
+                    false
+                } else {
+                    // ok, still enough for the stack
+                    let start_index = *len;
+                    let end_index = start_index + other.len();
+                    (&mut array[start_index..end_index]).copy_from_slice(other);
+                    *len = resulting_len;
+                    true
+                }
+            }
+        }
+    }
+
+    /// only builds a binary if this fits onto the stack. Returns `None` otherwise.
+    pub fn build_stack_only(&self) -> Option<SBin> {
+        match &self.inner {
+            Inner::Vec(vec) => {
+                None
+            }
+            Inner::Stack { len, array } => Some(StackBin::try_from(&array[0..*len])
+                .expect("This MUST be small enough for the stack.")),
+        }
+    }
+
     pub fn build(self) -> Result<SBin, Vec<u8>> {
         match self.inner {
             Inner::Vec(vec) => {
