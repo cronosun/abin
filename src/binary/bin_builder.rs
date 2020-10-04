@@ -1,15 +1,35 @@
-use crate::{AnyBin, BinSegment};
+use crate::{AnyBin, BinSegment, Bytes128};
 
 pub trait BinBuilder<'a> {
     type T: AnyBin;
 
     fn push(&mut self, segment: impl Into<BinSegment<'a, Self::T>>);
 
-    /*fn push_bin(&mut self, bin: impl Into<Self::T>);
-    fn push_slice(&mut self, slice: &[u8]);
-    fn push_static(&mut self, slice: &'static [u8]);
-    fn push_given_vec(&mut self, vec: Vec<u8>);
-    fn push_u8(&mut self, byte: u8);*/
+    #[inline]
+    fn push_bin(&mut self, bin: impl Into<Self::T>) {
+        self.push(BinSegment::Bin(bin.into()));
+    }
+
+    #[inline]
+    fn push_slice(&mut self, slice: impl Into<&'a [u8]>) {
+        self.push(BinSegment::Slice(slice.into()));
+    }
+
+    #[inline]
+    fn push_static(&mut self, slice: impl Into<&'static [u8]>) {
+        self.push(BinSegment::Static(slice.into()));
+    }
+
+    #[inline]
+    fn push_given_vec(&mut self, vec: impl Into<Vec<u8>>) {
+        self.push(BinSegment::GivenVec(vec.into()));
+    }
+
+    #[inline]
+    fn push_u8(&mut self, byte: u8) {
+        let bin_segment: Bytes128 = byte.into();
+        self.push(BinSegment::Bytes128(bin_segment));
+    }
 
     /// Builds the binary.
     ///

@@ -61,6 +61,8 @@ fn create_from_iterator() {
 
 /// Demonstrates how to construct a binary from multiple segments (efficiently). Should
 /// need just one single allocation.
+///
+/// Note: Alternative is using a builder.
 #[test]
 fn bin_create_from_segments() {
     // "Hello, "

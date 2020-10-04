@@ -41,6 +41,12 @@ impl<'a, TBin: AnyBin> From<String> for StrSegment<'a, TBin> {
     }
 }
 
+impl<'a, TBin: AnyBin> From<char> for StrSegment<'a, TBin> {
+    fn from(chr: char) -> Self {
+        Self::Char(chr)
+    }
+}
+
 impl<'a, TBin: AnyBin> Segment for StrSegment<'a, TBin> {
     #[inline]
     fn number_of_bytes(&self) -> usize {

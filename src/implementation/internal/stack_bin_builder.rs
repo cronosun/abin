@@ -74,11 +74,11 @@ impl StackBinBuilder {
     /// only builds a binary if this fits onto the stack. Returns `None` otherwise.
     pub fn build_stack_only(&self) -> Option<SBin> {
         match &self.inner {
-            Inner::Vec(vec) => {
-                None
-            }
-            Inner::Stack { len, array } => Some(StackBin::try_from(&array[0..*len])
-                .expect("This MUST be small enough for the stack.")),
+            Inner::Vec(vec) => None,
+            Inner::Stack { len, array } => Some(
+                StackBin::try_from(&array[0..*len])
+                    .expect("This MUST be small enough for the stack."),
+            ),
         }
     }
 

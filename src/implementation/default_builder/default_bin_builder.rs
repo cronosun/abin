@@ -3,7 +3,7 @@ use core::mem;
 use serde::export::PhantomData;
 use smallvec::SmallVec;
 
-use crate::{AnyBin, BinBuilder, BinSegment, Factory, SBin, Segment, StackBinBuilder};
+use crate::{AnyBin, BinBuilder, BinSegment, Factory, SBin, Segment, StackBin, StackBinBuilder};
 
 /// There's two things we want to optimize:
 ///
@@ -20,6 +20,15 @@ pub struct DefaultBinBuilder<'a, TFactory: Factory, TConfig> {
     _phantom: PhantomData<TConfig>,
 }
 
+impl<'a, TFactory: Factory, TConfig> DefaultBinBuilder<'a, TFactory, TConfig> {
+    pub fn new() -> Self {
+        Self {
+            state: State::State0Empty,
+            _phantom: Default::default(),
+        }
+    }
+}
+
 pub trait BuilderCfg<TAnyBin: AnyBin> {
     fn convert_from_sbin_to_t(sbin: SBin) -> TAnyBin;
     fn vec_excess_capacity() -> usize;
@@ -29,7 +38,11 @@ pub trait BuilderCfg<TAnyBin: AnyBin> {
 /// is takes about 40 bytes (on 64 bit machines).
 const SMALL_VEC_MAX_SEGMENTS: usize = 8;
 
-impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, TConfig> where TFactory: Factory, TConfig: BuilderCfg<TFactory::T> {
+impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, TConfig>
+where
+    TFactory: Factory,
+    TConfig: BuilderCfg<TFactory::T>,
+{
     type T = TFactory::T;
 
     #[inline]
@@ -41,9 +54,7 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
         }
 
         match &mut self.state {
-            State::State0Empty => {
-                self.state = State::State1Single(segment)
-            }
+            State::State0Empty => self.state = State::State1Single(segment),
             State::State1Single(single) => {
                 let single = mem::replace(single, BinSegment::Empty);
 
@@ -54,7 +65,8 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
                     if !fits_onto_stack {
                         None
                     } else {
-                        let fits_onto_stack = stack_builder.try_extend_from_slice(segment.as_slice());
+                        let fits_onto_stack =
+                            stack_builder.try_extend_from_slice(segment.as_slice());
                         if !fits_onto_stack {
                             None
                         } else {
@@ -68,8 +80,10 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
                 } else {
                     // nope, they're large, go to state 3
                     let mut segments = SegmentsSmallVec::new();
-                    let number_of_bytes = single.number_of_bytes()
-                        .checked_add(segment.number_of_bytes()).unwrap();
+                    let number_of_bytes = single
+                        .number_of_bytes()
+                        .checked_add(segment.number_of_bytes())
+                        .unwrap();
                     segments.push(single);
                     segments.push(segment);
 
@@ -85,14 +99,17 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
                     // nice! keep state 2
                 } else {
                     // unfortunately we have to go to state 3...
-                    let sbin = stack_builder.build_stack_only().expect("Implementation \
-                    error: We made sure that the stack builder does not grow too large.");
+                    let sbin = stack_builder.build_stack_only().expect(
+                        "Implementation \
+                    error: We made sure that the stack builder does not grow too large.",
+                    );
 
                     let mut segments = SegmentsSmallVec::new();
-                    let number_of_bytes = sbin.len()
-                        .checked_add(segment.number_of_bytes()).unwrap();
+                    let number_of_bytes =
+                        sbin.len().checked_add(segment.number_of_bytes()).unwrap();
                     segments.push(BinSegment::Bin(TConfig::convert_from_sbin_to_t(sbin)));
                     segments.push(segment);
+                    maybe_compress::<Self::T, TConfig>(&mut segments);
 
                     self.state = State::State3Large {
                         segments,
@@ -100,11 +117,16 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
                     }
                 }
             }
-            State::State3Large { segments, number_of_bytes } => {
+            State::State3Large {
+                segments,
+                number_of_bytes,
+            } => {
                 let new_number_of_bytes = (*number_of_bytes)
-                    .checked_add(segment.number_of_bytes()).unwrap();
+                    .checked_add(segment.number_of_bytes())
+                    .unwrap();
                 *number_of_bytes = new_number_of_bytes;
                 segments.push(segment);
+                maybe_compress::<Self::T, TConfig>(segments);
                 // keep state 3
             }
         }
@@ -117,14 +139,22 @@ impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, T
             State::State0Empty => TFactory::empty(),
             State::State1Single(single) => TFactory::from_segment(single),
             State::State2Stack(stack_builder) => {
-                let sbin = stack_builder.build_stack_only().expect("Implementation \
-                    error: We made sure that the stack builder does not grow too large.");
+                let sbin = stack_builder.build_stack_only().expect(
+                    "Implementation \
+                    error: We made sure that the stack builder does not grow too large.",
+                );
                 TConfig::convert_from_sbin_to_t(sbin)
             }
-            State::State3Large { segments, number_of_bytes } => {
+            State::State3Large {
+                segments,
+                number_of_bytes,
+            } => {
                 // allocate a vector that's large enough
                 let mut vec = Vec::with_capacity(
-                    TConfig::vec_excess_capacity().checked_add(number_of_bytes).unwrap());
+                    TConfig::vec_excess_capacity()
+                        .checked_add(number_of_bytes)
+                        .unwrap(),
+                );
                 for segment in segments {
                     vec.extend_from_slice(segment.as_slice());
                 }
@@ -148,4 +178,52 @@ enum State<'a, TAnyBin: AnyBin> {
         segments: SegmentsSmallVec<'a, TAnyBin>,
         number_of_bytes: usize,
     },
+}
+
+/// Combines the last two segments if they're short enough to be placed on the stack. Reason:
+/// It tries to keep the `vec` as small as possible (to make sure we can keep it on the stack).
+///
+/// Say we have: [item1, item2, item3, item4] in `vec`. The method first checks whether the `vec`
+/// is a stack vec (only in this case the operation makes sense -> if it's >
+/// `SMALL_VEC_MAX_SEGMENTS` its too late anyways and we already have a heap-allocation). Then
+/// sees if we can combine `item3` and `item4` into one stack-item.
+#[inline]
+fn maybe_compress<'a, TAnyBin, TConfig>(vec: &mut SegmentsSmallVec<TAnyBin>)
+where
+    TConfig: BuilderCfg<TAnyBin>,
+    TAnyBin: AnyBin,
+{
+    let len = vec.len();
+    if len > SMALL_VEC_MAX_SEGMENTS {
+        // no need for compression ... it's too late now
+    } else if len > 1 {
+        let vec_slice = vec.as_slice();
+        let last = &vec_slice[len - 1];
+        let second_last = &vec_slice[len - 2];
+        let len_of_two_last = last
+            .number_of_bytes()
+            .checked_add(second_last.number_of_bytes())
+            .unwrap();
+        if len_of_two_last <= StackBin::max_len() {
+            // great, we can combine those two
+            let mut stack_builder = StackBinBuilder::new(0);
+            if !stack_builder.try_extend_from_slice(second_last.as_slice()) {
+                panic!("Implementation error (must fit onto the stack)")
+            }
+            if !stack_builder.try_extend_from_slice(last.as_slice()) {
+                panic!("Implementation error (must fit onto the stack)");
+            }
+            vec.pop()
+                .expect("Expected element missing (maybe_compress)");
+            vec.pop()
+                .expect("Expected element missing (maybe_compress)");
+
+            // and add the combined stack as last element
+            vec.push(BinSegment::Bin(TConfig::convert_from_sbin_to_t(
+                stack_builder
+                    .build_stack_only()
+                    .expect("Implementation error (must fit onto the stack)."),
+            )));
+        }
+    }
 }

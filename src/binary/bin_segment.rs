@@ -1,4 +1,5 @@
 use core::mem;
+use std::io::Bytes;
 
 use crate::{AnyBin, Segment};
 
@@ -71,6 +72,15 @@ where
 {
     fn from(vec: Vec<u8>) -> Self {
         Self::GivenVec(vec)
+    }
+}
+
+impl<'a, TAnyBin> From<Bytes128> for BinSegment<'a, TAnyBin>
+where
+    TAnyBin: AnyBin,
+{
+    fn from(bytes: Bytes128) -> Self {
+        Self::Bytes128(bytes)
     }
 }
 
