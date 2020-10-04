@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 use std::fmt::{Debug, LowerHex, UpperHex};
 use std::hash::Hash;
-use std::ops::RangeBounds;
+use std::ops::{RangeBounds, Deref};
 
 use crate::{Bin, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef};
 
@@ -24,6 +24,7 @@ pub trait AnyBin:
     + IntoUnSyncView<Target = Bin>
     + IntoUnSync<Target = Bin>
     + IntoSync<Target = SBin>
+    + Deref<Target=[u8]>
 {
     /// Returns a view into this binary.
     fn as_slice(&self) -> &[u8];

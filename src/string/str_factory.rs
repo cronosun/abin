@@ -1,7 +1,21 @@
-use crate::{AnyStr, Factory};
+use crate::{AnyStr, Factory, AnyStrUtf8Error};
+use std::str::Utf8Error;
 
 pub trait StrFactory {
     type TBinFactory: Factory;
+
+    #[inline]
+    fn from_utf8_iter(iter: impl IntoIterator<Item = u8>) -> Result<AnyStr<<Self::TBinFactory as Factory>::T>, AnyStrUtf8Error<<Self::TBinFactory as Factory>::T>> {
+        let bin: <Self::TBinFactory as Factory>::T = Self::TBinFactory::from_iter(iter);
+        AnyStr::<<Self::TBinFactory as Factory>::T>::from_utf8(bin)
+    }
+
+    #[inline]
+    fn empty() -> AnyStr<<Self::TBinFactory as Factory>::T> {
+        let bin = Self::TBinFactory::empty();
+        // empty is always valid utf-8
+        unsafe { AnyStr::from_utf8_unchecked(bin) }
+    }
 
     #[inline]
     fn from_static(string: &'static str) -> AnyStr<<Self::TBinFactory as Factory>::T> {

@@ -14,7 +14,7 @@ fn usage_basics() {
     let hello_bin: Bin = NewBin::from_iter([72u8, 101u8, 108u8, 108u8, 111u8].iter().copied());
     let hello_str: Str = NewStr::copy_from_str("Hello");
     assert_eq!(&hello_bin, hello_str.as_bin());
-    assert_eq!(hello_str.deref(), "Hello");
+    assert_eq!(hello_str.as_ref() as &str, "Hello");
 
     // methods for binaries / strings
 

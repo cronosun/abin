@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::ops::{Bound, RangeBounds};
+use std::ops::{Bound, RangeBounds, Deref};
 
 use crate::{
     AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,
@@ -212,6 +212,15 @@ impl UpperHex for Bin {
 impl AsRef<[u8]> for Bin {
     #[inline]
     fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
+impl Deref for Bin {
+    type Target = [u8];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
         self.as_slice()
     }
 }

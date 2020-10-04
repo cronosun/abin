@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
-use std::ops::RangeBounds;
+use std::ops::{RangeBounds, Deref};
 
 use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
@@ -164,6 +164,15 @@ impl AsRef<[u8]> for SBin {
     #[inline]
     fn as_ref(&self) -> &[u8] {
         self.un_sync_ref().as_slice()
+    }
+}
+
+impl Deref for SBin {
+    type Target = [u8];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
     }
 }
 

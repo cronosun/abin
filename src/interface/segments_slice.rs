@@ -26,8 +26,11 @@ impl<'a, TAnyBin: AnyBin> SegmentsSlice<'a, TAnyBin> {
                 number_of_bytes += item_len;
                 if no_item_yet {
                     single_index = Some(index);
+                    no_item_yet = false;
+                } else {
+                    // more than one
+                    single_index = None;
                 }
-                no_item_yet = false;
             }
         }
 
