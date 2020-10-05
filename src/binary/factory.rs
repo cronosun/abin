@@ -26,9 +26,6 @@ pub trait BinFactory {
 
     fn from_segment<'a>(segment: impl Into<BinSegment<'a, Self::T>>) -> Self::T;
 
-    #[deprecated(note = "Exposes internal details; not required when builder is added")]
-    fn vec_excess() -> usize;
-
     /// Creates a binary from given vec. Important: Only use this method if you're given
     /// a `Vec<u8>` from outside (something you can't control). If you're in control, use
     /// any of the other methods provided by this factory.

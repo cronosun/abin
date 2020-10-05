@@ -18,8 +18,6 @@ pub mod utils;
 fn test_same_behaviour_basics() {
     // make sure there are no leaks
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let excess = max(NewBin::vec_excess(), NewSBin::vec_excess());
-
         same_behaviour_basics_static(&[]);
         same_behaviour_basics_static(&[3]);
         same_behaviour_basics_static(&[4, 8]);
@@ -28,7 +26,7 @@ fn test_same_behaviour_basics() {
         // small
         for index in 0..1024 {
             let bin_gen = BinGen::new(index as u8, index as usize);
-            let vec = bin_gen.generate_to_vec_shrink(excess);
+            let vec = bin_gen.generate_to_vec_shrink(0);
             same_behaviour_non_static(vec);
         }
 
@@ -36,7 +34,7 @@ fn test_same_behaviour_basics() {
         for step in 1..15 {
             let index = step * 2007;
             let bin_gen = BinGen::new(index as u8, index as usize);
-            let vec = bin_gen.generate_to_vec_shrink(excess);
+            let vec = bin_gen.generate_to_vec_shrink(0);
             same_behaviour_non_static(vec);
         }
     });

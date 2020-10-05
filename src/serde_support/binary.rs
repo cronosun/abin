@@ -1,12 +1,12 @@
 use core::cmp::min;
 use core::fmt;
+use std::fmt::Formatter;
+use std::marker::PhantomData;
 
 use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, ArcBin, Bin, RcBin, SBin};
-use std::fmt::Formatter;
-use std::marker::PhantomData;
+use crate::{AnyBin, AnyRc, ArcBin, Bin, BinBuilder, BinFactory, NewBin, NewSBin, RcBin, SBin};
 
 impl Serialize for Bin {
     #[inline]
@@ -24,9 +24,7 @@ impl<'de> Deserialize<'de> for Bin {
     where
         D: Deserializer<'de>,
     {
-        // we use the ref count binary here; alternative would be the VecBin: ... but I think the
-        // advantages of a RcBin outweighs the disadvantage of the reference-counter.
-        deserializer.deserialize_bytes(RcBytesVisitor::<RcBin>::new())
+        deserializer.deserialize_bytes(RcBytesVisitor::<NewBin>::new())
     }
 }
 
@@ -46,9 +44,7 @@ impl<'de> Deserialize<'de> for SBin {
     where
         D: Deserializer<'de>,
     {
-        // we use the ref count binary here; alternative would be the VecBin: ... but I think the
-        // advantages of a ArcBin outweighs the disadvantage of the reference-counter.
-        deserializer.deserialize_bytes(RcBytesVisitor::<ArcBin>::new())
+        deserializer.deserialize_bytes(RcBytesVisitor::<NewSBin>::new())
     }
 }
 
@@ -66,10 +62,11 @@ impl<T> RcBytesVisitor<T> {
 
 static SAFE_MAX_LEN: usize = 256 * 1024;
 static GUESSED_LEN: usize = 256;
+static OVERHEAD_BYTES: usize = 128;
 
 impl<'de, T> Visitor<'de> for RcBytesVisitor<T>
 where
-    T: AnyRc,
+    T: BinFactory,
 {
     type Value = T::T;
 
@@ -90,7 +87,7 @@ where
     where
         E: de::Error,
     {
-        Ok(T::from_vec(v.into_bytes()))
+        Ok(T::from_given_vec(v.into_bytes()))
     }
 
     #[inline]
@@ -106,7 +103,7 @@ where
     where
         E: de::Error,
     {
-        Ok(T::from_vec(v))
+        Ok(T::from_given_vec(v))
     }
 
     #[inline]
@@ -125,7 +122,7 @@ where
         // and an empty sequence produces an empty Vec<u8>; and the empty Vec<u8> does not
         // allocate and can be stack-allocated.
         let capacity = if capacity > 0 {
-            capacity + T::overhead_bytes()
+            capacity + OVERHEAD_BYTES
         } else {
             capacity
         };
@@ -135,6 +132,6 @@ where
             values.push(value);
         }
 
-        Ok(T::from_vec(values))
+        Ok(T::from_given_vec(values))
     }
 }

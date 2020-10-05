@@ -5,7 +5,9 @@ use std::marker::PhantomData;
 use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, AnyStr, ArcBin, RcBin, SStr, Str};
+use crate::{
+    AnyBin, AnyRc, AnyStr, ArcBin, BinFactory, NewSStr, NewStr, RcBin, SStr, Str, StrFactory,
+};
 
 impl Serialize for Str {
     #[inline]
@@ -23,7 +25,7 @@ impl<'de> Deserialize<'de> for Str {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_str(RcStrVisitor::<RcBin>::new())
+        deserializer.deserialize_str(RcStrVisitor::<NewStr>::new())
     }
 }
 
@@ -43,7 +45,7 @@ impl<'de> Deserialize<'de> for SStr {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_str(RcStrVisitor::<ArcBin>::new())
+        deserializer.deserialize_str(RcStrVisitor::<NewSStr>::new())
     }
 }
 
@@ -61,10 +63,9 @@ impl<T> RcStrVisitor<T> {
 
 impl<'de, T> Visitor<'de> for RcStrVisitor<T>
 where
-    T: AnyRc,
-    T::T: AnyBin,
+    T: StrFactory,
 {
-    type Value = AnyStr<T::T>;
+    type Value = AnyStr<<T::TBinFactory as BinFactory>::T>;
 
     fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         formatter.write_str("expecting a string")
@@ -75,9 +76,7 @@ where
     where
         E: de::Error,
     {
-        let bin = T::copy_from_slice(v.as_bytes());
-        // we know it's safe (we just got the valid str)
-        unsafe { Ok(AnyStr::from_utf8_unchecked(bin)) }
+        Ok(T::copy_from_str(v))
     }
 
     #[inline]
@@ -85,8 +84,6 @@ where
     where
         E: de::Error,
     {
-        let bin = T::from_vec(v.into_bytes());
-        // we know it's safe (we just got the valid str)
-        unsafe { Ok(AnyStr::from_utf8_unchecked(bin)) }
+        Ok(T::from_given_string(v))
     }
 }

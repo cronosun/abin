@@ -12,7 +12,7 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 pub mod utils;
 
 #[test]
-fn basic_rc_memory_test() {
+fn no_leak_tests() {
     basic_rc_memory::<NewBin>();
     basic_rc_memory::<NewSBin>();
 }
@@ -24,7 +24,6 @@ fn basic_rc_memory<T: BinFactory>() {
     no_leak_3::<T>();
     no_leak_4::<T>();
 
-    into_vec_does_not_allocate_when_single_reference::<T>();
     assert_no_leak::<T>();
 }
 
@@ -32,7 +31,7 @@ fn basic_rc_memory<T: BinFactory>() {
 fn no_leak_1<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let _vec1 = create_huge_allocation(vec_len, T::vec_excess());
+        let _vec1 = create_huge_allocation(vec_len);
     })
 }
 
@@ -40,7 +39,7 @@ fn no_leak_1<T: BinFactory>() {
 fn no_leak_2<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec1 = create_huge_allocation(vec_len);
         let _bin1 = T::from_given_vec(vec1);
     })
 }
@@ -49,7 +48,7 @@ fn no_leak_2<T: BinFactory>() {
 fn no_leak_3<T: BinFactory>() {
     let vec_len = 1024 * 1024 * 32;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec1 = create_huge_allocation(vec_len);
         let bin1 = T::from_given_vec(vec1);
         let _bin11 = bin1.clone();
     })
@@ -59,7 +58,7 @@ fn no_leak_3<T: BinFactory>() {
 fn no_leak_4<T: BinFactory>() {
     let vec_len = 1024 * 255;
     mem_scoped(&GLOBAL, &MaNoLeak, || {
-        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec1 = create_huge_allocation(vec_len);
         let bin1 = T::from_given_vec(vec1);
         {
             let _bin11 = bin1.clone();
@@ -76,34 +75,17 @@ fn no_leak_4<T: BinFactory>() {
     })
 }
 
-fn into_vec_does_not_allocate_when_single_reference<T: BinFactory>() {
-    let vec_len = 1024 * 1024 * 32;
-    let vec1 = create_huge_allocation(vec_len, T::vec_excess());
-    let bin1 = T::from_given_vec(vec1);
-    let _vec = mem_scoped(&GLOBAL, &MaNoAllocNoDealloc, || {
-        // no allocation, since 'bin1' is single reference
-        bin1.into_vec()
-    });
-}
-
 fn assert_no_leak<T: BinFactory>() {
-    let mut reg = Region::new(&GLOBAL);
-    let vec_len = 1024 * 1024 * 32;
+    mem_scoped(&GLOBAL, &MaNoLeak, || {
+        let vec_len = 1024 * 1024 * 32;
 
-    // expected: no change
-    let change1 = reg.change_and_reset();
-
-    let (change2, change3, change4) = {
-        let vec1 = create_huge_allocation(vec_len, T::vec_excess());
-        let vec2 = create_huge_allocation(vec_len, T::vec_excess());
-        let vec3 = create_huge_allocation(vec_len, T::vec_excess());
+        let vec1 = create_huge_allocation(vec_len);
+        let vec2 = create_huge_allocation(vec_len);
+        let vec3 = create_huge_allocation(vec_len);
 
         let bin1 = T::from_given_vec(vec1);
         let bin2 = T::from_given_vec(vec2);
         let bin3 = T::from_given_vec(vec3);
-
-        // expected: about 3 * vec_len (the size of the 3 vectors)
-        let change2 = reg.change_and_reset();
 
         let bin11 = bin1.clone();
         let bin21 = bin2.clone();
@@ -115,32 +97,13 @@ fn assert_no_leak<T: BinFactory>() {
         // should not allocate, since it's the only reference
         let _vec_bin3 = bin3.into_vec();
 
-        // expected: no change (since cloning does not allocate; into_vec does not allocate
-        // if single reference).
-        let change3 = reg.change_and_reset();
-
         let _vec_bin1 = bin1.into_vec();
-        // expected: about 1 * vec_len (since bin1 still has references).
-        let change4 = reg.change_and_reset();
-
-        (change2, change3, change4)
-    };
-    // expected: about -(4 * vec_len)
-    let change5 = reg.change_and_reset();
-
-    assert!(change1.bytes_allocated == 0 && change1.bytes_deallocated == 0);
-    assert!(change2.bytes_allocated == 100663296 && change2.bytes_deallocated == 0);
-    assert!(change3.bytes_allocated == 0 && change3.bytes_deallocated == 0);
-    assert!(change4.bytes_allocated == 33554432 && change4.bytes_deallocated == 0);
-    assert!(change5.bytes_allocated == 0 && change5.bytes_deallocated == 100663296 + 33554432);
+    });
 }
 
-fn create_huge_allocation(
-    number_of_bytes: usize,
-    remaining_capacity_for_rc_overhead: usize,
-) -> Vec<u8> {
+fn create_huge_allocation(number_of_bytes: usize) -> Vec<u8> {
     let mut huge_vec = Vec::with_capacity(number_of_bytes);
-    let len = number_of_bytes - remaining_capacity_for_rc_overhead;
+    let len = number_of_bytes;
     unsafe {
         huge_vec.set_len(len);
     }

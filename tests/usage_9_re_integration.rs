@@ -10,14 +10,19 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
+/// The re-integration re-integrates a slice (S) (`&[u8]`) into a given binary (A). This works if
+/// that slice (S) is part/slice of (A).
+///
+/// This is used for zero-allocation de-serialization; we get a `&[u8]` from serde in the
+/// deserialization-method and can re-integrate that slice into the binary we're de-serializing from.
 #[test]
 fn test_re_integration() {
     static_re_integration();
-    rc_re_integration::<NewBin>();
-    rc_re_integration::<NewSBin>();
+    non_static_re_integration::<NewBin>();
+    non_static_re_integration::<NewSBin>();
 }
 
-fn rc_re_integration<T: BinFactory>() {
+fn non_static_re_integration<T: BinFactory>() {
     let some_demo_slice = "This is some binary used for this test (the content does not \
     really matter - it just has to have some length)."
         .as_bytes();

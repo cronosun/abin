@@ -54,10 +54,11 @@ where
         TIterator: IntoIterator<Item = u8>,
     {
         let iter = iter.into_iter();
+        let vec_excess = TCf::TAnyRc::overhead_bytes();
         match iter.size_hint() {
             (_, Some(max)) if max <= StackBin::max_len() => {
                 // maybe will fit into stack
-                let mut stack_bin_builder = StackBinBuilder::new(Self::vec_excess());
+                let mut stack_bin_builder = StackBinBuilder::new(vec_excess);
                 for item in iter {
                     stack_bin_builder.extend_from_slice(&[item]);
                 }
@@ -72,14 +73,13 @@ where
             (_, Some(max)) => {
                 // does know length but it's too long for the stack
                 let limited_max = core::cmp::min(max, VEC_CAPACITY_FROM_ITER_SAFE_MAX);
-                let mut vec = Vec::with_capacity(limited_max + Self::vec_excess());
+                let mut vec = Vec::with_capacity(limited_max + vec_excess);
                 vec.extend(iter);
                 Self::from_given_vec_with_config::<T>(vec)
             }
             _ => {
                 // seems to be long or does not know length (use a normal vec).
-                let mut vec =
-                    Vec::with_capacity(Self::vec_excess() + VEC_CAPACITY_IF_UNKNOWN_ITER_LEN);
+                let mut vec = Vec::with_capacity(vec_excess + VEC_CAPACITY_IF_UNKNOWN_ITER_LEN);
                 vec.extend(iter);
                 Self::from_given_vec_with_config::<T>(vec)
             }
@@ -105,12 +105,12 @@ where
                     Self::from_segment_with_config::<T, _>(single)
                 }
                 Err(iter) => {
+                    let vec_excess = TCf::TAnyRc::overhead_bytes();
                     // no, we have multiple segments ... would be nice if length is known
                     match iter.exact_number_of_bytes() {
                         (Some(number_of_bytes)) if number_of_bytes > StackBin::max_len() => {
                             // to long for stack ... collect into a vec (at least we know the exact capacity).
-                            let mut vec: Vec<u8> =
-                                Vec::with_capacity(number_of_bytes + Self::vec_excess());
+                            let mut vec: Vec<u8> = Vec::with_capacity(number_of_bytes + vec_excess);
                             for item in iter {
                                 vec.extend_from_slice(item.as_slice())
                             }
@@ -119,7 +119,7 @@ where
                         _ => {
                             // we don't know the length or it's small enough for stack (both cases
                             // share the same code).
-                            let mut stack_builder = StackBinBuilder::new(Self::vec_excess());
+                            let mut stack_builder = StackBinBuilder::new(vec_excess);
                             for item in iter {
                                 stack_builder.extend_from_slice(item.as_slice())
                             }
@@ -164,21 +164,17 @@ where
     }
 
     #[inline]
-    fn vec_excess() -> usize {
-        TCf::TAnyRc::overhead_bytes()
-    }
-
-    #[inline]
     fn from_given_vec(vec: Vec<u8>) -> Self::T {
         TCf::from_given_vec_with_config::<DefaultGivenVecConfig>(vec)
     }
 
     #[inline]
     fn from_given_vec_with_config<T: GivenVecConfig>(mut vec: Vec<u8>) -> Self::T {
-        maybe_shrink::<T::TExcessShrink>(&mut vec, Self::vec_excess());
+        let vec_excess = TCf::TAnyRc::overhead_bytes();
+        maybe_shrink::<T::TExcessShrink>(&mut vec, vec_excess);
         // here we just check whether there's sufficient excess
         let excess = vec.capacity() - vec.len();
-        let sufficient_excess = excess >= Self::vec_excess();
+        let sufficient_excess = excess >= vec_excess;
 
         if sufficient_excess {
             // perfect: sufficient excess for reference-counting

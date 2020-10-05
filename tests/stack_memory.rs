@@ -10,18 +10,19 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-/// take a "conservative" length (depending on the platform; 32-bit; 64-bit this
-/// is different; but 2 should be small enough for any platform).
-const FITS_STACK: usize = 2;
+// that's the maximum that fits onto the stack.
+const FITS_STACK: usize = 3 * core::mem::size_of::<usize>() - 1;
 
 #[test]
-pub fn stack_memory() {
-    copy_from_slice::<NewBin>();
-    copy_from_slice::<NewSBin>();
-    from_vec::<NewBin>();
-    from_vec::<NewSBin>();
-    from_iter::<NewBin>();
-    from_iter::<NewSBin>();
+fn stack_memory() {
+    mem_scoped(&GLOBAL, &MaNoLeak, || {
+        copy_from_slice::<NewBin>();
+        copy_from_slice::<NewSBin>();
+        from_vec::<NewBin>();
+        from_vec::<NewSBin>();
+        from_iter::<NewBin>();
+        from_iter::<NewSBin>();
+    });
 }
 
 /// rc also uses stack and does not allocate for small binaries.
@@ -41,7 +42,7 @@ fn from_vec<T: BinFactory>() {
     });
 }
 
-/// vec also uses stack and does not allocate for small binaries.
+/// iter also uses stack and does not allocate for small binaries.
 fn from_iter<T: BinFactory>() {
     let slice = [15u8; FITS_STACK];
     let vec = Vec::from(&slice as &[u8]);

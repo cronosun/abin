@@ -12,19 +12,22 @@ static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 pub mod utils;
 
-const STACK_BIN_LEN: usize = 3;
+/// maximum number of bytes that fit onto the stack.
+const STACK_BIN_LEN: usize = 3 * core::mem::size_of::<usize>() - 1;
 
 /// This tests some guarantees that are given that do not heap-allocate.
 #[test]
 fn no_alloc_guarantees() {
-    empty();
-    small_binaries_are_stack_allocated();
-    vec_can_be_extracted_without_allocation();
-    convert_into_sync_un_sync();
-    no_alloc_clone();
-    slice_does_not_allocate();
-    into_vec_does_not_allocate();
-    // TODO rc_from_vec();
+    // and of course no leaks
+    mem_scoped(&GLOBAL, &MaNoLeak, || {
+        empty();
+        small_binaries_are_stack_allocated();
+        vec_can_be_extracted_without_allocation();
+        convert_into_sync_un_sync();
+        no_alloc_clone();
+        slice_does_not_allocate();
+        into_vec_does_not_allocate();
+    });
 }
 
 /// The empty binary is stored on the stack; so no allocation here.
@@ -35,7 +38,7 @@ fn empty() {
     });
 }
 
-/// Small binaries are stored on the stack (up to `StackBin::max_len()` bytes).
+/// Small binaries are stored on the stack (up to `STACK_BIN_LEN` bytes).
 fn small_binaries_are_stack_allocated() {
     let empty_slice: &[u8] = &[];
     let empty_vec_1 = Vec::from(empty_slice);
@@ -59,24 +62,19 @@ fn small_binaries_are_stack_allocated() {
 }
 
 /// As long as there are not multiple references pointing to the binary, a vec can always be
-/// extracted without allocation.
+/// extracted without allocation (as long as it's not too small and thus gets stack-allocated).
 fn vec_can_be_extracted_without_allocation() {
     let bin_gen = BinGen::new(0, 800);
     let vec = bin_gen.generate_to_vec();
     let vec_clone = vec.clone();
-    let small_vec: Vec<u8> = Vec::from(&[4u8, 8u8] as &[u8]);
-    let small_vec_clone = small_vec.clone();
+    let bin_1 = NewBin::from_given_vec(vec);
+    let vec_from_bin = bin_1.into_vec();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        let large = NewBin::from_given_vec(vec);
-        let small = NewBin::from_given_vec(small_vec);
-
+        let bin_2 = NewBin::from_given_vec(vec_from_bin);
         // and get the vector back
-        let large_vec = large.into_vec();
-        let small_vec = small.into_vec();
-
-        assert_eq!(vec_clone, large_vec);
-        assert_eq!(small_vec_clone, small_vec);
+        let vec_from_bin_2 = bin_2.into_vec();
+        assert_eq!(vec_clone, vec_from_bin_2);
     });
 }
 
@@ -93,7 +91,6 @@ fn convert_into_sync_un_sync() {
     let bin_4 = NewSBin::copy_from_slice(vec.as_slice()).un_sync();
     let bin_5 = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
     let bin_6 = NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = NewSBin::from_given_vec(vec).un_sync();
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // convert to sync
@@ -104,7 +101,6 @@ fn convert_into_sync_un_sync() {
         let sync_bin4 = bin_4.into_sync();
         let sync_bin5 = bin_5.into_sync();
         let sync_bin6 = bin_6.into_sync();
-        let sync_bin7 = bin_7.into_sync();
 
         // convert back to un-sync
         sync_bin1.un_sync_convert();
@@ -114,7 +110,6 @@ fn convert_into_sync_un_sync() {
         sync_bin4.un_sync_convert();
         sync_bin5.un_sync_convert();
         sync_bin6.un_sync_convert();
-        sync_bin7.un_sync_convert();
     });
 }
 
@@ -164,10 +159,11 @@ fn slice_does_not_allocate() {
     });
 }
 
-/// `into_vec` is allocation-free for `EmptyBin`, ... and for reference-counted binaries
-/// with only one reference.
+/// `into_vec` is allocation-free for empty binaries ... and for reference-counted binaries
+/// (too large for stack) with only one reference.
 fn into_vec_does_not_allocate() {
-    let len = 200;
+    // make sure this is too large for stack
+    let len = STACK_BIN_LEN * 2;
     let bin_gen = BinGen::new(0, len);
     let vec = bin_gen.generate_to_vec();
 
@@ -178,7 +174,6 @@ fn into_vec_does_not_allocate() {
     let bin_5_allocates = NewBin::from_given_vec(generate_small_vec_that_fits_on_stack());
     let bin_6_allocates =
         NewSBin::from_given_vec(generate_small_vec_that_fits_on_stack()).un_sync();
-    let bin_7 = NewBin::from_given_vec(vec);
 
     mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
         // returns an empty vec
@@ -187,7 +182,6 @@ fn into_vec_does_not_allocate() {
         bin_3.into_vec();
         // reference-counted binaries do not allocate unless there are multiple references pointing to them.
         bin_4.into_vec();
-        bin_7.into_vec();
     });
 
     mem_scoped(&GLOBAL, &MaDoesAllocate, || {
@@ -207,36 +201,7 @@ fn into_vec_does_not_allocate() {
     });
 }
 
-/// Creating a bin is alloc free under some conditions:
-///
-///   * Given vec has enough capacity (see `AnyRc::overhead_bytes()`)
-///   * Do not use a capacity shrinker (or use a vec that does not have too much excess).
-/*fn rc_from_vec() {
-    let generator = BinGen::new(0, 1024 * 32);
-
-    let vec_for_sync = generator.generate_to_vec_shrink(New::vec_excess());
-    let vec_for_non_sync = generator.generate_to_vec_shrink(SNew::vec_excess());
-
-    // reserve additional 64k (excess)
-    let mut vec_for_sync_much_excess = generator.generate_to_vec();
-    vec_for_sync_much_excess.reserve(1024 * 64);
-    let mut vec_for_non_sync_much_excess = generator.generate_to_vec();
-    vec_for_non_sync_much_excess.reserve(1024 * 64);
-
-    let (_, _, _, _) = mem_scoped(&GLOBAL, &MaNoAllocNoReAlloc, || {
-        let bin1 = SNew::from_given_vec(vec_for_sync);
-        let bin2 = New::from_given_vec(vec_for_non_sync);
-
-        // can also construct from a vec with much excess (but in this case, we have to choose a
-        // different shrinker).
-        let bin3 = SNew::from_given_vec_with_config::<NeverShrink>(vec_for_sync_much_excess);
-        let bin4 = SNew::from_given_vec_with_config::<NeverShrink>(vec_for_non_sync_much_excess);
-
-        (bin1, bin2, bin3, bin4)
-    });
-}*/
-
-/// See `StackBin::max_len()`: That's the maximum that fits on stack.
+/// That's the maximum that fits on stack.
 fn generate_small_vec_that_fits_on_stack() -> Vec<u8> {
     let bin_gen = BinGen::new(0, STACK_BIN_LEN);
     bin_gen.generate_to_vec()

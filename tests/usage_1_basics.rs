@@ -16,7 +16,7 @@ fn usage_basics() {
     assert_eq!(&hello_bin, hello_str.as_bin());
     assert_eq!(hello_str.as_ref() as &str, "Hello");
 
-    // methods for binaries / strings
+    // operations for binaries / strings
 
     // length (number of bytes / number of utf-8 bytes)
     assert_eq!(5, hello_bin.len());
