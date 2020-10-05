@@ -1,3 +1,29 @@
+# Work in progress.
+
+# Naming
+
+* Data types: `[S][Bin/Str]` (`Bin`, `Str`, `SBin`, `SStr`).
+* Type traits: `[Any][Bin/Str]` (`AnyBin`, `AnyStr`).
+* Factory traits: `[Bin/Str][Factory]` (`BinFactory`, `StrFactory`)
+* Factory implementations: `[New][S][Bin/Str]` (`NewBin`, `NewStr`, `NewSBin`, `NewSStr`).
+
+| Name       | Send + Sync | Binary / String | What                   | Sync / Non-Sync equivalent | Binary / String equivalent |
+|------------|-------------|-----------------|------------------------|----------------------------|----------------------------|
+| AnyBin     |             | Binary          | Trait for Bin and SBin | -                          | AnyStr                     |
+| Bin        | No          | Binary          | Binary data            | SBin                       | Str                        |
+| SBin       | Yes         | Binary          | Binary data            | Bin                        | SStr                       |
+| BinFactory |             | Binary          | Factory trait Bin/SBin | -                          | StrFactory                 |
+| NewBin     | No          | Binary          | Factory for Bin        | NewSBin                    | NewStr                     |
+| NewSBin    | Yes         | Binary          | Factors for SBin       | NewBin                     | NewSStr                    |
+| AnyStr     |             | String          | Str / SStr             | -                          | AnyBin                     |
+| Str        | No          | String          | String data            | SStr                       | Bin                        |
+| SStr       | Yes         | String          | String data            | Str                        | SBin                       |
+| StrFactory |             | String          | Factory trait Str/SStr | -                          | BinFactory                 |
+| NewStr     | No          | String          | Factory for Str        | NewSStr                    | NewBin                     |
+| NewSStr    | Yes         | String          | Factory for SStr       | NewStr                     | NewSBin                    |
+
+# OLD
+
 # Overview
 
 A library for working with binaries. It provides multiple implementations that all share the same interface `AnyBin`; `struct Bin` / `struct SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free, and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`.

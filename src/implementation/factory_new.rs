@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{AnyRc, Bin, BinBuilder, BuilderCfg, DefaultBinBuilder, IntoUnSyncView, RcBin, SBin};
+use crate::{AnyRc, Bin, BinBuilder, BuilderCfg, DefaultBinBuilder, IntoUnSyncView, RcBin, SBin, BooToOwned, BinFactory};
 
 pub struct NewBin {
     _phantom: PhantomData<()>,
@@ -9,6 +9,12 @@ pub struct NewBin {
 impl NewBin {
     pub fn builder<'a>() -> impl BinBuilder<'a, T = Bin> {
         DefaultBinBuilder::<NewBin, BinBuilderCfg>::new()
+    }
+}
+
+impl BooToOwned<[u8], Bin> for NewBin {
+    fn convert_to_owned(borrowed: &[u8]) -> Bin {
+        Self::copy_from_slice(borrowed)
     }
 }
 
