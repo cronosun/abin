@@ -4,11 +4,13 @@ use crate::{
     AnyRc, ArcBin, BinBuilder, BinFactory, BooToOwned, BuilderCfg, DefaultBinBuilder, SBin,
 };
 
+/// Default implementation used to create `SBin`. See `BinFactory` for documentation.
 pub struct NewSBin {
     _phantom: PhantomData<()>,
 }
 
 impl NewSBin {
+    /// Constructs a builder that can be used to create `SBin`.
     pub fn builder<'a>() -> impl BinBuilder<'a, T = SBin> {
         DefaultBinBuilder::<NewSBin, BinBuilderCfg>::new()
     }

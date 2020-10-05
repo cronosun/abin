@@ -5,7 +5,7 @@ use std::ops::{Deref, RangeBounds};
 
 use crate::{Bin, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef};
 
-/// Common trait implemented by [Bin](struct.Bin.html) and [SyncBin](struct.SyncBin.html).
+/// Common trait implemented by `Bin` and `SBin`.
 pub trait AnyBin:
     Clone
     + Debug
@@ -36,18 +36,19 @@ pub trait AnyBin:
     /// The length (number of bytes).
     ///
     /// ```rust
-    /// use abin::{StaticBin, AnyBin};
-    /// let bin1 = StaticBin::from("Hello".as_bytes());
-    /// assert_eq!(5, bin1.len());
+    /// use abin::{NewBin, BinFactory};
+    /// let bin = NewBin::from_static("Hello".as_bytes());
+    /// assert_eq!(5, bin.len());
     /// ```
     fn len(&self) -> usize;
 
     /// `true` if this binary is empty.
     ///
     /// ```rust
-    /// use abin::{StaticBin, AnyBin};
-    /// let bin1 = StaticBin::from("".as_bytes());
-    /// assert_eq!(true, bin1.is_empty());
+    /// use abin::{NewBin, BinFactory};
+    /// let bin = NewBin::from_static("Hello".as_bytes());
+    /// assert_eq!(false, bin.is_empty());
+    /// assert_eq!(true, NewBin::empty().is_empty());
     /// ```
     fn is_empty(&self) -> bool;
 
@@ -58,15 +59,15 @@ pub trait AnyBin:
     /// effort).
     ///
     /// ```rust
-    /// use abin::{StaticBin, AnyBin, EmptyBin};
+    /// use abin::{NewBin, BinFactory, AnyBin};
     ///
-    /// let bin1 = StaticBin::from("This is some text!".as_bytes());
+    /// let bin1 = NewBin::from_static("This is some text!".as_bytes());
     /// assert_eq!("is some".as_bytes(), bin1.slice(5..12).unwrap().as_slice());
     /// assert_eq!("This is some text!".as_bytes(), bin1.slice(0..18).unwrap().as_slice());
     ///
     /// // out of bounds
-    /// assert_eq!(None, EmptyBin::new().slice(0..1));
-    /// assert_eq!(None, EmptyBin::new().slice(800..0));
+    /// assert_eq!(None, NewBin::empty().slice(0..1));
+    /// assert_eq!(None, NewBin::empty().slice(800..0));
     /// assert_eq!(None, bin1.slice(0..19));
     /// ```
     fn slice<TRange>(&self, range: TRange) -> Option<Self>
@@ -93,10 +94,10 @@ pub trait AnyBin:
     /// thus prevent a memory-allocation; `Bin` (B) is then just a slice of `Bin` (A).
     ///
     /// ```rust
-    /// use abin::{StaticBin, AnyBin};
+    /// use abin::{NewBin, BinFactory, AnyBin};
     ///
     /// let bin_a_slice = "this is some static binary".as_bytes();
-    /// let bin_a = StaticBin::from(bin_a_slice);
+    /// let bin_a = NewBin::from_static(bin_a_slice);
     ///
     /// let bin_b_slice = &bin_a.as_slice()[5..];
     ///

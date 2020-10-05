@@ -1,5 +1,7 @@
 use crate::{AnyBin, Segment};
 
+/// A segment; segments can be joined to create binaries. See `BinBuilder`,
+/// `SegmentIterator` and `SegmentsSlice`.
 #[derive(Debug, Clone)]
 pub enum BinSegment<'a, TAnyBin: AnyBin> {
     Slice(&'a [u8]),

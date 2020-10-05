@@ -1,6 +1,6 @@
 /// Returns the un-synchronized view of self.
 ///
-/// See also [UnSyncRef](trait.UnSyncRef.html) and [IntoUnSync](trait.IntoUnSync.html).
+/// See also `UnSyncRef` and `IntoUnSync`.
 pub trait IntoUnSyncView {
     type Target;
 
@@ -10,9 +10,9 @@ pub trait IntoUnSyncView {
     /// changed. It's still backed by a synchronized implementation.
     ///
     /// ```rust
-    /// use abin::{SBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, IntoSync};
+    /// use abin::{SBin, NewSBin, BinFactory, IntoUnSyncView, Bin, AnyBin, IntoSync};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = NewSBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync());
     ///
     /// fn function_wants_bin(value : Bin) {
@@ -29,7 +29,7 @@ pub trait IntoUnSyncView {
 
 /// Returns the un-synchronized view of self (as reference).
 ///
-/// See also [IntoUnSyncView](trait.IntoUnSyncView.html) and [IntoUnSync](trait.IntoUnSync.html).
+/// See also `IntoUnSyncView` and `IntoUnSync`.
 pub trait UnSyncRef {
     type Target;
 
@@ -39,9 +39,9 @@ pub trait UnSyncRef {
     /// changed. It's still backed by a synchronized implementation.
     ///
     /// ```rust
-    /// use abin::{SBin, ArcBin, AnyRc, IntoUnSyncView, Bin, AnyBin, UnSyncRef};
+    /// use abin::{NewSBin, SBin, BinFactory, UnSyncRef, Bin, AnyBin};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = NewSBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync_ref());
     ///
     /// fn function_wants_bin(value : &Bin) {
@@ -55,7 +55,7 @@ pub trait UnSyncRef {
 
 /// Converts self into the un-synchronized version.
 ///
-/// See also [IntoUnSyncView](trait.IntoUnSyncView.html) and [UnSyncRef](trait.UnSyncRef.html).
+/// See also `IntoUnSyncView` and `UnSyncRef`.
 pub trait IntoUnSync {
     type Target;
 
@@ -68,9 +68,9 @@ pub trait IntoUnSync {
     /// there's no good reason to use this, better use the `IntoUnSyncView`.
     ///
     /// ```rust
-    /// use abin::{SBin, ArcBin, AnyRc, Bin, AnyBin, IntoSync, IntoUnSync};
+    /// use abin::{NewSBin, SBin, BinFactory, Bin, IntoUnSync, AnyBin, IntoSync};
     /// let string = "This is some string; content of the binary.";
-    /// let sync_bin : SBin = ArcBin::copy_from_slice(string.as_bytes());
+    /// let sync_bin : SBin = NewSBin::copy_from_slice(string.as_bytes());
     /// function_wants_bin(sync_bin.un_sync_convert());
     ///
     /// fn function_wants_bin(value : Bin) {

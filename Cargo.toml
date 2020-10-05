@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 smallvec = ">= 1.4"
-serde = ">= 1.0.96"
+serde = { version = ">= 1.0.96", optional = true, default-features = false }
 
 [dev-dependencies]
 stats_alloc = ">= 0.1"

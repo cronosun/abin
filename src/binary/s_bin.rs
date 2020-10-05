@@ -7,8 +7,8 @@ use std::ops::{Deref, RangeBounds};
 
 use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
 
-/// A synchronized version (`Send + Sync`) of [Bin](struct.Bin.html). See
-/// also [AnyBin](trait.AnyBin.html).
+/// A binary that does implement `Send + Sync`. See `AnyBin` for documentation; see `Bin`
+/// if you don't need `Send + Sync`. See `BinFactory` on how to create binaries.
 pub struct SBin(pub(crate) Bin);
 
 unsafe impl Sync for SBin {}

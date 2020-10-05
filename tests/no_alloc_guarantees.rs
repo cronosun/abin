@@ -2,9 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{
-    AnyBin, BinFactory, IntoSync, IntoUnSync, IntoUnSyncView, NewBin, NewSBin,
-};
+use abin::{AnyBin, BinFactory, IntoSync, IntoUnSync, IntoUnSyncView, NewBin, NewSBin};
 use utils::*;
 
 #[global_allocator]

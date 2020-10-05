@@ -1,5 +1,7 @@
 use crate::{AnyBin, AnyStr, BinSegment, Segment};
 
+/// A segment; segments can be joined to create strings. See `StrBuilder`,
+/// `SegmentIterator` and `SegmentsSlice`.
 #[derive(Debug, Clone)]
 pub enum StrSegment<'a, TBin: AnyBin> {
     Slice(&'a str),

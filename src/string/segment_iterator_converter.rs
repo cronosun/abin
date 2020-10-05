@@ -1,8 +1,7 @@
 use std::iter::Map;
 
-use serde::export::PhantomData;
-
 use crate::{AnyBin, BinSegment, SegmentIterator, StrSegment};
+use std::marker::PhantomData;
 
 /// Converts a string segment iterator to a binary segment iterator.
 pub struct SegmentIteratorConverter<'a, TInnerIterator, TAnyBin>

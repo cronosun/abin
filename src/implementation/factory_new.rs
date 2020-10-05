@@ -5,11 +5,13 @@ use crate::{
     RcBin, SBin,
 };
 
+/// Default implementation used to create `Bin`. See `BinFactory` for documentation.
 pub struct NewBin {
     _phantom: PhantomData<()>,
 }
 
 impl NewBin {
+    /// Constructs a builder that can be used to create `Bin`.
     pub fn builder<'a>() -> impl BinBuilder<'a, T = Bin> {
         DefaultBinBuilder::<NewBin, BinBuilderCfg>::new()
     }

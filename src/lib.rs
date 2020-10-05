@@ -1,68 +1,73 @@
-//! A library for working with binaries. It provides multiple implementations that all
-//! share the same interface ([AnyBin](trait.AnyBin.html),
-//! [struct Bin](struct.Bin.html)/[struct SyncBin](struct.SyncBin.html)). [Bin](struct.Bin.html)
-//! and [SyncBin](struct.SyncBin.html) have no lifetime arguments, are sized (structs), easy
-//! to use, most operations are allocation-free, and they can be converted to each other.
-//! [SyncBin](struct.SyncBin.html) is a version of [Bin](struct.Bin.html) that
-//! implements `Send + Sync`.
-//!
-//! The implementations are [EmptyBin](struct.EmptyBin.html), [RcBin](struct.RcBin.html),
-//! [ArcBin](struct.ArcBin.html), [VecBin](struct.VecBin.html), [StackBin](struct.StackBin.html)
-//! and [StaticBin](struct.StaticBin.html). Custom implementations are possible.
-//!
-//! To work with strings (utf-8 strings), there's [AnyStr](struct.AnyStr.html)
-//! ([Str](type.Str.html) / [SyncStr](type.SyncStr.html) backed by [struct Bin](struct.Bin.html)
-//! and [struct SyncBin](struct.SyncBin.html) respectively).
-//!
-//! Serde support is available. Zero-copy / zero-allocation de-serialization (under some
-//! conditions) is possible.
+//! A library for working with binaries and strings. The library tries to avoid
+//! heap-allocations / memory-copy whenever possible by automatically choosing a reasonable
+//! strategy (stack for small binaries; static-lifetime-binary or reference-counting). It's
+//! easy to use (no lifetimes; the binary type is sized), `Send + Sync` is optional (thus
+//! no synchronization overhead), provides optional serde support and has a similar API for
+//! strings and binaries. Custom binary/string types can be implemented for fine-tuning.
 //!
 //! ```rust
-//! use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, RcBin, StaticBin, VecBin};
+//! use std::iter::FromIterator;
+//! use std::ops::Deref;
+//! use abin::{AnyBin, AnyStr, Bin, BinFactory, NewBin, NewStr, Str, StrFactory};
 //!
-//! pub fn usage() {
-//!     let example_slice = "This is some binary used for the following examples.".as_bytes();
+//! // static binary / static string
+//! let static_bin: Bin = NewBin::from_static("I'm a static binary, hello!".as_bytes());
+//! let static_str: Str = NewStr::from_static("I'm a static binary, hello!");
+//! assert_eq!(&static_bin, static_str.as_bin());
+//! assert_eq!(static_str.as_str(), "I'm a static binary, hello!");
+//! // non-static (but small enough to be stored on the stack)
+//! let hello_bin: Bin = NewBin::from_iter([72u8, 101u8, 108u8, 108u8, 111u8].iter().copied());
+//! let hello_str: Str = NewStr::copy_from_str("Hello");
+//! assert_eq!(&hello_bin, hello_str.as_bin());
+//! assert_eq!(hello_str.as_ref() as &str, "Hello");
 //!
-//!     // empty binary, stack-only.
-//!     let bin1 = EmptyBin::new();
-//!     // small binary; stack-only.
-//!     let bin2 = RcBin::copy_from_slice(&example_slice[2..5]);
-//!     // reference-counted binary (non-synchronized; like Rc);
-//!     let bin3 = RcBin::copy_from_slice(example_slice);
-//!     // reference-counted binary (synchronized; like Arc);
-//!     let bin4 = ArcBin::from_vec(example_slice.to_vec());
-//!     // binary backed by a Vec<u8>.
-//!     let bin5 = VecBin::from_vec(example_slice.to_vec(), false);
-//!     // no allocation for static data.
-//!     let bin6 = StaticBin::from(example_slice);
+//! // operations for binaries / strings
 //!
-//!     use_bin(bin1.into(), &[]);
-//!     use_bin(bin2, &example_slice[2..5]);
-//!     use_bin(bin3, example_slice);
-//!     use_bin(bin4.into(), example_slice);
-//!     use_bin(bin5.into(), example_slice);
-//!     use_bin(bin6.into(), example_slice);
-//! }
-//!
-//! pub fn use_bin(bin: Bin, expected: &[u8]) {
-//!     assert_eq!(expected.len(), bin.len());
-//!     assert_eq!(expected, bin.as_slice());
-//!     let cloned: Bin = bin.clone();
-//!     assert_eq!(bin, cloned);
-//!     let slice: Option<Bin> = bin.slice(1..3);
-//!     if let Some(slice) = slice {
-//!         assert_eq!(2, slice.len());
-//!     }
-//!     let vec_from_bin = bin.into_vec();
-//!     assert_eq!(cloned.as_slice(), vec_from_bin.as_slice());
-//! }
+//! // length (number of bytes / number of utf-8 bytes)
+//! assert_eq!(5, hello_bin.len());
+//! assert_eq!(5, hello_str.len());
+//! // is_empty
+//! assert_eq!(false, hello_bin.is_empty());
+//! assert_eq!(false, hello_str.is_empty());
+//! // as_slice / as_str / deref / as_bin
+//! assert_eq!(&[72u8, 101u8, 108u8, 108u8, 111u8], hello_bin.as_slice());
+//! assert_eq!("Hello", hello_str.as_str());
+//! assert_eq!("Hello", hello_str.deref());
+//! assert_eq!(&hello_bin, hello_str.as_bin());
+//! // slice
+//! assert_eq!(
+//!     NewBin::from_static(&[72u8, 101u8]),
+//!     hello_bin.slice(0..2).unwrap()
+//! );
+//! assert_eq!(NewStr::from_static("He"), hello_str.slice(0..2).unwrap());
+//! // clone
+//! assert_eq!(hello_bin.clone(), hello_bin);
+//! assert_eq!(hello_str.clone(), hello_str);
+//! // compare
+//! assert!(NewBin::from_static(&[255u8]) > hello_bin);
+//! assert!(NewStr::from_static("Z") > hello_str);
+//! // convert string into binary and binary into string
+//! let hello_bin_from_str: Bin = hello_str.clone().into_bin();
+//! assert_eq!(hello_bin_from_str, hello_bin);
+//! let hello_str_from_bin: Str = AnyStr::from_utf8(hello_bin.clone()).expect("invalid utf8!");
+//! assert_eq!(hello_str_from_bin, hello_str);
+//! // convert into Vec<u8> / String
+//! assert_eq!(
+//!     Vec::from_iter([72u8, 101u8, 108u8, 108u8, 111u8].iter().copied()),
+//!     hello_bin.into_vec()
+//! );
+//! assert_eq!("Hello".to_owned(), hello_str.into_string());
 //! ```
 
-pub use {binary::*, boo::*, common::*, implementation::*, serde_support::*, string::*};
+#[cfg(any(test, feature = "serde"))]
+pub use serde_support::*;
+pub use {binary::*, boo::*, common::*, implementation::*, string::*};
 
 mod binary;
 mod boo;
 mod common;
 mod implementation;
-mod serde_support;
 mod string;
+
+#[cfg(any(test, feature = "serde"))]
+mod serde_support;

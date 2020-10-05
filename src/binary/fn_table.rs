@@ -1,8 +1,7 @@
 use crate::Bin;
 
-/// The function table to be implemented for [Bin](struct.Bin.html) types.
-///
-/// Note: This is only required if you implement your own binary type.
+/// The function table to be implemented for `Bin` types. This is only required if you
+/// implement your own binary type.
 pub struct FnTable {
     /// Drop function. It's `None` if dropping is not required.
     pub drop: Option<fn(bin: &mut Bin)>,

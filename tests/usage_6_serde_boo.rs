@@ -1,3 +1,5 @@
+#![cfg(feature = "serde")]
+
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};

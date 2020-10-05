@@ -2,9 +2,7 @@ use std::alloc::System;
 
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{
-    AnyBin, BinFactory, BinSegment, NewBin, NewSBin, SegmentIterator, SegmentsSlice,
-};
+use abin::{AnyBin, BinFactory, BinSegment, NewBin, NewSBin, SegmentIterator, SegmentsSlice};
 use utils::*;
 
 #[global_allocator]

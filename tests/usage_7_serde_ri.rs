@@ -1,12 +1,11 @@
+#![cfg(feature = "serde")]
+
 use std::alloc::System;
 
 use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
-use abin::{
-    AnyBin, BinFactory, DefaultScopes, NewSBin, NewSStr, SBin,
-    SStr, StrFactory,
-};
+use abin::{AnyBin, BinFactory, DefaultScopes, NewSBin, NewSStr, SBin, SStr, StrFactory};
 use utils::*;
 
 #[global_allocator]

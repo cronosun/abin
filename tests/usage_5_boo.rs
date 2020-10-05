@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Deref;
 
-use abin::{
-    BooStr, NewStr, Str, StrFactory, 
-    ToBooConverter,
-};
+use abin::{BooStr, NewStr, Str, StrFactory, ToBooConverter};
 
 #[test]
 fn entity_with_borrowed_or_owned_fields() {

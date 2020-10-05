@@ -2,7 +2,7 @@ use crate::AnyRc;
 use crate::{AnyRcConfigForSync, AnyRcImpl, SBin, UnsafeBin};
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this
-/// is `Send + Sync`. Cloning is cheap. See [AnyRc](trait.AnyRc.html) for details.
+/// is `Send + Sync`. Cloning is cheap. See `AnyRc`.
 pub struct ArcBin;
 
 impl AnyRc for ArcBin {

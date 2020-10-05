@@ -3,6 +3,7 @@ use core::mem;
 use crate::common::segment_iterator::SegmentIterator;
 use crate::Segment;
 
+/// It's an implementation of `SegmentIterator` that does not heap-allocate.
 pub struct SegmentsSlice<'a, TSegment> {
     slice: &'a mut [TSegment],
     number_of_bytes: usize,

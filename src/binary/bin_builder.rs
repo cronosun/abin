@@ -1,5 +1,7 @@
 use crate::{AnyBin, BinSegment, Bytes128};
 
+/// Trait used to build a binary efficiently (with just one allocation & no re-allocation or
+/// even without allocation).
 pub trait BinBuilder<'a> {
     type T: AnyBin;
 

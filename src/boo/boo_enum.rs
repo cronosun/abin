@@ -15,7 +15,9 @@ pub enum Boo<'a, TBorrowed, TOwned>
 where
     TBorrowed: ?Sized,
 {
+    /// It's borrowed.
     Borrowed(&'a TBorrowed),
+    /// It's owned.
     Owned(TOwned),
 }
 
@@ -28,12 +30,16 @@ where
     }
 }
 
+/// Can convert `&T` to `Boo::Borrowed` and `T` to `Boo:Owned`.
 pub trait ToBooConverter {
+    /// Convert `&self` to `Boo::Borrowed`.
     fn borrowed<TBorrowed>(&self) -> Boo<TBorrowed, Self>
     where
         TBorrowed: ?Sized,
         Self: Borrow<TBorrowed>,
         Self: Sized;
+
+    /// Convert `self` into `Boo::Owned`.
     fn owned<'a, TBorrowed>(self) -> Boo<'a, TBorrowed, Self>
     where
         TBorrowed: ?Sized,
@@ -64,6 +70,8 @@ where
     TOwned: Borrow<TBorrowed>,
     TBorrowed: ?Sized,
 {
+    /// Returns `self` if already owned. If borrowed, converts the value to owned
+    /// using `TBooToOwned`.
     pub fn into_owned_with<TBooToOwned>(self) -> TOwned
     where
         TBooToOwned: BooToOwned<TBorrowed, TOwned>,

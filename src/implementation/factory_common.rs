@@ -187,7 +187,7 @@ where
             } else {
                 // now this step depends on the chosen optimization
                 match T::optimization() {
-                    GivenVecOptimization::Creation => {
+                    GivenVecOptimization::Construction => {
                         // vector binary
                         TCf::TFunctions::convert_to_un_sync(VecBin::from_vec(
                             vec,

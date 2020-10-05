@@ -2,14 +2,14 @@ use serde::export::PhantomData;
 
 use crate::{AnyBin, Bin, Binaries, IntoUnSyncView, SBin, ScopedRiSetup};
 
-/// Constructs [ScopedRiSetup] with sane defaults.
+/// Constructs `ScopedRiSetup` with sane defaults.
 pub struct DefaultScopes {
     _phantom: PhantomData<()>,
 }
 
 impl DefaultScopes {
-    /// A scope that can be used to de-serialize `Bin` and `SyncBin`. If a `Bin` is required,
-    /// the `SyncBin` value is converted using `IntoUnSyncView` (so just a view).
+    /// A scope that can be used to de-serialize `Bin` and `SBin`. If a `Bin` is required,
+    /// the `SBin` value is converted using `IntoUnSyncView` (so just a view).
     ///
     /// This is what you most likely want to use if you can't guarantee that you don't
     /// de-serialize only `Bin`.

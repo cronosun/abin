@@ -1,4 +1,6 @@
-/// Some sort of segment that knows its length (in bytes).
+/// Some sort of segment that knows its length (in bytes). It's used for constructing
+/// binaries/strings efficiently (knowing the entire length in advance to avoid
+/// re-allocations).
 pub trait Segment {
     /// The number of bytes in this segment.
     fn number_of_bytes(&self) -> usize;

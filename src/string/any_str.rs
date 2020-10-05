@@ -8,9 +8,7 @@ use std::str::Utf8Error;
 
 use crate::{AnyBin, Bin, IntoSync, IntoUnSync, IntoUnSyncView, SBin};
 
-/// A utf-8 string backed by [AnyBin](trait.AnyBin.html) ([Bin](struct.Bin.html) or
-/// [SyncBin](struct.SyncBin.html)), see also [Str](type.Str.html) and
-/// [SyncStr](type.SyncStr.html).
+/// A utf-8 string backed by `AnyBin` (`Bin` or `SBin`), see also `Str` and `SStr`.
 pub struct AnyStr<TBin>(TBin);
 
 impl<TBin> AnyStr<TBin>
@@ -38,32 +36,39 @@ where
         Self(value)
     }
 
+    /// Returns `&str`. It's a cheap operation. See `AnyBin::as_slice`.
     #[inline]
     pub fn as_str(&self) -> &str {
         // no need to check utf8 again; we know it's valid (it's validated when constructed).
         unsafe { core::str::from_utf8_unchecked(self.0.as_slice()) }
     }
 
+    /// Extracts the wrapped binary.
     #[inline]
     pub fn into_bin(self) -> TBin {
         self.0
     }
 
+    /// Wrapped binary as reference.
     #[inline]
     pub fn as_bin(&self) -> &TBin {
         &self.0
     }
 
+    /// `true` if this string is empty (number of utf-8 bytes is 0). See also `AnyBin::is_empty`.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// The number of utf-8 bytes in this string. See also `AnyBin::len`.
     #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Converts this into a `String`; depending on the type, this might allocate or not. See
+    /// also `AnyBin::into_vec`.
     #[inline]
     pub fn into_string(self) -> String {
         let vec = self.0.into_vec();
@@ -76,6 +81,8 @@ where
     ///
     ///   - range is ouf of bounds.
     ///   - or if the range does not lie on UTF-8 boundaries (see also `str::get`).
+    ///
+    /// See also `AnyBin::slice`.
     #[inline]
     pub fn slice<TRange>(&self, range: TRange) -> Option<Self>
     where
@@ -105,13 +112,9 @@ where
             None
         }
     }
-
-    #[inline]
-    pub fn to_string(&self) -> String {
-        String::from(self.as_str())
-    }
 }
 
+/// See `AnyStr::into_string`.
 impl<TBin> Into<String> for AnyStr<TBin>
 where
     TBin: AnyBin,
@@ -236,6 +239,7 @@ where
     }
 }
 
+/// Error returned when trying to create a `AnyStr` from a binary that contains invalid utf-8.
 #[derive(Debug, Clone)]
 pub struct AnyStrUtf8Error<TBin> {
     utf8_error: Utf8Error,
@@ -251,6 +255,7 @@ impl<TBin> AnyStrUtf8Error<TBin> {
         &self.utf8_error
     }
 
+    /// This can be used to retrieve the binary that has been used to construct the string.
     pub fn deconstruct(self) -> (Utf8Error, TBin) {
         (self.utf8_error, self.binary)
     }

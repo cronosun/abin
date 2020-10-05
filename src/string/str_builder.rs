@@ -1,5 +1,7 @@
 use crate::{AnyBin, AnyStr, StrSegment};
 
+/// Trait used to build a string efficiently (with just one allocation & no re-allocation or
+/// even without allocation).
 pub trait StrBuilder<'a> {
     /// The binary type the generated strings are backed by.
     type T: AnyBin;
@@ -31,7 +33,7 @@ pub trait StrBuilder<'a> {
         self.push(StrSegment::Char(chr));
     }
 
-    /// Builds the binary string.
+    /// Builds the string.
     ///
     /// Note: After calling this method, the builder will be empty again and can be re-used. We
     /// use `&mut self` here instead of `self` to make sure the builder is not copied (it's large).

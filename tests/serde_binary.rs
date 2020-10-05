@@ -1,3 +1,5 @@
+#![cfg(feature = "serde")]
+
 use std::alloc::System;
 
 use serde::{Deserialize, Serialize};
