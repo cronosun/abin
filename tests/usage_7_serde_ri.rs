@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{
-    maybe_shrink, AnyBin, BinFactory, DefaultExcessShrink, DefaultScopes, NewSBin, NewSStr, SBin,
+    AnyBin, BinFactory, DefaultScopes, NewSBin, NewSStr, SBin,
     SStr, StrFactory,
 };
 use utils::*;
@@ -29,7 +29,7 @@ fn zero_allocation_deserialization() {
         let sbin = {
             let request = create_server_request();
             // serialize
-            let mut vec = serde_cbor::to_vec(&request).unwrap();
+            let vec = serde_cbor::to_vec(&request).unwrap();
             NewSBin::from_given_vec(vec)
         };
 
@@ -40,7 +40,7 @@ fn zero_allocation_deserialization() {
     });
 }
 
-/// The server gets the message from the client/from network as `Vec<u8>`.
+/// The server gets the message from the client/from network as `SBin` (converted from Vec<u8>).
 fn server_process_message(msg: SBin) {
     // create a scope for re-integration
     let scope_setup = DefaultScopes::sync(&msg);
@@ -81,11 +81,11 @@ fn database_process_message(command: DatabaseCommand) {
 #[derive(Deserialize, Serialize, Eq, PartialEq, Clone, Debug)]
 pub struct ServerRequest {
     pub request_id: u64,
-    #[serde(deserialize_with = "abin::ri_deserialize_sync_str")]
+    #[serde(deserialize_with = "abin::ri_deserialize_sstr")]
     pub user_name: SStr,
-    #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+    #[serde(deserialize_with = "abin::ri_deserialize_sbin")]
     pub huge_binary_1: SBin,
-    #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+    #[serde(deserialize_with = "abin::ri_deserialize_sbin")]
     pub huge_binary_2: SBin,
 }
 

@@ -1,4 +1,4 @@
-use abin::{Bin, BinBuilder, BinFactory, NewBin, NewStr, Str, StrBuilder, StrFactory, StrSegment};
+use abin::{BinBuilder, BinFactory, NewBin, NewStr, Str, StrBuilder, StrFactory};
 
 use crate::Action::{GreetTwo, SayGoodByeTo, SayHelloTo, ShutUp};
 

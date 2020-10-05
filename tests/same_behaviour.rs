@@ -1,5 +1,5 @@
 use std::alloc::System;
-use std::cmp::{max, Ordering};
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::ops::Range;
 

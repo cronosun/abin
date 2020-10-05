@@ -1,7 +1,5 @@
 use std::ops::Deref;
 
-use serde::de::Unexpected::NewtypeStruct;
-
 use abin::{
     AnyBin, Bin, BinFactory, BinSegment, NewBin, NewStr, SegmentsSlice, Str, StrFactory, StrSegment,
 };

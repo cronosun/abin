@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{AnyBin, AnyRc, ArcBin, Bin, BinBuilder, BinFactory, NewBin, NewSBin, RcBin, SBin};
+use crate::{AnyBin, Bin, BinFactory, NewBin, NewSBin, SBin};
 
 impl Serialize for Bin {
     #[inline]

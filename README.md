@@ -1,40 +1,15 @@
-# Work in progress.
+# Overview 
 
-# Naming
+A library for working with binaries and strings. The library tries to avoid heap-allocations / memory-copy whenever possible by automatically choosing a reasonable strategy (stack for small binaries; static-lifetime-binary or reference-counting). It's easy to use (no lifetimes; the binary type is sized), `Send + Sync` is optional (thus no synchronization overhead), provides optional serde support and has a similar API for strings and binaries. Custom binary/string types can be implemented for fine-tuning.
 
-* Data types: `[S][Bin/Str]` (`Bin`, `Str`, `SBin`, `SStr`).
-* Type traits: `[Any][Bin/Str]` (`AnyBin`, `AnyStr`).
-* Factory traits: `[Bin/Str][Factory]` (`BinFactory`, `StrFactory`)
-* Factory implementations: `[New][S][Bin/Str]` (`NewBin`, `NewStr`, `NewSBin`, `NewSStr`).
+Libraries that provide similar functionality:
 
-| Name       | Send + Sync | Binary / String | What                   | Sync / Non-Sync equivalent | Binary / String equivalent |
-|------------|-------------|-----------------|------------------------|----------------------------|----------------------------|
-| AnyBin     |             | Binary          | Trait for Bin and SBin | -                          | AnyStr                     |
-| Bin        | No          | Binary          | Binary data            | SBin                       | Str                        |
-| SBin       | Yes         | Binary          | Binary data            | Bin                        | SStr                       |
-| BinFactory |             | Binary          | Factory trait Bin/SBin | -                          | StrFactory                 |
-| NewBin     | No          | Binary          | Factory for Bin        | NewSBin                    | NewStr                     |
-| NewSBin    | Yes         | Binary          | Factors for SBin       | NewBin                     | NewSStr                    |
-| AnyStr     |             | String          | Str / SStr             | -                          | AnyBin                     |
-| Str        | No          | String          | String data            | SStr                       | Bin                        |
-| SStr       | Yes         | String          | String data            | Str                        | SBin                       |
-| StrFactory |             | String          | Factory trait Str/SStr | -                          | BinFactory                 |
-| NewStr     | No          | String          | Factory for Str        | NewSStr                    | NewBin                     |
-| NewSStr    | Yes         | String          | Factory for SStr       | NewStr                     | NewSBin                    |
+ * [https://github.com/tokio-rs/bytes](https://github.com/tokio-rs/bytes)
+ * [https://github.com/rust-analyzer/smol_str](https://github.com/rust-analyzer/smol_str)
 
-# OLD
+# Details
 
-# Overview
-
-A library for working with binaries. It provides multiple implementations that all share the same interface `AnyBin`; `struct Bin` / `struct SyncBin` have no lifetime arguments, are sized (structs), easy to use, most operations are allocation-free, and they can be converted to each other. `SyncBin` is a version of `Bin` that implements `Send + Sync`.
-
-The implementations are `EmptyBin`, `RcBin`, `ArcBin`, `VecBin`, `StackBin` and `StaticBin`. Custom implementations are possible.
-
-To work with strings (utf-8 strings), there's `AnyStr` (`Str` and `SyncStr` backed by `Bin` and `SyncBin` respectively).
-
-Serde support is available. Zero-copy / zero-allocation de-serialization (under some conditions) is possible.
-
-## Basic usage
+## Usage
 
 ```toml
 [dependencies]
@@ -42,250 +17,160 @@ abin = "*"
 ```
 
 ```rust
-use abin::{AnyBin, AnyRc, ArcBin, Bin, EmptyBin, RcBin, StaticBin, UnSync, VecBin};
+use std::iter::FromIterator;
+use std::ops::Deref;
+
+use abin::{AnyBin, AnyStr, Bin, BinFactory, NewBin, NewStr, Str, StrFactory};
 
 #[test]
-pub fn usage() {
-    // empty binary, stack-only.
-    let bin1 = EmptyBin::new();
-    // small binary; stack-only.
-    let bin2 = RcBin::copy_from_slice(&[5, 10]);
-    // reference-counted binary (not synchronized); from a slice; can also be constructed from a vec.
-    let bin3 = RcBin::copy_from_slice("This is a binary; too large for the stack.".as_bytes());
-    // reference-counted binary (synchronized); this time from a vector (does not allocate if the
-    // vector has enough capacity for the meta-data).
-    let bin4 = ArcBin::from_vec(
-        "This is a binary; too large for the stack."
-            .to_owned()
-            .into_bytes(),
+fn usage_basics() {
+    // static binary / static string
+    let static_bin: Bin = NewBin::from_static("I'm a static binary, hello!".as_bytes());
+    let static_str: Str = NewStr::from_static("I'm a static binary, hello!");
+    assert_eq!(&static_bin, static_str.as_bin());
+    assert_eq!(static_str.as_str(), "I'm a static binary, hello!");
+    // non-static (but small enough to be stored on the stack)
+    let hello_bin: Bin = NewBin::from_iter([72u8, 101u8, 108u8, 108u8, 111u8].iter().copied());
+    let hello_str: Str = NewStr::copy_from_str("Hello");
+    assert_eq!(&hello_bin, hello_str.as_bin());
+    assert_eq!(hello_str.as_ref() as &str, "Hello");
+
+    // operations for binaries / strings
+
+    // length (number of bytes / number of utf-8 bytes)
+    assert_eq!(5, hello_bin.len());
+    assert_eq!(5, hello_str.len());
+    // is_empty
+    assert_eq!(false, hello_bin.is_empty());
+    assert_eq!(false, hello_str.is_empty());
+    // as_slice / as_str / deref / as_bin
+    assert_eq!(&[72u8, 101u8, 108u8, 108u8, 111u8], hello_bin.as_slice());
+    assert_eq!("Hello", hello_str.as_str());
+    assert_eq!("Hello", hello_str.deref());
+    assert_eq!(&hello_bin, hello_str.as_bin());
+    // slice
+    assert_eq!(
+        NewBin::from_static(&[72u8, 101u8]),
+        hello_bin.slice(0..2).unwrap()
     );
-    // binary backed by a Vec<u8>.
-    let bin5 = VecBin::from_vec(
-        "This is a vector binary, backed by a vector"
-            .to_owned()
-            .into_bytes(),
-        true,
+    assert_eq!(NewStr::from_static("He"), hello_str.slice(0..2).unwrap());
+    // clone
+    assert_eq!(hello_bin.clone(), hello_bin);
+    assert_eq!(hello_str.clone(), hello_str);
+    // compare
+    assert!(NewBin::from_static(&[255u8]) > hello_bin);
+    assert!(NewStr::from_static("Z") > hello_str);
+    // convert string into binary and binary into string
+    let hello_bin_from_str: Bin = hello_str.clone().into_bin();
+    assert_eq!(hello_bin_from_str, hello_bin);
+    let hello_str_from_bin: Str = AnyStr::from_utf8(hello_bin.clone()).expect("invalid utf8!");
+    assert_eq!(hello_str_from_bin, hello_str);
+    // convert into Vec<u8> / String
+    assert_eq!(
+        Vec::from_iter([72u8, 101u8, 108u8, 108u8, 111u8].iter().copied()),
+        hello_bin.into_vec()
     );
-    // no allocation for static data.
-    let bin6 = StaticBin::from("Static data".as_bytes());
-
-    use_bin(bin1.un_sync());
-    use_bin(bin2);
-    use_bin(bin3);
-    use_bin(bin4.un_sync());
-    use_bin(bin5.un_sync());
-    use_bin(bin6.un_sync());
-}
-
-/// Just two interfaces for all binaries (`Bin`/`SyncBin`) - `SyncBin` can be converted to `Bin`.
-pub fn use_bin(bin: Bin) {
-    // length of the binary (cheap operation).
-    let len = bin.len();
-    // to &[u8] (cheap operation)
-    let _u8_slice = bin.as_slice();
-    // can be cloned (for reference-counted binaries, StaticBin and stack-binary, this is cheap).
-    let cloned_bin = bin.clone();
-    assert_eq!(bin, cloned_bin);
-    assert_eq!(len, cloned_bin.len());
-    // can be sliced (cheap operation for reference-counted binaries, StaticBin and stack-binary).
-    let slice = bin.slice(0..10);
-    if let Some(slice) = slice {
-        assert_eq!(10, slice.len());
-    }
-    // ...and converted into vector (cheap operation for VecBin and for reference-counted
-    // binaries with no more references).
-    let vec = bin.into_vec();
-    assert_eq!(cloned_bin.as_slice(), vec.as_slice());
+    assert_eq!("Hello".to_owned(), hello_str.into_string());
 }
 ```
 
-# Details
+## Notable structs, traits and types & naming
 
-## Introduction
-
-The available implementations are:
-
- * `StaticBin`: A binary pointing to static data.
- * `VecBin`: A binary backed by a `Vec<u8>`.
- * `RcBin`: Reference counted binary (without synchronization-overhead). (only implements `Bin`, not `SyncBin`).
- * `ArcBin`: Reference counted binary (with synchronization-overhead).
- * `StackBin`: Stores small binaries on the stack.
- * `EmpyBin`: For empty binaries (stack).  
-
-It's similar to [https://crates.io/crates/bytes](https://crates.io/crates/bytes); these are the main differences:
-
- * It's extensible (you can provide your own binary type).
- * Stores small binaries on the stack.
- * Provides a reference-counted binary without synchronization-overhead (`RcBin`).
- * Zero-copy / zero-allocation serde de-serialization.
- * ... see *Details* below for more differences.
-
-## Details / Highlights / Features
-
-**Reduces allocations & memory usage**
-
-Many operations do not need memory-allocation / are zero-copy operations. There's a reference counted binary that can be cloned without allocating memory. Small binaries (up to 3 words minus one byte; 23 bytes on 64-bit platforms) can be stored in-line (on the stack).
-
-See [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs) for operations that are guaranteed to be alloc-free.
-
-**Reference counted binary**
-
-There's a reference-counted binary that can be cloned without allocating memory. It can be constructed from a `Vec<u8>` without allocating memory (as long as the vec has some capacity left). It can be converted back to a `Vec<u8>` without allocating memory (as long as there are no more references to the binary).
-
-**Reference-counted binary: No indirection / from Vec**
-
-If you use `Rc<[u8]>`/`Arc<[u8]>` there's no possibility to convert `Vec<u8>` to `Rc<[u8]>`/`Arc<[u8]>` without memory-copy/allocation. If you use `Rc<Vec<u8>>`/`Arc<Vec<u8>>` another indirection is introduced (`Rc -> RcBox(Vec) -> VecData`).
-
-This crate on the other hand supports reference counted binaries that can be constructed from a `Vec<u8>` without allocation*1 and still does not introduce another indirection. It does this by storing the metadata (like the reference-counter) inside the vector. 
-
-(*1): The vector must have some capacity left (it's 3 word-aligned words; this is between 24 and 31 bytes on 64-bit platforms).
-
-**No synchronization when not needed**
-
-There are two versions of the reference-counted binary: A synchronized one and one that's not synchronized. As long as you use the non-synchronized binary, there's no need for synchronization.  
-
-**Serde: zero-copy / zero-allocation de-serialization**
-
-It uses `AnyBin::try_to_re_integrate` to re-integrated a `&'a [u8]` (given by serde) into outer `Bin`/`SyncBin` (the binary that's being deserialized). This works for binaries and strings (note: collections still need to be allocated). 
-See [tests/zero_allocation_deserialization.rs](tests/zero_allocation_deserialization.rs).
-
-**Static binary**
-
-There's a binary that can be used for static data. No allocation.
-See [tests/basic_static.rs](tests/basic_static.rs).
-
-**Slices**
-
-All binaries can be sliced. Some binaries (the static and the reference-counted ones) support allocation-free slicing. 
-
-**Extensible**
-
-If you don't like the implementations provided by this crate, you can implement your own binary type.
-
-**Strings**
-
-There's also s string implementation available that's backed by the binaries provided by this crate (see `AnyStr`, `Str` and `SyncStr`).
-
-**Map-friendly**
-
-The binaries (and strings) provided by this crate can be used in maps; they implement `Hash`/`Equals` and implement `Borrow<[u8]>` (for lookup operations using `&[u8]`). 
-See [tests/strings_in_map.rs](tests/strings_in_map.rs) / [tests/bin_slice_hash_map.rs](tests/bin_slice_hash_map.rs).
-
-**Stack-size**
-
-The binary provided by this crate uses 4 words on the stack (32 bytes on 64-bit platforms; 16 bytes on 32-bit platforms). It's one word more than `Vec<u8>`; 2 words more than `Rc<[u8]>`; 3 words more than `Rc<Vec<u8>>` (on the other hand it can store small binaries on the stack).
-See [tests/size_align.rs](tests/size_align.rs).
+Interfaces: 
+  * `Bin`: Binary (it's a struct).
+  * `SBin`: Synchronized binary (it's a struct).
+  * `Str`: String (`type Str = AnyStr<Bin>`)
+  * `SStr` Synchronized string (`type SStr = AnyStr<SBin>`).
  
-## Usage
+Factories provided by the default implementation: 
+  * `NewBin`: Creates `Bin`.
+  * `NewSBin`: Creates `SBin`.
+  * `NewStr`: Creates `Str`.
+  * `NewSStr`: Creates `SStr`. 
 
- * Binary: [tests/basic_usage2.rs](tests/basic_usage2.rs).
- * Binary: [tests/usage_strings.rs](tests/usage_strings.rs).
- 
-## Important traits / structs
+See also:
+  * `AnyBin`: Trait implemented by `Bin` and `SBin`.
+  * `AnyStr`: See `Str` and `SStr`; string backed by either `Bin` or `SBin`.
+  * `BinFactory`: Factory trait implemented by `NewBin` and `NewSBin`.
+  * `StrFactory`: Factory trait implemented by `NewStr` and `NewSStr`.
 
- * `Bin` / `SyncBin`: The interfaces (structs) for all binary types.
- * `AnyBin`: The trait `Bin` and `SyncBin` implement.
- * `RcBin`, `ArcBin`, `StaticBin`, `VecBin`, `EmptyBin`: Implementations; they provide methods to construct `Bin` / `SyncBin`.
- * `AnyRc`: The trait both reference-counted types implement.
- * `IntoSync`, `IntoUnSyncView`, `UnSyncRef`, `IntoUnSync`: Convert `Bin` to `SyncBin` and vice-versa.
- * `ChainSlicesIter`: Chain multiple binaries (slices) into one binary with just one single allocation.
- * `AnyStr` (`Str` / `SyncStr`): `Bin`/`SyncBin` backed utf-8 strings.
- 
-## Design decisions / faq
+## Learn
 
-**No `Deref<Target=[u8]>` for `Bin`/`SyncBin`**
+See the example tests:
 
-I decided against implementing this for `Bin`/`SyncBin`. Reason: It's too easy to pick the wrong method if this is implemented; for instance there's `&[u8]::to_vec()` (which needs to allocate & copy) and there's `Bin::into_vec()` you most likely want to use. ... or `&[u8]::len()` and `Bin::len()` ... there's some change you pick the wrong operation.
+* [tests/usage_1_basics.rs](tests/usage_1_basics.rs): Basic usage.
+* [tests/usage_2_creating.rs](tests/usage_2_creating.rs): How to create binaries and strings.
+* [tests/usage_3_builder.rs](tests/usage_3_builder.rs): How to use the builder to create binaries / strings.
+* [tests/usage_4_operations.rs](tests/usage_4_operations.rs): Operations provided by binaries and strings, such as slicing, converting binaries to strings and converting binaries/strings to `Vec<u8>` and `String`.
+* [tests/usage_5_boo.rs](tests/usage_5_boo.rs): "Borrowed-Or-Owned" (boo), alternative to `Cow` that works with types that don't implement `ToOwned`.
+* [tests/usage_6_serde_boo.rs](tests/usage_6_serde_boo.rs): Use `Boo` with serde.
+* [tests/usage_7_serde_ri.rs](tests/usage_7_serde_ri.rs): Use serde with re-integration (also see *Questions and Answers*).
+* [tests/usage_8_send_sync.rs](tests/usage_8_send_sync.rs): Synchronized (`Send + Sync`) and non-synchronized binaries / strings.
+* [tests/usage_9_re_integration.rs](tests/usage_9_re_integration.rs): Re-integration (also see *Questions and Answers*)
 
-**No `From<T>` for `Bin`/`SyncBin`**
+## Questions and Answers
 
-I want `Bin`/`SyncBin` (interface) to be decoupled from the implementation (`RcBin`/`VecBin`...). Implementing `From<Vec<u8>>` for `Bin`/`SyncBin` would couple the interface to a certain implementation... the next question would arise: Which implementation to take? A `Bin` can be constructed from a `Vec<u8>` using `RcBin`, `ArcBin` and `VecBin`, which one is the correct implementation?  
+**There's already other crates with similar functionality, why another one? / Features**
 
-## Technical details
+This crate provides some features that cannot be found in other crates (or not all of them):
 
-### `Bin` / `SyncBin`
+ * Provides support for binaries **and** strings; the API for strings mirrors the binary-API closely.
+ * Binaries/strings are not synchronized when not needed (synchronization is optional).
+ * Custom implementations are possible.
+ * Small binaries/strings are stored on the stack.
+ * Support for serde zero-allocation deserialization to owned types (in some situations).
+ * Efficient cloning (usually zero-allocation / zero-copy).
+ * Efficient slicing to owned types (slice from `Bin`/`Str` to `Bin`/`Str`) (usually zero-allocation / zero-copy).
+ * Guaranteed zero-allocation/zero-copy borrowed slicing (slice from `Bin`/`Str` to `&[u8]`/`&str`).
+ * Provide everything to be used as keys in maps / serde support.
 
-`Bin` is just a struct with 3 data-fields, each data-field is of type `usize` (word) and a function-table. The function-table contains functions like `clone`, `drop`, `as_slice`, `slice` and is provided by the implementation. The meaning of the 3 data-type fields is unknown to `Bin` (that's implementation-specific). `SyncBin` is just a newtype of `Bin` that implements `Sync + Send`.
+**Why `NewBin`, `NewStr`? what's this?**
 
-It looks something like this (simplified):
+Why `let string = NewStr::from_static("Hello")` instead of just `let string = Str::from_static("Hello")` (or implement `From<&str> for Str`)? This is due to the decision to decouple the interface from the implementation. The `Str` is the interface, whereas `NewStr` is the factory of the built-in implementation. This library is designed to be extensible; you can provide your own implementation, tweaked for your use case.
 
-```
-struct Bin {
-    data_field_1 : usize,
-    data_field_2 : usize,
-    data_field_3 : usize,
-    function_table : &'static FunctionTable,
-}
+**How does the default-implementation `NewBin` / `NewStr` work?**
 
-struct FunctionTable {
-    drop : fn(bin : &mut Bin),
-    clone : fn(bin : &bin) -> Bin,
-    ...
-}
-```
+  * Small binaries are stored on the stack. Up to `3 * sizeof(word) - 1` bytes; that's 23 bytes on a 64-bit platform. For reference, the string `Hello, world!` only takes 13 bytes and could easily be stored on the stack.
+  * Static binaries are just pointers to the actual data (so stack-only).
+  * Larger binaries are usually (*1) reference-counted. (*1: There's a tweak to change this behaviour, see `GivenVecConfig`). The reference-counter is stored inside the vector-data. This has those advantages:
+    * It's possible to create a `Bin` from `Vec<u8>` without allocation (if `Vec<u8>` has some capacity left for the reference-counter) - something which is not possible by using `Rc<[u8]>`.
+    * ...at the same time (unlike `Rc<Vec<u8>>`) no second indirection is introduced.
 
-### `RcBin` and `ArcBin`
+The only difference between `NewBin` and `NewSBin` is the reference-counted binaries: `SBin` created by `NewSBin` have a synchronized reference counter (`AtomicUsize`).
+  
+Note: The same statements also apply to strings (since strings are backed by the binary implementation).
 
-`RcBin` and `ArcBin` are basically a `Vec<u8>`. When `RcBin`/`ArcBin` is constructed, some meta-data is added to the `Vec<u8>`. This meta-data contains the reference-counter (and more). `RcBin` and `ArcBin` are identical except for the reference-counter (`RcBin` uses just a `usize`, `ArcBin` uses a `AtomicUsize`).
+**I want to write my own implementation, how to?**
 
-`RcBin` and `ArcBin` can be sliced, that's the reason why `capacity` and `payload_ptr` is also stored in `Meta` (this information is required for freeing the memory). `RcBin.data_field_1` points to `Heap.payload` for rc-binaries that have not been sliced.
+There's currently no documentation - but you can use the default implementation for reference. It's found in the module `implementation`.
 
-```
-// stack
-struct RcBin : Bin {
-    data_field_1: pointer to somewhere inside [Heap.payload],
-    data_field_2: the length (usize),
-    data_field_3: pointer to [Heap.meta],
-    function_table: ... // function table for RcBin
-}
+**Why `Boo` and not `Cow`?**
 
-// this is stored on the heap (one allocation; no indirection).
-struct Heap {
-  payload: [u8; ...],
-  padding: <padding for [Meta] alignment>,
-  meta: struct Meta {
-      payload_ptr: pointer back to [Heap.payload] (used for `mem::free`),
-      capacity: capacity (allocated heap memory) of [Heap] (used for `mem::free`),
-      reference_counter: usize or AtomicUsize (RcBin / ArcBin)
-  }  
-}
-```
+`Cow` requires `where B: 'a + ToOwned`. This does not work with this crate, since the implementation is separated from the interface. Say we have `&[u8]` (borrowed), to convert that to owned (`Bin` or `SBin`), the implementation has to be known. I don't want `Cow` to contain information about the implementation.
 
-### `EmptyBin` / `StackBin`
+**Aren't `Bin` and `Str` huge (stack-size)?**
 
-All 3 data-fields are ignored by `EmptyBin`. `StackBin` uses the 3 data fields to store the binary (except for the last byte, that's used for the length).
+`Bin` and `Str` have a size of 4 words and are word-aligned. Yes, it's not small - but for reference, a `Vec<u8>` also takes 3 words (pointer, length and capacity).
 
-```
-struct StackBin : Bin {
-    data_field_1: [u8; sizeof(usize)]
-    data_field_2: [u8; sizeof(usize)]
-    data_field_3: [u8; sizeof(usize) - 1][length : u8]
-    function_table: ... // function table for StackBin
-}
+**What is re-integration?**
+
+Say we have this code (pseudocode):
+
+```rust
+let large_binary_from_network : Vec<u8> = <...>;
+let bin = NewBin::from_given_vec(large_binary_from_network);
+let slice_of_that_bin : &[u8] = &bin.as_slice()[45..458];
+
+// it's now possible to re-integrate that `slice_of_that_bin` into the `bin` it was sliced from.
+// re-integration converts the borrowed type `&[u8]` (`slice_of_that_bin`) into an owned
+// type (`Bin`) without memory-allocation or memory-copy.
+let bin_re_integrated : Bin = bin.try_re_integrate(slice_of_that_bin).unwrap();
 ```
 
-### `VecBin`
+This is useful if you want to de-serialize to owned (without using `Boo`) using serde. When deserializing a type, we get `slice_of_that_bin` from serde; using re-integration it's possible to get an owned binary (`Bin`) without allocation.
 
-`VecBin` just wraps a `Vec<u8>` (stack for `VecBin` and `Vec<u8>` is identical), it looks like this:
+Technical detail: It checks whether `slice_of_that_bin` lies within the memory range of `bin`; if so, it increments the reference-count of `bin` by one, and the returned binary (`bin_re_integrated`) is then just a sliced reference to `bin`.
 
-```
-struct VecBin : Bin {
-    data_field_1: *const u8, // pointer to payload
-    data_field_2: usize, // length
-    data_field_3: usize, // capacity
-    function_table: ... // function table for VecBin
-}
-```
+**Name `abin`?**
 
-### `StaticBin`
-
-`StaticBin` looks like this:
-
-```
-struct StackBin : Bin {
-    data_field_1: *const u8, // pointer to static data
-    data_field_2: usize, // length
-    data_field_3: _, // this field is not used for StaticBin
-    function_table: ... // function table for StackBin
-}
-```
+It's named after the trait `AnyBin`.

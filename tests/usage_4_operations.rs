@@ -1,4 +1,4 @@
-use abin::{AnyBin, AnyStr, AnyStrUtf8Error, Bin, BinFactory, NewBin, NewStr, Str, StrFactory};
+use abin::{AnyBin, BinFactory, NewBin, NewStr, Str, StrFactory};
 
 #[test]
 fn slice() {

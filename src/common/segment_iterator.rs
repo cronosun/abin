@@ -1,4 +1,4 @@
-use crate::{AnyBin, BinSegment, Segment};
+use crate::Segment;
 
 /// An iterator for `Segment`.
 ///

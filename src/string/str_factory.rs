@@ -1,5 +1,3 @@
-use std::str::Utf8Error;
-
 use crate::{
     AnyStr, AnyStrUtf8Error, BinFactory, SegmentIterator, SegmentIteratorConverter, StrSegment,
 };

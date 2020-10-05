@@ -6,7 +6,7 @@ use serde::de::Visitor;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
-    AnyBin, AnyRc, AnyStr, ArcBin, BinFactory, NewSStr, NewStr, RcBin, SStr, Str, StrFactory,
+    AnyStr,  BinFactory, NewSStr, NewStr, SStr, Str, StrFactory,
 };
 
 impl Serialize for Str {

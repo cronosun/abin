@@ -26,7 +26,7 @@ where
     deserialize.deserialize_str(ReIntegrationStrVisitor::<NonSyncStrReIntegrator>::new())
 }
 
-/// Performs re-integration de-serialization for `SyncStr`, see `#[serde(deserialize_with = "path")]`.
+/// Performs re-integration de-serialization for `SStr`, see `#[serde(deserialize_with = "path")]`.
 ///
 /// ```rust
 /// use abin::SyncStr;
@@ -35,11 +35,11 @@ where
 /// #[derive(Deserialize, Serialize)]
 /// pub struct ServerRequest {
 ///     pub request_id: u64,
-///     #[serde(deserialize_with = "abin::ri_deserialize_sync_str")]
+///     #[serde(deserialize_with = "abin::ri_deserialize_sstr")]
 ///     pub user_name: SyncStr,
 /// }
 /// ```
-pub fn ri_deserialize_sync_str<'de, D>(deserialize: D) -> Result<SStr, D::Error>
+pub fn ri_deserialize_sstr<'de, D>(deserialize: D) -> Result<SStr, D::Error>
 where
     D: Deserializer<'de>,
 {

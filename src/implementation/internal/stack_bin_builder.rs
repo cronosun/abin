@@ -53,7 +53,7 @@ impl StackBinBuilder {
     /// stack. Returns `false` if item has not been added, because it does not fit onto the stack.
     pub fn try_extend_from_slice(&mut self, other: &[u8]) -> bool {
         match &mut self.inner {
-            Inner::Vec(vec) => false,
+            Inner::Vec(_vec) => false,
             Inner::Stack { len, array } => {
                 let other_len = other.len();
                 let resulting_len = len.checked_add(other_len).unwrap();
@@ -74,7 +74,7 @@ impl StackBinBuilder {
     /// only builds a binary if this fits onto the stack. Returns `None` otherwise.
     pub fn build_stack_only(&self) -> Option<SBin> {
         match &self.inner {
-            Inner::Vec(vec) => None,
+            Inner::Vec(_vec) => None,
             Inner::Stack { len, array } => Some(
                 StackBin::try_from(&array[0..*len])
                     .expect("This MUST be small enough for the stack."),

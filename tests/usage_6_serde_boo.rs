@@ -1,9 +1,8 @@
-use std::borrow::Cow;
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
-use abin::{BooStr, BooVec};
+use abin::BooStr;
 
 /// Serialize/de-serialize using serde with Boo (like Cow).
 #[test]

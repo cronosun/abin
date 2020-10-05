@@ -23,7 +23,7 @@ where
     deserialize.deserialize_bytes(ReIntegrationBytesVisitor::<BinReIntegrator>::new())
 }
 
-/// Performs re-integration de-serialization for `SyncBin`, see `#[serde(deserialize_with = "path")]`.
+/// Performs re-integration de-serialization for `SBin`, see `#[serde(deserialize_with = "path")]`.
 ///
 /// ```rust
 /// use serde::{Deserialize, Serialize};
@@ -32,11 +32,11 @@ where
 /// #[derive(Deserialize, Serialize)]
 /// struct SomeData {
 ///   some_number : usize,
-///   #[serde(deserialize_with = "abin::ri_deserialize_sync_bin")]
+///   #[serde(deserialize_with = "abin::ri_deserialize_sbin")]
 ///   binary : SBin
 /// }
 /// ```
-pub fn ri_deserialize_sync_bin<'de, D>(deserialize: D) -> Result<SBin, D::Error>
+pub fn ri_deserialize_sbin<'de, D>(deserialize: D) -> Result<SBin, D::Error>
 where
     D: Deserializer<'de>,
 {

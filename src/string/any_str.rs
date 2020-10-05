@@ -1,6 +1,5 @@
 use core::fmt;
 use std::borrow::Borrow;
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};

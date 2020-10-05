@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ops::Deref;
 
 use abin::{
-    Bin, BinBuilder, BinFactory, BooStr, NewBin, NewStr, Str, StrBuilder, StrFactory, StrSegment,
+    BooStr, NewStr, Str, StrFactory, 
     ToBooConverter,
 };
 

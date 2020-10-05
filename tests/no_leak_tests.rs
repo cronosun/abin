@@ -1,7 +1,7 @@
 use std::alloc::System;
 use std::cmp::max;
 
-use stats_alloc::{Region, StatsAlloc, INSTRUMENTED_SYSTEM};
+use stats_alloc::{StatsAlloc, INSTRUMENTED_SYSTEM};
 
 use abin::{AnyBin, BinFactory, NewBin, NewSBin};
 use utils::*;

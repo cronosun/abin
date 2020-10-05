@@ -1,4 +1,4 @@
-use crate::{AnyBin, BinSegment, BooToOwned, ExcessShrink, SegmentIterator};
+use crate::{AnyBin, BinSegment, ExcessShrink, SegmentIterator};
 
 pub trait BinFactory {
     /// The type this factory produces.

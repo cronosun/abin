@@ -1,6 +1,3 @@
-use core::mem;
-use std::io::Bytes;
-
 use crate::{AnyBin, Segment};
 
 #[derive(Debug, Clone)]

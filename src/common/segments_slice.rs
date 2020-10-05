@@ -1,7 +1,7 @@
 use core::mem;
 
 use crate::common::segment_iterator::SegmentIterator;
-use crate::{AnyBin, BinSegment, Segment};
+use crate::Segment;
 
 pub struct SegmentsSlice<'a, TSegment> {
     slice: &'a mut [TSegment],

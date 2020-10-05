@@ -31,7 +31,7 @@ where
         D: Deserializer<'de>,
     {
         // we always de-serialize borrowed (that's what you usually want to do).
-        let borrowed = <(&'a TBorrowed)>::deserialize(deserializer)?;
+        let borrowed = <&'a TBorrowed>::deserialize(deserializer)?;
         Ok(Boo::Borrowed(borrowed))
     }
 }

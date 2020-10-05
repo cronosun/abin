@@ -1,4 +1,4 @@
-use crate::{AnyBin, AnyStr, BinSegment, Bytes128, StrSegment};
+use crate::{AnyBin, AnyStr, StrSegment};
 
 pub trait StrBuilder<'a> {
     /// The binary type the generated strings are backed by.

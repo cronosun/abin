@@ -108,7 +108,7 @@ where
                     let vec_excess = TCf::TAnyRc::overhead_bytes();
                     // no, we have multiple segments ... would be nice if length is known
                     match iter.exact_number_of_bytes() {
-                        (Some(number_of_bytes)) if number_of_bytes > StackBin::max_len() => {
+                        Some(number_of_bytes) if number_of_bytes > StackBin::max_len() => {
                             // to long for stack ... collect into a vec (at least we know the exact capacity).
                             let mut vec: Vec<u8> = Vec::with_capacity(number_of_bytes + vec_excess);
                             for item in iter {
