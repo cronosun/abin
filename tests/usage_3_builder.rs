@@ -36,7 +36,7 @@ fn text_from_action() {
             NewStr::from_static("Simon"),
             NewStr::from_static("Garfunkel"),
         ))
-            .as_str()
+        .as_str()
     );
     assert_eq!("", process_action(ShutUp).as_str());
 }

@@ -3,7 +3,7 @@ use core::mem;
 use serde::export::PhantomData;
 use smallvec::SmallVec;
 
-use crate::{AnyBin, BinBuilder, BinSegment, BinFactory, SBin, Segment, StackBin, StackBinBuilder};
+use crate::{AnyBin, BinBuilder, BinFactory, BinSegment, SBin, Segment, StackBin, StackBinBuilder};
 
 /// There's two things we want to optimize:
 ///

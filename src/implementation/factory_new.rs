@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::{AnyRc, Bin, BinBuilder, BuilderCfg, DefaultBinBuilder, IntoUnSyncView, RcBin, SBin, BooToOwned, BinFactory};
+use crate::{
+    AnyRc, Bin, BinBuilder, BinFactory, BooToOwned, BuilderCfg, DefaultBinBuilder, IntoUnSyncView,
+    RcBin, SBin,
+};
 
 pub struct NewBin {
     _phantom: PhantomData<()>,

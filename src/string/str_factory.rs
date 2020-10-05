@@ -52,7 +52,9 @@ pub trait StrFactory {
     }
 
     #[inline]
-    fn from_given_string(string: impl Into<String>) -> AnyStr<<Self::TBinFactory as BinFactory>::T> {
+    fn from_given_string(
+        string: impl Into<String>,
+    ) -> AnyStr<<Self::TBinFactory as BinFactory>::T> {
         let string = string.into();
         let bin = Self::TBinFactory::from_given_vec(string.into_bytes());
         // we know it's valid utf-8
@@ -60,7 +62,9 @@ pub trait StrFactory {
     }
 
     #[inline]
-    fn copy_from_str<'a>(string: impl Into<&'a str>) -> AnyStr<<Self::TBinFactory as BinFactory>::T> {
+    fn copy_from_str<'a>(
+        string: impl Into<&'a str>,
+    ) -> AnyStr<<Self::TBinFactory as BinFactory>::T> {
         let string = string.into();
         let bin = Self::TBinFactory::copy_from_slice(string.as_bytes());
         // we know it's valid utf-8

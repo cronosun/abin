@@ -1,6 +1,6 @@
 use crate::{
-    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinSegment, DefaultGivenVecConfig, EmptyBin, BinFactory,
-    GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
+    maybe_shrink, AnyBin, AnyRc, ArcBin, Bin, BinFactory, BinSegment, DefaultGivenVecConfig,
+    EmptyBin, GivenVecConfig, GivenVecOptimization, IntoUnSyncView, NewBin, NewSBin, RcBin, SBin,
     SegmentIterator, StackBin, StackBinBuilder, StaticBin, VecBin,
 };
 

@@ -1,6 +1,8 @@
 use serde::export::PhantomData;
 
-use crate::{Bin, BooToOwned, DefaultStrBuilder, NewBin, NewSBin, SBin, SStr, Str, StrBuilder, StrFactory};
+use crate::{
+    Bin, BooToOwned, DefaultStrBuilder, NewBin, NewSBin, SBin, SStr, Str, StrBuilder, StrFactory,
+};
 
 pub struct NewStr {
     _phantom: PhantomData<()>,
@@ -8,7 +10,7 @@ pub struct NewStr {
 
 impl NewStr {
     #[inline]
-    pub fn builder<'a>() -> impl StrBuilder<'a, T=Bin> {
+    pub fn builder<'a>() -> impl StrBuilder<'a, T = Bin> {
         DefaultStrBuilder::new(NewBin::builder())
     }
 }
@@ -29,7 +31,7 @@ pub struct NewSStr {
 
 impl NewSStr {
     #[inline]
-    pub fn builder<'a>() -> impl StrBuilder<'a, T=SBin> {
+    pub fn builder<'a>() -> impl StrBuilder<'a, T = SBin> {
         DefaultStrBuilder::new(NewSBin::builder())
     }
 }

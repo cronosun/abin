@@ -12,34 +12,63 @@ use crate::BooToOwned;
 /// Similar to `std::borrow::Cow` but without the requirement of
 /// `TBorrowed : ToOwned<Owned=TOwned>`.
 #[derive(Debug)]
-pub enum Boo<'a, TBorrowed, TOwned> where TBorrowed: ?Sized {
+pub enum Boo<'a, TBorrowed, TOwned>
+where
+    TBorrowed: ?Sized,
+{
     Borrowed(&'a TBorrowed),
     Owned(TOwned),
 }
 
-impl<'a, TBorrowed, TOwned> From<&'a TBorrowed> for Boo<'a, TBorrowed, TOwned> where TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> From<&'a TBorrowed> for Boo<'a, TBorrowed, TOwned>
+where
+    TBorrowed: ?Sized,
+{
     fn from(borrowed: &'a TBorrowed) -> Self {
         Self::Borrowed(borrowed)
     }
 }
 
 pub trait ToBooConverter {
-    fn borrowed<TBorrowed>(&self) -> Boo<TBorrowed, Self> where TBorrowed: ?Sized, Self: Borrow<TBorrowed>, Self: Sized;
-    fn owned<'a, TBorrowed>(self) -> Boo<'a, TBorrowed, Self> where TBorrowed: ?Sized, Self: Sized;
+    fn borrowed<TBorrowed>(&self) -> Boo<TBorrowed, Self>
+    where
+        TBorrowed: ?Sized,
+        Self: Borrow<TBorrowed>,
+        Self: Sized;
+    fn owned<'a, TBorrowed>(self) -> Boo<'a, TBorrowed, Self>
+    where
+        TBorrowed: ?Sized,
+        Self: Sized;
 }
 
 impl<T> ToBooConverter for T {
-    fn borrowed<TBorrowed>(&self) -> Boo<TBorrowed, Self> where TBorrowed: ?Sized, Self: Borrow<TBorrowed>, Self: Sized {
+    fn borrowed<TBorrowed>(&self) -> Boo<TBorrowed, Self>
+    where
+        TBorrowed: ?Sized,
+        Self: Borrow<TBorrowed>,
+        Self: Sized,
+    {
         Boo::Borrowed(self.borrow())
     }
 
-    fn owned<'a, TBorrowed>(self) -> Boo<'a, TBorrowed, Self> where TBorrowed: ?Sized, Self: Sized {
+    fn owned<'a, TBorrowed>(self) -> Boo<'a, TBorrowed, Self>
+    where
+        TBorrowed: ?Sized,
+        Self: Sized,
+    {
         Boo::Owned(self)
     }
 }
 
-impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: ?Sized {
-    pub fn into_owned_with<TBooToOwned>(self) -> TOwned where TBooToOwned: BooToOwned<TBorrowed, TOwned> {
+impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: ?Sized,
+{
+    pub fn into_owned_with<TBooToOwned>(self) -> TOwned
+    where
+        TBooToOwned: BooToOwned<TBorrowed, TOwned>,
+    {
         match self {
             Boo::Borrowed(borrowed) => TBooToOwned::convert_to_owned(borrowed),
             Boo::Owned(owned) => owned,
@@ -47,16 +76,25 @@ impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBor
     }
 }
 
-impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: ?Sized {
-    fn borrow_internal(&self) -> &TBorrowed {
+impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: ?Sized,
+{
+    pub(crate) fn borrow_internal(&self) -> &TBorrowed {
         match self {
             Boo::Borrowed(value) => *value,
-            Boo::Owned(value) => value.borrow()
+            Boo::Owned(value) => value.borrow(),
         }
     }
 }
 
-impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned> where TBorrowed: ToOwned<Owned=TOwned>, TOwned: Borrow<TBorrowed>, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned>
+where
+    TBorrowed: ToOwned<Owned = TOwned>,
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: ?Sized,
+{
     pub fn into_owned(self) -> TOwned {
         match self {
             Boo::Borrowed(borrowed) => borrowed.to_owned(),
@@ -65,80 +103,88 @@ impl<'a, TBorrowed, TOwned> Boo<'a, TBorrowed, TOwned> where TBorrowed: ToOwned<
     }
 }
 
-impl<'a, TBorrowed, TOwned> Default for Boo<'a, TBorrowed, TOwned> where TOwned: Default, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Default for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Default,
+    TBorrowed: ?Sized,
+{
     fn default() -> Self {
         Boo::Owned(TOwned::default())
     }
 }
 
-impl<'a, TBorrowed, TOwned> Borrow<TBorrowed> for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Borrow<TBorrowed> for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: ?Sized,
+{
     fn borrow(&self) -> &TBorrowed {
         match self {
             Boo::Borrowed(value) => *value,
-            Boo::Owned(value) => value.borrow()
+            Boo::Owned(value) => value.borrow(),
         }
     }
 }
 
-impl<'a, TBorrowed, TOwned> AsRef<TBorrowed> for Boo<'a, TBorrowed, TOwned> where TOwned: AsRef<TBorrowed>, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> AsRef<TBorrowed> for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: AsRef<TBorrowed>,
+    TBorrowed: ?Sized,
+{
     fn as_ref(&self) -> &TBorrowed {
         match self {
             Boo::Borrowed(value) => *value,
-            Boo::Owned(value) => value.as_ref()
+            Boo::Owned(value) => value.as_ref(),
         }
     }
 }
 
-impl<'a, TBorrowed, TOwned> Deref for Boo<'a, TBorrowed, TOwned> where TOwned: Deref<Target=TBorrowed>, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Deref for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Deref<Target = TBorrowed>,
+    TBorrowed: ?Sized,
+{
     type Target = TBorrowed;
 
     fn deref(&self) -> &Self::Target {
         match self {
             Boo::Borrowed(value) => *value,
-            Boo::Owned(value) => value.borrow()
+            Boo::Owned(value) => value.borrow(),
         }
     }
 }
 
-impl<'a, TBorrowed, TOwned> Eq for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: Eq + PartialEq, TBorrowed: ?Sized {}
-
-impl<'a, TBorrowed, TOwned> PartialEq for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: PartialEq, TBorrowed: ?Sized {
-    fn eq(&self, other: &Self) -> bool {
-        self.borrow_internal() == other.borrow_internal()
-    }
-}
-
-impl<'a, TBorrowed, TOwned> Ord for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: Ord + Eq + PartialOrd, TBorrowed: ?Sized {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.borrow_internal().cmp(other.borrow_internal())
-    }
-}
-
-impl<'a, TBorrowed, TOwned> PartialOrd for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: PartialOrd + PartialEq, TBorrowed: ?Sized {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.borrow_internal().partial_cmp(other.borrow_internal())
-    }
-}
-
-impl<'a, TBorrowed, TOwned> Hash for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: Hash, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Hash for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: Hash,
+    TBorrowed: ?Sized,
+{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.borrow_internal().hash(state)
     }
 }
 
-impl<'a, TBorrowed, TOwned> Display for Boo<'a, TBorrowed, TOwned> where TOwned: Borrow<TBorrowed>, TBorrowed: Display, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Display for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Borrow<TBorrowed>,
+    TBorrowed: Display,
+    TBorrowed: ?Sized,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self.borrow_internal(), f)
     }
 }
 
-impl<'a, TBorrowed, TOwned> Clone for Boo<'a, TBorrowed, TOwned> where TOwned: Clone, TBorrowed: ?Sized {
+impl<'a, TBorrowed, TOwned> Clone for Boo<'a, TBorrowed, TOwned>
+where
+    TOwned: Clone,
+    TBorrowed: ?Sized,
+{
     fn clone(&self) -> Self {
         match self {
             Boo::Borrowed(value) => Boo::Borrowed(value),
-            Boo::Owned(value) => Boo::Owned(value.clone())
+            Boo::Owned(value) => Boo::Owned(value.clone()),
         }
     }
 }
-
-

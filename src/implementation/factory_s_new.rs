@@ -1,13 +1,15 @@
 use std::marker::PhantomData;
 
-use crate::{AnyRc, ArcBin, BinBuilder, BinFactory, BooToOwned, BuilderCfg, DefaultBinBuilder, SBin};
+use crate::{
+    AnyRc, ArcBin, BinBuilder, BinFactory, BooToOwned, BuilderCfg, DefaultBinBuilder, SBin,
+};
 
 pub struct NewSBin {
     _phantom: PhantomData<()>,
 }
 
 impl NewSBin {
-    pub fn builder<'a>() -> impl BinBuilder<'a, T=SBin> {
+    pub fn builder<'a>() -> impl BinBuilder<'a, T = SBin> {
         DefaultBinBuilder::<NewSBin, BinBuilderCfg>::new()
     }
 }

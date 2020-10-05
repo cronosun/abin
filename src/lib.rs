@@ -58,11 +58,11 @@
 //! }
 //! ```
 
-pub use {binary::*, common::*, implementation::*, serde_support::*, string::*, boo::*};
+pub use {binary::*, boo::*, common::*, implementation::*, serde_support::*, string::*};
 
 mod binary;
+mod boo;
 mod common;
 mod implementation;
 mod serde_support;
 mod string;
-mod boo;
