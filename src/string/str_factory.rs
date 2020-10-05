@@ -5,6 +5,8 @@ use crate::{
 /// Use this factory to create strings. There's a built-in implementation in this crate;
 /// custom implementations (that implement this trait) are possible.
 pub trait StrFactory {
+    /// The binary backend this string factory uses to produce strings (strings are just wrappers
+    /// for utf-8-validated binaries).
     type TBinFactory: BinFactory;
 
     /// Create a string by joining multiple segments (see `StrSegment`).
@@ -57,7 +59,7 @@ pub trait StrFactory {
     /// ```
     #[inline]
     fn from_utf8_iter(
-        iter: impl IntoIterator<Item = u8>,
+        iter: impl IntoIterator<Item=u8>,
     ) -> Result<
         AnyStr<<Self::TBinFactory as BinFactory>::T>,
         AnyStrUtf8Error<<Self::TBinFactory as BinFactory>::T>,
