@@ -7,12 +7,30 @@ pub trait BinFactory {
     type T: AnyBin;
 
     /// Empty binary.
+    ///
+    /// ```rust
+    /// use abin::{NewBin, Bin, BinFactory};
+    /// let bin : Bin = NewBin::empty();
+    /// assert_eq!(0, bin.len());
+    /// ```
     fn empty() -> Self::T;
 
     /// A binary from a `&'static [u8]`.
+    ///
+    /// ```rust
+    /// use abin::{Bin, NewBin, BinFactory, AnyBin};
+    /// let bin : Bin = NewBin::from_static("Hello".as_bytes());
+    /// assert_eq!("Hello".as_bytes(), bin.as_slice());
+    /// ```
     fn from_static(slice: &'static [u8]) -> Self::T;
 
     /// A binary from a `&[u8]`; prefer `from_static` if there's a static lifetime.
+    ///
+    /// ```rust
+    /// use abin::{Bin, NewBin, BinFactory, AnyBin};
+    /// let bin : Bin = NewBin::copy_from_slice("Hello".as_bytes());
+    /// assert_eq!("Hello".as_bytes(), bin.as_slice());
+    /// ```
     fn copy_from_slice(slice: &[u8]) -> Self::T;
 
     /// Create a binary from an iterator. To be efficient, the iterator should provide correct
@@ -23,6 +41,12 @@ pub trait BinFactory {
 
     /// Create a binary from an iterator. To be efficient, the iterator should provide correct
     /// hints (see `Iterator::size_hint`).
+    ///
+    /// ```rust
+    /// use abin::{Bin, NewBin, BinFactory, AnyBin};
+    /// let bin : Bin = NewBin::from_iter((0..6).map(|i| i as u8));
+    /// assert_eq!(&[0u8, 1u8, 2u8, 3u8, 4u8, 5u8], bin.as_slice());
+    /// ```
     fn from_iter(iter: impl IntoIterator<Item = u8>) -> Self::T;
 
     /// Create a binary by joining multiple segments (see `BinSegment`).
@@ -31,6 +55,16 @@ pub trait BinFactory {
         TIterator: SegmentIterator<BinSegment<'a, Self::T>>;
 
     /// Create a binary by joining multiple segments (see `BinSegment`).
+    ///
+    /// ```rust
+    /// use abin::{BinSegment, SegmentsSlice, Bin, NewBin, BinFactory, AnyBin};
+    ///
+    /// let segments = &mut [BinSegment::Static("Hello, ".as_bytes()),
+    ///     BinSegment::Static("World!".as_bytes())];
+    /// let iterator = SegmentsSlice::new(segments);
+    /// let bin : Bin = NewBin::from_segments(iterator);
+    /// assert_eq!("Hello, World!".as_bytes(), bin.as_slice());
+    /// ```
     fn from_segments<'a>(iter: impl SegmentIterator<BinSegment<'a, Self::T>>) -> Self::T;
 
     /// Convert a `BinSegment` to a binary.
@@ -39,6 +73,16 @@ pub trait BinFactory {
         TSegment: Into<BinSegment<'a, Self::T>>;
 
     /// Convert a `BinSegment` to a binary.
+    ///
+    /// ```rust
+    /// use abin::{NewBin, BinFactory, BinSegment};
+    ///
+    /// // both lines are equivalent (`from_segment` will just call `from_static`).
+    /// let bin_1 = NewBin::from_static("Hello".as_bytes());
+    /// let bin_2 = NewBin::from_segment(BinSegment::Static("Hello".as_bytes()));
+    ///
+    /// assert_eq!(bin_1, bin_2);
+    /// ```
     fn from_segment<'a>(segment: impl Into<BinSegment<'a, Self::T>>) -> Self::T;
 
     /// Creates a binary from given vec. Important: Only use this method if you're given
@@ -46,6 +90,13 @@ pub trait BinFactory {
     /// any of the other methods provided by this factory (such as `from_iter`, `from_segments`).
     ///
     /// See `from_given_vec_with_config` with a default config chosen by the implementation.
+    ///
+    /// ```rust
+    /// use abin::{NewBin, BinFactory, AnyBin};
+    /// let vec_from_string = "Hello".to_owned().into_bytes();
+    /// let bin = NewBin::from_given_vec(vec_from_string);
+    /// assert_eq!("Hello".as_bytes(), bin.as_slice());
+    /// ```
     fn from_given_vec(vec: Vec<u8>) -> Self::T;
 
     /// Creates a binary from given vec. Important: Only use this method if you're given

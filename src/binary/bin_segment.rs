@@ -2,6 +2,17 @@ use crate::{AnyBin, Segment};
 
 /// A segment; segments can be joined to create binaries. See `BinBuilder`,
 /// `SegmentIterator` and `SegmentsSlice`.
+///
+/// ```rust
+/// use abin::{NewBin, BinSegment, Bin, AnyBin, BinBuilder};
+///
+/// let mut builder = NewBin::builder();
+/// builder.push(BinSegment::Static("Hello, ".as_bytes()));
+/// builder.push(BinSegment::Static("World!".as_bytes()));
+/// let bin : Bin = builder.build();
+///
+/// assert_eq!("Hello, World!".as_bytes(), bin.as_slice());
+/// ```
 #[derive(Debug, Clone)]
 pub enum BinSegment<'a, TAnyBin: AnyBin> {
     Slice(&'a [u8]),

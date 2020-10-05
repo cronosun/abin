@@ -2,6 +2,17 @@ use crate::{AnyBin, AnyStr, StrSegment};
 
 /// Trait used to build a string efficiently (with just one allocation & no re-allocation or
 /// even without allocation).
+///
+/// ```rust
+/// use abin::{NewStr, StrSegment, Str, StrBuilder};
+///
+/// let mut builder = NewStr::builder();
+/// builder.push(StrSegment::Static("Hello, "));
+/// builder.push(StrSegment::Static("World!"));
+/// let string : Str = builder.build();
+///
+/// assert_eq!("Hello, World!", string.as_str());
+/// ```
 pub trait StrBuilder<'a> {
     /// The binary type the generated strings are backed by.
     type T: AnyBin;

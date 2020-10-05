@@ -6,6 +6,12 @@ use crate::{
 };
 
 /// Default implementation used to create `Bin`. See `BinFactory` for documentation.
+///
+/// ```rust
+/// use abin::{NewBin, BinFactory, Bin, AnyBin};
+/// let bin : Bin = NewBin::from_static("Hello, I'm a binary!".as_bytes());
+/// assert_eq!("Hello, I'm a binary!".as_bytes(), bin.as_slice());
+/// ```
 pub struct NewBin {
     _phantom: PhantomData<()>,
 }

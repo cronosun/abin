@@ -2,6 +2,17 @@ use crate::{AnyBin, BinSegment, Bytes128};
 
 /// Trait used to build a binary efficiently (with just one allocation & no re-allocation or
 /// even without allocation).
+///
+/// ```rust
+/// use abin::{NewBin, BinSegment, Bin, AnyBin, BinBuilder};
+///
+/// let mut builder = NewBin::builder();
+/// builder.push(BinSegment::Static("Hello, ".as_bytes()));
+/// builder.push(BinSegment::Static("World!".as_bytes()));
+/// let bin : Bin = builder.build();
+///
+/// assert_eq!("Hello, World!".as_bytes(), bin.as_slice());
+/// ```
 pub trait BinBuilder<'a> {
     type T: AnyBin;
 

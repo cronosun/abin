@@ -19,6 +19,13 @@ where
     ///
     /// The given value must be valid UTF-8. If the value is not valid UTF-8, this method
     /// returns an error containing the original binary.
+    ///
+    /// ```rust
+    /// use abin::{NewBin, BinFactory, AnyStr, Bin};
+    /// let bin : Bin = NewBin::from_static(&[65u8, 66u8, 67u8]);
+    /// let str : AnyStr<Bin> = AnyStr::from_utf8(bin).unwrap();
+    /// assert_eq!("ABC", str.as_str());
+    /// ```
     #[inline]
     pub fn from_utf8(value: impl Into<TBin>) -> Result<Self, AnyStrUtf8Error<TBin>> {
         let value = value.into();
@@ -37,6 +44,12 @@ where
     }
 
     /// Returns `&str`. It's a cheap operation. See `AnyBin::as_slice`.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory};
+    /// let string : Str = NewStr::from_static("Hello");
+    /// assert_eq!("Hello", string.as_str());
+    /// ```
     #[inline]
     pub fn as_str(&self) -> &str {
         // no need to check utf8 again; we know it's valid (it's validated when constructed).
@@ -44,24 +57,50 @@ where
     }
 
     /// Extracts the wrapped binary.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory, AnyBin, Bin};
+    /// let string : Str = NewStr::from_static("ABC");
+    /// let bin : Bin = string.into_bin();
+    /// assert_eq!(&[65u8, 66u8, 67u8], bin.as_slice());
+    /// ```
     #[inline]
     pub fn into_bin(self) -> TBin {
         self.0
     }
 
     /// Wrapped binary as reference.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory, AnyBin, Bin};
+    /// let string : Str = NewStr::from_static("ABC");
+    /// let bin : &Bin = string.as_bin();
+    /// assert_eq!(&[65u8, 66u8, 67u8], bin.as_slice());
+    /// ```
     #[inline]
     pub fn as_bin(&self) -> &TBin {
         &self.0
     }
 
     /// `true` if this string is empty (number of utf-8 bytes is 0). See also `AnyBin::is_empty`.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory};
+    /// let string : Str = NewStr::from_static("");
+    /// assert_eq!(true, string.is_empty());
+    /// ```
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// The number of utf-8 bytes in this string. See also `AnyBin::len`.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory};
+    /// let string : Str = NewStr::from_static("Hello");
+    /// assert_eq!(5, string.len());
+    /// ```
     #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
@@ -69,6 +108,13 @@ where
 
     /// Converts this into a `String`; depending on the type, this might allocate or not. See
     /// also `AnyBin::into_vec`.
+    ///
+    /// ```rust
+    /// use abin::{Str, NewStr, StrFactory};
+    /// let string : Str = NewStr::from_static("Hello");
+    /// let std_string : String = string.into_string();
+    /// assert_eq!("Hello", &std_string);
+    /// ```
     #[inline]
     pub fn into_string(self) -> String {
         let vec = self.0.into_vec();
@@ -83,6 +129,24 @@ where
     ///   - or if the range does not lie on UTF-8 boundaries (see also `str::get`).
     ///
     /// See also `AnyBin::slice`.
+    ///
+    /// ```rust
+    /// use abin::{NewStr, StrFactory, Str};
+    /// let str : Str = NewStr::from_static("🗻∈🌏");
+    ///
+    /// // works
+    /// let slice1 : Option<Str> = str.slice(0..4);
+    /// assert_eq!(Some(NewStr::from_static("🗻")), slice1);
+    ///
+    /// // indices not on UTF-8 sequence boundaries
+    /// let slice2 : Option<Str> = str.slice(1..);
+    /// assert!(slice2.is_none());
+    /// let slice3 : Option<Str> = str.slice(..8);
+    /// assert!(slice3.is_none());
+    /// // out of bounds
+    /// let slice4 : Option<Str> = str.slice(..42);
+    /// assert!(slice4.is_none());
+    /// ```
     #[inline]
     pub fn slice<TRange>(&self, range: TRange) -> Option<Self>
     where

@@ -13,6 +13,12 @@ use crate::{
 
 /// A binary that does not implement `Send + Sync`. See `AnyBin` for documentation; see `SBin`
 /// if you need `Send + Sync`. See `BinFactory` on how to create binaries.
+///
+/// ```rust
+/// use abin::{NewBin, BinFactory, Bin, AnyBin};
+/// let bin : Bin = NewBin::from_static("Hello, I'm a binary!".as_bytes());
+/// assert_eq!("Hello, I'm a binary!".as_bytes(), bin.as_slice());
+/// ```
 #[repr(C)]
 pub struct Bin {
     data: BinData,

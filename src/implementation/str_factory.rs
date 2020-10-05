@@ -4,6 +4,12 @@ use crate::{
 use std::marker::PhantomData;
 
 /// Default implementation used to create `Str`. See `StrFactory` for documentation.
+///
+/// ```rust
+/// use abin::{Str, NewStr, StrFactory};
+/// let string : Str = NewStr::from_static("Hello, I'm a binary!");
+/// assert_eq!("Hello, I'm a binary!", string.as_str());
+/// ```
 pub struct NewStr {
     _phantom: PhantomData<()>,
 }
@@ -27,6 +33,12 @@ impl BooToOwned<str, Str> for NewStr {
 }
 
 /// Default implementation used to create `SStr`. See `StrFactory` for documentation.
+///
+/// ```rust
+/// use abin::{SStr, NewSStr, StrFactory};
+/// let string : SStr = NewSStr::from_static("Hello, I'm a binary!");
+/// assert_eq!("Hello, I'm a binary!", string.as_str());
+/// ```
 pub struct NewSStr {
     _phantom: PhantomData<()>,
 }

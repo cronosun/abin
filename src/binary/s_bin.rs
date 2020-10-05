@@ -9,6 +9,12 @@ use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncR
 
 /// A binary that does implement `Send + Sync`. See `AnyBin` for documentation; see `Bin`
 /// if you don't need `Send + Sync`. See `BinFactory` on how to create binaries.
+///
+/// ```rust
+/// use abin::{NewSBin, SBin, BinFactory, AnyBin};
+/// let bin : SBin = NewSBin::from_static("Hello, I'm a binary!".as_bytes());
+/// assert_eq!("Hello, I'm a binary!".as_bytes(), bin.as_slice());
+/// ```
 pub struct SBin(pub(crate) Bin);
 
 unsafe impl Sync for SBin {}

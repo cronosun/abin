@@ -3,7 +3,19 @@ use core::mem;
 use crate::common::segment_iterator::SegmentIterator;
 use crate::Segment;
 
-/// It's an implementation of `SegmentIterator` that does not heap-allocate.
+/// It's an implementation of `SegmentIterator` that does not heap-allocate. Alternatives are
+/// `BinBuilder` and `StrBuilder`; `SegmentsSlice` is less flexible but cheaper
+/// (smaller stack; faster).
+///
+/// ```rust
+/// use abin::{BinSegment, SegmentsSlice, Bin, NewBin, BinFactory, AnyBin};
+///
+/// let segments = &mut [BinSegment::Static("Hello, ".as_bytes()),
+///     BinSegment::Static("World!".as_bytes())];
+/// let iterator = SegmentsSlice::new(segments);
+/// let bin : Bin = NewBin::from_segments(iterator);
+/// assert_eq!("Hello, World!".as_bytes(), bin.as_slice());
+/// ```
 pub struct SegmentsSlice<'a, TSegment> {
     slice: &'a mut [TSegment],
     number_of_bytes: usize,

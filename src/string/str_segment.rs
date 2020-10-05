@@ -2,6 +2,17 @@ use crate::{AnyBin, AnyStr, BinSegment, Segment};
 
 /// A segment; segments can be joined to create strings. See `StrBuilder`,
 /// `SegmentIterator` and `SegmentsSlice`.
+///
+/// ```rust
+/// use abin::{NewStr, StrSegment, Str, StrBuilder};
+///
+/// let mut builder = NewStr::builder();
+/// builder.push(StrSegment::Static("Hello, "));
+/// builder.push(StrSegment::Static("World!"));
+/// let string : Str = builder.build();
+///
+/// assert_eq!("Hello, World!", string.as_str());
+/// ```
 #[derive(Debug, Clone)]
 pub enum StrSegment<'a, TBin: AnyBin> {
     Slice(&'a str),
