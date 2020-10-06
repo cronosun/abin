@@ -1,6 +1,7 @@
 use core::{mem, slice};
 
-use crate::{Bin, BinData, BinFactory, FnTable, IntoUnSyncView, NewBin, NewSBin, SBin, UnsafeBin};
+use crate::{Bin, BinFactory, IntoUnSyncView, NewBin, NewSBin, SBin};
+use crate::spi::{UnsafeBin, BinData, FnTable};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted:
 /// If you clone it or slice it, it will be converted to a reference-counted version.

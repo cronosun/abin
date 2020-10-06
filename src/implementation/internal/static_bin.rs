@@ -1,7 +1,8 @@
 use core::slice;
 use std::mem;
 
-use crate::{Bin, BinData, EmptyBin, FnTable, IntoUnSyncView, SBin, UnsafeBin};
+use crate::{Bin, EmptyBin, IntoUnSyncView, SBin};
+use crate::spi::{UnsafeBin, BinData, FnTable};
 
 /// A binary from a static slice.
 pub struct StaticBin;
@@ -11,7 +12,7 @@ impl StaticBin {
     pub fn from(slice: &'static [u8]) -> SBin {
         let len = slice.len();
         if len == 0 {
-            EmptyBin::new()
+            EmptyBin::empty_sbin()
         } else {
             let ptr = slice.as_ptr();
             let data = StaticBinData::new(ptr, len);

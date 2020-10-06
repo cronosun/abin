@@ -59,6 +59,7 @@
 //! assert_eq!("Hello".to_owned(), hello_str.into_string());
 //! ```
 
+pub mod spi;
 #[cfg(any(test, feature = "serde"))]
 pub use serde_support::*;
 pub use {binary::*, boo::*, common::*, implementation::*, string::*};

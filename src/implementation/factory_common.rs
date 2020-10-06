@@ -30,7 +30,7 @@ where
 
     #[inline]
     fn empty() -> Self::T {
-        TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
+        TCf::TFunctions::convert_to_un_sync(EmptyBin::empty_sbin())
     }
 
     #[inline]
@@ -97,7 +97,7 @@ where
         TIterator: SegmentIterator<BinSegment<'a, Self::T>>,
     {
         if iter.is_empty() {
-            TCf::TFunctions::convert_to_un_sync(EmptyBin::new())
+            TCf::TFunctions::convert_to_un_sync(EmptyBin::empty_sbin())
         } else {
             match iter.single() {
                 Ok(single) => {

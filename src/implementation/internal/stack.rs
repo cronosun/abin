@@ -1,7 +1,8 @@
 use core::slice;
 
-use crate::{AnyBin, Bin, BinData, FnTable, SBin, UnsafeBin};
+use crate::{AnyBin, Bin, SBin};
 use crate::{EmptyBin, IntoUnSyncView};
+use crate::spi::{BinData, UnsafeBin, FnTable};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();
@@ -16,7 +17,7 @@ pub struct StackBin;
 impl StackBin {
     /// Does those steps:
     ///
-    ///  * If it's empty, returns `EmptyBin::new()`.
+    ///  * If it's empty, returns `EmptyBin::empty_sbin()`.
     ///  * If the slice is small (<= `max_len`) returns a stack binary.
     ///  * ...otherwise returns `None`.
     #[inline]
@@ -24,7 +25,7 @@ impl StackBin {
         let len = slice.len();
         if len == 0 {
             // no problem, empty can always be stored on the stack
-            Some(EmptyBin::new())
+            Some(EmptyBin::empty_sbin())
         } else if len < BIN_DATA_LEN {
             // yes, this works (one byte is required for the length information)
             let mut bin = unsafe { Bin::_new(BinData::empty(), &FN_TABLE) };
@@ -96,7 +97,7 @@ fn is_empty(bin: &Bin) -> bool {
 
 fn clone(bin: &Bin) -> Bin {
     let data = unsafe { bin._data() };
-    unsafe { Bin::_new(data.clone(), &FN_TABLE) }
+    unsafe { Bin::_new(*data, &FN_TABLE) }
 }
 
 fn into_vec(bin: Bin) -> Vec<u8> {

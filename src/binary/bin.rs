@@ -7,9 +7,9 @@ use std::marker::PhantomData;
 use std::ops::{Bound, Deref, RangeBounds};
 
 use crate::{
-    AnyBin, BinData, FnTable, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,
-    UnsafeBin,
+    AnyBin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,
 };
+use crate::spi::{BinData, FnTable, UnsafeBin};
 
 /// A binary that does not implement `Send + Sync`. See `AnyBin` for documentation; see `SBin`
 /// if you need `Send + Sync`. See `BinFactory` on how to create binaries.
@@ -162,11 +162,6 @@ impl PartialEq for Bin {
     fn eq(&self, other: &Self) -> bool {
         self.as_slice() == other.as_slice()
     }
-
-    #[inline]
-    fn ne(&self, other: &Self) -> bool {
-        self.as_slice().ne(other.as_slice())
-    }
 }
 
 impl Ord for Bin {
@@ -237,7 +232,7 @@ impl<'a> IntoIterator for &'a Bin {
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.as_slice().into_iter()
+        self.as_slice().iter()
     }
 }
 

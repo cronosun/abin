@@ -24,32 +24,28 @@ impl ExcessShrink for DefaultExcessShrink {
         if excess < 96 + 1 {
             // fast path: 99% case
             ShrinkResult::do_not_shrink()
-        } else {
-            if len < 1024 + 1 {
-                // < 1kb
-                ShrinkResult::shrink_with_remaining_excess(48)
-            } else if len < 1024 * 4 + 1 {
-                // 1kb - 4kb
-                if excess > 256 {
-                    ShrinkResult::shrink_with_remaining_excess(64)
-                } else {
-                    ShrinkResult::do_not_shrink()
-                }
-            } else if len < 1024 * 32 + 1 {
-                // 4kb - 32kb
-                if excess > 1024 * 1 {
-                    ShrinkResult::shrink_with_remaining_excess(128)
-                } else {
-                    ShrinkResult::do_not_shrink()
-                }
+        } else if len < 1024 {
+            // < 1kb
+            ShrinkResult::shrink_with_remaining_excess(48)
+        } else if len < 1024 * 4 + 1 {
+            // 1kb - 4kb
+            if excess > 256 {
+                ShrinkResult::shrink_with_remaining_excess(64)
             } else {
-                // large
-                if excess > 1024 * 4 + 1 {
-                    ShrinkResult::shrink_with_remaining_excess(256)
-                } else {
-                    ShrinkResult::do_not_shrink()
-                }
+                ShrinkResult::do_not_shrink()
             }
+        } else if len < 1024 * 32 + 1 {
+            // 4kb - 32kb
+            if excess > 1024 {
+                ShrinkResult::shrink_with_remaining_excess(128)
+            } else {
+                ShrinkResult::do_not_shrink()
+            }
+            // last: large
+        } else if excess > 1024 * 4 + 1 {
+            ShrinkResult::shrink_with_remaining_excess(256)
+        } else {
+            ShrinkResult::do_not_shrink()
         }
     }
 }

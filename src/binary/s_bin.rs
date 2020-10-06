@@ -5,7 +5,8 @@ use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, RangeBounds};
 
-use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef, UnsafeBin};
+use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef};
+use crate::spi::UnsafeBin;
 
 /// A binary that does implement `Send + Sync`. See `AnyBin` for documentation; see `Bin`
 /// if you don't need `Send + Sync`. See `BinFactory` on how to create binaries.
@@ -188,7 +189,7 @@ impl<'a> IntoIterator for &'a SBin {
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.un_sync_ref().as_slice().into_iter()
+        self.un_sync_ref().as_slice().iter()
     }
 }
 

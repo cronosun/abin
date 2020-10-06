@@ -1,4 +1,5 @@
-use crate::{Bin, BinData, FnTable, IntoUnSyncView, SBin};
+use crate::{Bin, IntoUnSyncView, SBin};
+use crate::spi::{BinData, FnTable};
 
 /// A binary that's always empty.
 pub struct EmptyBin;
@@ -6,7 +7,7 @@ pub struct EmptyBin;
 impl EmptyBin {
     /// Creates a new empty binary.
     #[inline]
-    pub const fn new() -> SBin {
+    pub const fn empty_sbin() -> SBin {
         SBin(Bin::_const_new(BinData::empty(), &FN_TABLE))
     }
 }
@@ -27,7 +28,7 @@ const FN_TABLE: FnTable = FnTable {
 };
 
 fn clone(_: &Bin) -> Bin {
-    EmptyBin::new().un_sync()
+    EmptyBin::empty_sbin().un_sync()
 }
 
 fn into_vec(_: Bin) -> Vec<u8> {
@@ -36,7 +37,7 @@ fn into_vec(_: Bin) -> Vec<u8> {
 
 fn slice(_: &Bin, start: usize, end_excluded: usize) -> Option<Bin> {
     if start == 0 && end_excluded == 0 {
-        Some(EmptyBin::new().un_sync())
+        Some(EmptyBin::empty_sbin().un_sync())
     } else {
         None
     }

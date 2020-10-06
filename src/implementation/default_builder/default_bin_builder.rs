@@ -23,7 +23,7 @@ pub struct DefaultBinBuilder<'a, TFactory: BinFactory, TConfig> {
 impl<'a, TFactory: BinFactory, TConfig> DefaultBinBuilder<'a, TFactory, TConfig> {
     pub fn new() -> Self {
         Self {
-            state: State::State0Empty,
+            state: State::Stage0Empty,
             _phantom: Default::default(),
         }
     }
@@ -54,11 +54,11 @@ where
         }
 
         match &mut self.state {
-            State::State0Empty => self.state = State::State1Single(segment),
-            State::State1Single(single) => {
+            State::Stage0Empty => self.state = State::Stage1Single(segment),
+            State::Stage1Single(single) => {
                 let single = mem::replace(single, BinSegment::Empty);
 
-                // if both items fit onto the stack, we go to state 2...
+                // if both items fit onto the stack, we go to stage 2...
                 let stack_builder = {
                     let mut stack_builder = StackBinBuilder::new(0);
                     let fits_onto_stack = stack_builder.try_extend_from_slice(single.as_slice());
@@ -75,10 +75,10 @@ where
                     }
                 };
                 if let Some(stack_builder) = stack_builder {
-                    // ok, small enough, go to state 2.
-                    self.state = State::State2Stack(stack_builder);
+                    // ok, small enough, go to stage 2.
+                    self.state = State::Stage2Stack(stack_builder);
                 } else {
-                    // nope, they're large, go to state 3
+                    // nope, they're large, go to stage 3
                     let mut segments = SegmentsSmallVec::new();
                     let number_of_bytes = single
                         .number_of_bytes()
@@ -87,16 +87,16 @@ where
                     segments.push(single);
                     segments.push(segment);
 
-                    self.state = State::State3Large {
+                    self.state = State::Stage3Large {
                         segments,
                         number_of_bytes,
                     }
                 }
             }
-            State::State2Stack(stack_builder) => {
+            State::Stage2Stack(stack_builder) => {
                 let fits_onto_stack = stack_builder.try_extend_from_slice(segment.as_slice());
                 if fits_onto_stack {
-                    // nice! keep state 2
+                    // nice! keep stage 2
                 } else {
                     // unfortunately we have to go to state 3...
                     let sbin = stack_builder.build_stack_only().expect(
@@ -111,13 +111,13 @@ where
                     segments.push(segment);
                     maybe_compress::<Self::T, TConfig>(&mut segments);
 
-                    self.state = State::State3Large {
+                    self.state = State::Stage3Large {
                         segments,
                         number_of_bytes,
                     }
                 }
             }
-            State::State3Large {
+            State::Stage3Large {
                 segments,
                 number_of_bytes,
             } => {
@@ -127,25 +127,25 @@ where
                 *number_of_bytes = new_number_of_bytes;
                 segments.push(segment);
                 maybe_compress::<Self::T, TConfig>(segments);
-                // keep state 3
+                // keep stage 3
             }
         }
     }
 
     fn build(&mut self) -> Self::T {
         // builder will be empty after this call
-        let taken_state = mem::replace(&mut self.state, State::State0Empty);
+        let taken_state = mem::replace(&mut self.state, State::Stage0Empty);
         match taken_state {
-            State::State0Empty => TFactory::empty(),
-            State::State1Single(single) => TFactory::from_segment(single),
-            State::State2Stack(stack_builder) => {
+            State::Stage0Empty => TFactory::empty(),
+            State::Stage1Single(single) => TFactory::from_segment(single),
+            State::Stage2Stack(stack_builder) => {
                 let sbin = stack_builder.build_stack_only().expect(
                     "Implementation \
                     error: We made sure that the stack builder does not grow too large.",
                 );
                 TConfig::convert_from_sbin_to_t(sbin)
             }
-            State::State3Large {
+            State::Stage3Large {
                 segments,
                 number_of_bytes,
             } => {
@@ -168,13 +168,13 @@ type SegmentsSmallVec<'a, TAnyBin> = SmallVec<[BinSegment<'a, TAnyBin>; SMALL_VE
 
 enum State<'a, TAnyBin: AnyBin> {
     /// initial state. Nothing in builder.
-    State0Empty,
+    Stage0Empty,
     /// one single item in builder.
-    State1Single(BinSegment<'a, TAnyBin>),
+    Stage1Single(BinSegment<'a, TAnyBin>),
     /// Multiple items in builder that all fit onto the stack.
-    State2Stack(StackBinBuilder),
+    Stage2Stack(StackBinBuilder),
     /// multiple items in builder that are too large for the stack.
-    State3Large {
+    Stage3Large {
         segments: SegmentsSmallVec<'a, TAnyBin>,
         number_of_bytes: usize,
     },
@@ -188,7 +188,7 @@ enum State<'a, TAnyBin: AnyBin> {
 /// `SMALL_VEC_MAX_SEGMENTS` its too late anyways and we already have a heap-allocation). Then
 /// sees if we can combine `item3` and `item4` into one stack-item.
 #[inline]
-fn maybe_compress<'a, TAnyBin, TConfig>(vec: &mut SegmentsSmallVec<TAnyBin>)
+fn maybe_compress<TAnyBin, TConfig>(vec: &mut SegmentsSmallVec<TAnyBin>)
 where
     TConfig: BuilderCfg<TAnyBin>,
     TAnyBin: AnyBin,

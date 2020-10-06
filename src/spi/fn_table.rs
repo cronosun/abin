@@ -60,5 +60,9 @@ pub struct FnTable {
     ///
     /// IMPORTANT: If `bin` is a synchronized binary, the returned binary has to be
     /// synchronized too.
-    pub try_re_integrate: Option<fn(bin: &Bin, slice: &[u8]) -> Option<Bin>>,
+    pub try_re_integrate: Option<TryReIntegrateFn>,
 }
+
+/// Re-integrate function; see `FnTable`. This is only required if you implement your
+/// own binary type.
+pub type TryReIntegrateFn = fn(bin: &Bin, slice: &[u8]) -> Option<Bin>;

@@ -1,8 +1,9 @@
 use core::{mem, slice};
 
 use crate::{
-    Bin, BinData, DefaultExcessShrink, RcCounter, RcDecResult, RcMeta, RcUtils, UnsafeBin,
+    Bin, DefaultExcessShrink, RcCounter, RcDecResult, RcMeta, RcUtils,
 };
+use crate::spi::{UnsafeBin, BinData};
 
 #[repr(C)]
 pub struct RcData<TCounter: RcCounter> {
