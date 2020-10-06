@@ -97,7 +97,7 @@ Interfaces:
   * `Bin`: Binary (it's a struct).
   * `SBin`: Synchronized binary (it's a struct).
   * `Str`: String (`type Str = AnyStr<Bin>`)
-  * `SStr` Synchronized string (`type SStr = AnyStr<SBin>`).
+  * `SStr`: Synchronized string (`type SStr = AnyStr<SBin>`).
  
 Factories provided by the default implementation: 
   * `NewBin`: Creates `Bin`.
