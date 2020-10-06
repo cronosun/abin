@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/cronosun/abin/badge.svg?branch=master)](https://coveralls.io/github/cronosun/abin?branch=master)
 [![Rust GitHub Template](https://img.shields.io/badge/Rust%20GitHub-Template-blue)](https://rust-github.github.io/)
 
-A library for working with binaries and strings. The library tries to avoid heap-allocations / memory-copy whenever possible by automatically choosing a reasonable strategy (stack for small binaries; static-lifetime-binary or reference-counting). It's easy to use (no lifetimes; the binary type is sized), `Send + Sync` is optional (thus no synchronization overhead), provides optional serde support and has a similar API for strings and binaries. Custom binary/string types can be implemented for fine-tuning.
+A library for working with binaries and strings. The library tries to avoid heap-allocations / memory-copy whenever possible by automatically choosing a reasonable strategy: stack for small binaries; static-lifetime-binary or reference-counting. It's easy to use (no lifetimes; the binary type is sized), `Send + Sync` is optional (thus no synchronization overhead), provides optional serde support and has a similar API for strings and binaries. Custom binary/string types can be implemented for fine-tuning.
 
 Libraries that provide similar functionality:
 
