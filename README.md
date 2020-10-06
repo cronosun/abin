@@ -1,4 +1,10 @@
-# Overview 
+# abin
+
+[![Crates.io](https://img.shields.io/crates/v/abin.svg)](https://crates.io/crates/abin)
+[![Docs.rs](https://docs.rs/abin/badge.svg)](https://docs.rs/abin)
+[![CI](https://github.com/cronosun/abin/workflows/Continuous%20Integration/badge.svg)](https://github.com/cronosun/abin/actions)
+[![Coverage Status](https://coveralls.io/repos/github/cronosun/abin/badge.svg?branch=master)](https://coveralls.io/github/cronosun/abin?branch=master)
+[![Rust GitHub Template](https://img.shields.io/badge/Rust%20GitHub-Template-blue)](https://rust-github.github.io/)
 
 A library for working with binaries and strings. The library tries to avoid heap-allocations / memory-copy whenever possible by automatically choosing a reasonable strategy (stack for small binaries; static-lifetime-binary or reference-counting). It's easy to use (no lifetimes; the binary type is sized), `Send + Sync` is optional (thus no synchronization overhead), provides optional serde support and has a similar API for strings and binaries. Custom binary/string types can be implemented for fine-tuning.
 
@@ -6,6 +12,17 @@ Libraries that provide similar functionality:
 
  * [https://github.com/tokio-rs/bytes](https://github.com/tokio-rs/bytes)
  * [https://github.com/rust-analyzer/smol_str](https://github.com/rust-analyzer/smol_str)
+
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
 
 # Details
 
@@ -108,6 +125,13 @@ See the example tests:
 * [tests/usage_8_send_sync.rs](tests/usage_8_send_sync.rs): Synchronized (`Send + Sync`) and non-synchronized binaries / strings.
 * [tests/usage_9_re_integration.rs](tests/usage_9_re_integration.rs): Re-integration (also see *Questions and Answers*)
 
+## Maturity
+
+It's quite young (development started in October 2020). The main functionality has been implemented. Things I might do:
+
+ * API refinement.
+ * Tests using `loom` / rayon / more tests.
+
 ## Questions and Answers
 
 **There's already other crates with similar functionality, why another one? / Features**
@@ -139,6 +163,10 @@ Why `let string = NewStr::from_static("Hello")` instead of just `let string = St
 The only difference between `NewBin` and `NewSBin` is the reference-counted binaries: `SBin` created by `NewSBin` have a synchronized reference counter (`AtomicUsize`).
   
 Note: The same statements also apply to strings (since strings are backed by the binary implementation).
+
+**What operations are allocation-free / zero-copy?**
+
+It's not documented (in text) - and of course depends on the implementation ... but for the default-implementation (`NewBin`/`NewSBin`/`NewStr`/`NewSStr`) there's a test, see [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs).
 
 **I want to write my own implementation, how to?**
 
@@ -174,3 +202,11 @@ Technical detail: It checks whether `slice_of_that_bin` lies within the memory r
 **Name `abin`?**
 
 It's named after the trait `AnyBin`.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).

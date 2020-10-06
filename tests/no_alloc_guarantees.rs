@@ -42,7 +42,7 @@ fn small_binaries_are_stack_allocated() {
     let empty_vec_1 = Vec::from(empty_slice);
     let empty_vec_2 = Vec::from(empty_slice);
 
-    // 'StackBin::max_len()': maximum that can be stored on stack.
+    // 'STACK_BIN_LEN': maximum that can be stored on stack.
     let max_stack_alloc_vec_1 = generate_small_vec_that_fits_on_stack();
     let max_stack_alloc_vec_2 = generate_small_vec_that_fits_on_stack();
 
@@ -113,7 +113,7 @@ fn convert_into_sync_un_sync() {
 
 /// Cloning is usually allocation-free.
 fn no_alloc_clone() {
-    let bin_gen = BinGen::new(0, 200);
+    let bin_gen = BinGen::new(0, STACK_BIN_LEN * 4);
     let vec = bin_gen.generate_to_vec();
 
     let bin_1 = NewBin::empty();
