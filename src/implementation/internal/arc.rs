@@ -1,6 +1,6 @@
+use crate::spi::UnsafeBin;
 use crate::AnyRc;
 use crate::{AnyRcConfigForSync, AnyRcImpl, SBin};
-use crate::spi::UnsafeBin;
 
 /// A reference-counted binary. Note: The reference counter is synchronized, so this
 /// is `Send + Sync`. Cloning is cheap. See `AnyRc`.

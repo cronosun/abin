@@ -1,8 +1,8 @@
 use core::slice;
 use std::mem;
 
+use crate::spi::{BinData, FnTable, UnsafeBin};
 use crate::{Bin, EmptyBin, IntoUnSyncView, SBin};
-use crate::spi::{UnsafeBin, BinData, FnTable};
 
 /// A binary from a static slice.
 pub struct StaticBin;
@@ -41,7 +41,7 @@ impl StaticBinData {
     #[inline]
     unsafe fn from_bin(bin: &Bin) -> &Self {
         let bin_data = bin._data() as *const BinData;
-        let self_data = mem::transmute::<*const BinData, *const Self>(bin_data);
+        let self_data = bin_data as *const Self;
         &*self_data
     }
 

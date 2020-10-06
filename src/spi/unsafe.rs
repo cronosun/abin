@@ -1,5 +1,5 @@
-use crate::SBin;
 use crate::spi::{BinData, FnTable};
+use crate::SBin;
 
 /// Unsafe interface for `Bin`. This is only to be used if you want to
 /// implement your own binary type.

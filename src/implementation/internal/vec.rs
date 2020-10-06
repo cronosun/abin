@@ -1,7 +1,7 @@
 use core::{mem, slice};
 
+use crate::spi::{BinData, FnTable, UnsafeBin};
 use crate::{Bin, BinFactory, IntoUnSyncView, NewBin, NewSBin, SBin};
-use crate::spi::{UnsafeBin, BinData, FnTable};
 
 /// A binary that is backed by a `Vec<u8>`. Note: It's not reference-counted:
 /// If you clone it or slice it, it will be converted to a reference-counted version.
@@ -40,7 +40,7 @@ impl VecData {
     #[inline]
     unsafe fn from_bin(bin: &Bin) -> &Self {
         let bin_data = bin._data() as *const BinData;
-        let self_data = mem::transmute::<*const BinData, *const Self>(bin_data);
+        let self_data = bin_data as *const Self;
         &*self_data
     }
 

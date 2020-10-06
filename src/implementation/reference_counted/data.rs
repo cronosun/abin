@@ -1,9 +1,7 @@
 use core::{mem, slice};
 
-use crate::{
-    Bin, DefaultExcessShrink, RcCounter, RcDecResult, RcMeta, RcUtils,
-};
-use crate::spi::{UnsafeBin, BinData};
+use crate::spi::{BinData, UnsafeBin};
+use crate::{Bin, DefaultExcessShrink, RcCounter, RcDecResult, RcMeta, RcUtils};
 
 #[repr(C)]
 pub struct RcData<TCounter: RcCounter> {
@@ -20,21 +18,25 @@ impl<TCounter: RcCounter> RcData<TCounter> {
     #[inline]
     pub unsafe fn from_bin(bin: &Bin) -> &Self {
         let bin_data = bin._data() as *const BinData;
-        let self_data = mem::transmute::<*const BinData, *const Self>(bin_data);
+        let self_data = bin_data as *const Self;
         &*self_data
     }
 
+    /// This is highly unsafe: converts a reference into a mutable reference. This is used for
+    /// example for clone, where we get `clone(&self)` but we actually need `clone(&mut self)` to
+    /// be able to mutate the reference counter.
+    #[allow(clippy::mut_from_ref)]
     #[inline]
     pub unsafe fn from_bin_mut_cast(bin: &Bin) -> &mut Self {
         let bin_data = bin._data() as *const BinData as *mut BinData;
-        let self_data = mem::transmute::<*mut BinData, *mut Self>(bin_data);
+        let self_data = bin_data as *mut Self;
         &mut *self_data
     }
 
     #[inline]
     pub unsafe fn from_bin_mut(bin: &mut Bin) -> &mut Self {
         let bin_data = bin._data_mut() as *mut BinData;
-        let self_data = mem::transmute::<*mut BinData, *mut Self>(bin_data);
+        let self_data = bin_data as *mut Self;
         &mut *self_data
     }
 
@@ -123,9 +125,10 @@ impl<TCounter: RcCounter> RcData<TCounter> {
         self.data_len == 0
     }
 
-    /// note: when calling this, make sure the `Bin` is not dropped (since we still need the content).
+    /// This converts `&mut self` into a vec (yes, `into`, not `to`), so: when calling this,
+    /// make sure the `Bin` is not dropped (since we still need the content).
     #[inline]
-    pub(crate) fn into_vec(&mut self) -> Vec<u8> {
+    pub(crate) fn mut_self_into_vec(&mut self) -> Vec<u8> {
         // this can be a no-op (if it's not shared).
         let dec_result = {
             let meta = self.rc_meta_mut();

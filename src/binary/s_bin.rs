@@ -5,8 +5,8 @@ use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, RangeBounds};
 
-use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef};
 use crate::spi::UnsafeBin;
+use crate::{AnyBin, Bin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, UnSyncRef};
 
 /// A binary that does implement `Send + Sync`. See `AnyBin` for documentation; see `Bin`
 /// if you don't need `Send + Sync`. See `BinFactory` on how to create binaries.

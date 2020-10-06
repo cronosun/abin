@@ -1,5 +1,5 @@
-use crate::{Bin, IntoUnSyncView, SBin};
 use crate::spi::{BinData, FnTable};
+use crate::{Bin, IntoUnSyncView, SBin};
 
 /// A binary that's always empty.
 pub struct EmptyBin;

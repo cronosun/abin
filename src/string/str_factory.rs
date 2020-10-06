@@ -2,6 +2,10 @@ use crate::{
     AnyStr, AnyStrUtf8Error, BinFactory, SegmentIterator, SegmentIteratorConverter, StrSegment,
 };
 
+/// The result produced by `from_utf8_iter`. Is either a `AnyStr` or an `AnyStrUtf8Error` on
+/// error (invalid UTF-8).
+pub type FromUtf8IterResult<TAnyBin> = Result<AnyStr<TAnyBin>, AnyStrUtf8Error<TAnyBin>>;
+
 /// Use this factory to create strings. There's a built-in implementation in this crate;
 /// custom implementations (that implement this trait) are possible.
 pub trait StrFactory {
@@ -59,11 +63,8 @@ pub trait StrFactory {
     /// ```
     #[inline]
     fn from_utf8_iter(
-        iter: impl IntoIterator<Item=u8>,
-    ) -> Result<
-        AnyStr<<Self::TBinFactory as BinFactory>::T>,
-        AnyStrUtf8Error<<Self::TBinFactory as BinFactory>::T>,
-    > {
+        iter: impl IntoIterator<Item = u8>,
+    ) -> FromUtf8IterResult<<Self::TBinFactory as BinFactory>::T> {
         let bin: <Self::TBinFactory as BinFactory>::T = Self::TBinFactory::from_iter(iter);
         AnyStr::<<Self::TBinFactory as BinFactory>::T>::from_utf8(bin)
     }

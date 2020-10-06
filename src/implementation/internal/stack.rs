@@ -1,8 +1,8 @@
 use core::slice;
 
+use crate::spi::{BinData, FnTable, UnsafeBin};
 use crate::{AnyBin, Bin, SBin};
 use crate::{EmptyBin, IntoUnSyncView};
-use crate::spi::{BinData, UnsafeBin, FnTable};
 
 /// the number of bytes we can store + 1 (since one byte is required for the length information).
 const BIN_DATA_LEN: usize = std::mem::size_of::<BinData>();

@@ -68,13 +68,16 @@ where
 
     type IntoIter = Map<
         <TInnerIterator as IntoIterator>::IntoIter,
-        fn(StrSegment<'a, TAnyBin>) -> BinSegment<'a, TAnyBin>,
+        StrSegmentToBinSegmentConverterFn<'a, TAnyBin>,
     >;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter().map(convert_fn)
     }
 }
+
+type StrSegmentToBinSegmentConverterFn<'a, TAnyBin> =
+    fn(StrSegment<'a, TAnyBin>) -> BinSegment<'a, TAnyBin>;
 
 #[inline]
 fn convert_fn<TAnyBin>(str_segment: StrSegment<TAnyBin>) -> BinSegment<TAnyBin>

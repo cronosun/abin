@@ -4,9 +4,7 @@
 //! implementing your own binary type or you're doing something wrong (as a user of this crate
 //! you won't need unsafe code, not things from this module).
 
-pub use {
-    data::*, fn_table::*, r#unsafe::*,
-};
+pub use {data::*, fn_table::*, r#unsafe::*};
 
 mod data;
 mod fn_table;

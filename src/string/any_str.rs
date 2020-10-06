@@ -20,6 +20,8 @@ where
     /// The given value must be valid UTF-8. If the value is not valid UTF-8, this method
     /// returns an error containing the original binary.
     ///
+    /// See also: `core::str::from_utf8` / `std::string::String::from_utf8`.
+    ///
     /// ```rust
     /// use abin::{NewBin, BinFactory, AnyStr, Bin};
     /// let bin : Bin = NewBin::from_static(&[65u8, 66u8, 67u8]);
@@ -38,6 +40,14 @@ where
         }
     }
 
+    /// Creates a new string from given binary without checking whether the data in the given
+    /// binary is valid UTF-8.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it does not check that the bytes passed to it are valid
+    /// UTF-8. If this constraint is violated, undefined behavior results, as `AnyStr`
+    /// assumes that it only contains valid UTF-8. See also `core::str::from_utf8_unchecked`.
     #[inline]
     pub unsafe fn from_utf8_unchecked(value: TBin) -> Self {
         Self(value)

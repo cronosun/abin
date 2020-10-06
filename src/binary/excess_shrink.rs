@@ -41,7 +41,7 @@ impl ExcessShrink for DefaultExcessShrink {
             } else {
                 ShrinkResult::do_not_shrink()
             }
-            // last: large
+        // last: large
         } else if excess > 1024 * 4 + 1 {
             ShrinkResult::shrink_with_remaining_excess(256)
         } else {

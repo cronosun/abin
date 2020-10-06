@@ -1,6 +1,6 @@
 pub use {
-    any_bin::*, bin::*, bin_builder::*, bin_segment::*, excess_shrink::*, factory::*,
-    into_iter::*,  s_bin::*,
+    any_bin::*, bin::*, bin_builder::*, bin_segment::*, excess_shrink::*, factory::*, into_iter::*,
+    s_bin::*,
 };
 
 mod any_bin;

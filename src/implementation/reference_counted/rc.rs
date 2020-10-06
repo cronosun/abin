@@ -1,8 +1,8 @@
 use core::mem;
 use std::marker::PhantomData;
 
+use crate::spi::{FnTable, UnsafeBin};
 use crate::{Bin, NsRcCounter, RcCounter, RcData, RcUtils, SyncRcCounter};
-use crate::spi::{UnsafeBin, FnTable};
 
 pub struct AnyRcImpl<TConfig: AnyRcImplConfig> {
     _phantom: PhantomData<TConfig>,
@@ -113,7 +113,7 @@ fn clone<TCounter: RcCounter>(bin: &Bin) -> Bin {
 
 fn into_vec<TCounter: RcCounter>(mut bin: Bin) -> Vec<u8> {
     let rc_data = unsafe { RcData::<TCounter>::from_bin_mut(&mut bin) };
-    let vec = rc_data.into_vec();
+    let vec = rc_data.mut_self_into_vec();
     // bin must not be dropped (we still might need the content)
     mem::forget(bin);
     vec

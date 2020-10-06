@@ -131,6 +131,8 @@ It's quite young (development started in October 2020). The main functionality h
 
  * API refinement.
  * Tests using `loom` / rayon / more tests.
+ * Optimizations.
+ * Benchmarks.
 
 ## Questions and Answers
 
@@ -184,7 +186,7 @@ There's currently no documentation - but you can use the default implementation 
 
 Say we have this code (pseudocode):
 
-```rust
+```
 let large_binary_from_network : Vec<u8> = <...>;
 let bin = NewBin::from_given_vec(large_binary_from_network);
 let slice_of_that_bin : &[u8] = &bin.as_slice()[45..458];

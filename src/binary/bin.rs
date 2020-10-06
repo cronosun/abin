@@ -6,10 +6,8 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::{Bound, Deref, RangeBounds};
 
-use crate::{
-    AnyBin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef,
-};
 use crate::spi::{BinData, FnTable, UnsafeBin};
+use crate::{AnyBin, IntoIter, IntoSync, IntoUnSync, IntoUnSyncView, SBin, UnSyncRef};
 
 /// A binary that does not implement `Send + Sync`. See `AnyBin` for documentation; see `SBin`
 /// if you need `Send + Sync`. See `BinFactory` on how to create binaries.
