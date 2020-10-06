@@ -36,7 +36,7 @@ pub trait BuilderCfg<TAnyBin: AnyBin> {
 
 /// Unfortunately, a segment is quite large, so we can't have too many on the stack. Each segment
 /// is takes about 40 bytes (on 64 bit machines).
-const SMALL_VEC_MAX_SEGMENTS: usize = 8;
+const SMALL_VEC_MAX_SEGMENTS: usize = 12;
 
 impl<'a, TFactory, TConfig> BinBuilder<'a> for DefaultBinBuilder<'a, TFactory, TConfig>
 where

@@ -6,3 +6,4 @@
  * `common`: Thinsgs used by the binary- and the string-type.
  * `serde_support`: Serde-support, obviously.
  * `boo`: Borrowed-or-owned.
+ * `spi`: Service provider interface: This is only required if you want to implement your own binary.

@@ -130,7 +130,7 @@ See the example tests:
 It's quite young (development started in October 2020). The main functionality has been implemented. Things I might do:
 
  * API refinement.
- * Tests using `loom` / rayon / more tests.
+ * Tests using `loom` / more tests.
  * Optimizations.
  * Benchmarks.
 
@@ -169,6 +169,11 @@ Note: The same statements also apply to strings (since strings are backed by the
 **What operations are allocation-free / zero-copy?**
 
 It's not documented (in text) - and of course depends on the implementation ... but for the default-implementation (`NewBin`/`NewSBin`/`NewStr`/`NewSStr`) there's a test, see [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs).
+
+Also see these two tests for single-allocation guarantee:
+
+ * [tests/single_allocation_builder.rs](tests/single_allocation_builder.rs)
+ * [tests/single_allocation_from_segments.rs](tests/single_allocation_from_segments.rs)
 
 **I want to write my own implementation, how to?**
 
