@@ -1,0 +1,23 @@
+[package]
+name = "abin-benchmark"
+version = "0.1.1"
+authors = ["cronosun <silvergate@gmail.com>"]
+edition = "2018"
+description = "Benchmark for the abin crate; this crate is not useful on its own."
+repository = "https://github.com/cronosun/abin/"
+homepage = "https://github.com/cronosun/abin/"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+abin = { path = "../abin" }
+enum-iterator = "0.6"
+enum-iterator-derive = "0.6"
+smallvec = ">= 1.4"
+
+[[bench]]
+name = "benchmark_cmp"
+harness = false
+
+[dev-dependencies]
+criterion = "0.3"
+stats_alloc = ">= 0.1"

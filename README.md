@@ -210,6 +210,75 @@ Technical detail: It checks whether `slice_of_that_bin` lies within the memory r
 
 It's named after the trait `AnyBin`.
 
+## Benchmark
+
+See `abin-benchmark` crate for details. The benchmarks are performed against those implementations:
+
+ * `StdLibOptimized`: Uses `Arc<str>` / `Arc<String>` / `&'static str`, `()`(empty) with slicing-support (hand-optimized). It's very similar to what `abin` internally does (except for storing small binaries on the stack). Overall, this implementation performs similar to `abin` - it's a bit faster but allocates more.
+ * `StdLibStringOnly`: Uses always `String` (from Rust std-lib); no optimization. Much worse than `abin` (slower and allocates way more).
+ * `StdLibArcStrOnly`: Always uses `Arc<str>` (from Rust std-lib); no optimization. Much worse than `abin` (slower and allocates way more).
+  
+### Memory
+
+`abin` outperforms every implementation. It's slightly better than `StdLibOptimized` (especially in number of allocations) - and it's much better than `StdLibStringOnly` and `StdLibArcStrOnly` (see number of bytes allocated, it's 380 MB vs 840 MB / 1.2 GB; and the number of allocations is almost 10x).
+
+**Results for `abin` (using `SStr`)**
+
+```
+{ allocations: 3154, deallocations: 3154, reallocations: 12, bytes_allocated: 388755346, 
+bytes_deallocated: 388755346, bytes_reallocated: 11520 }
+```
+
+**Results for `StdLibOptimized`**
+
+```
+{ allocations: 12754, deallocations: 12754, reallocations: 12, bytes_allocated: 389136018, 
+bytes_deallocated: 389136018, bytes_reallocated: 14400 }
+```
+
+**Results for `StdLibStringOnly`**
+
+```
+{ allocations: 21754, deallocations: 21754, reallocations: 1212, bytes_allocated: 848171274, 
+bytes_deallocated: 848171274, bytes_reallocated: 105981240 }
+```
+
+**Results for `StdLibArcStrOnly`**
+
+```
+{ allocations: 34354, deallocations: 34354, reallocations: 1212, bytes_allocated: 1201859852, 
+bytes_deallocated: 1201859852, bytes_reallocated: 105978360 }
+```
+
+### Performance
+
+As you can see, the `StdLibOptimized` is a bit better than `abin`; `abin` however, is more than twice as fast as `StdLibStringOnly` and `StdLibArcStrOnly`. 
+
+**Results for `abin` (using `SStr`)**
+```
+time:   [71.015 ms 71.485 ms 71.967 ms]
+```
+
+**Results for `abin` (using `Str`)**
+```
+time:   [67.401 ms 67.798 ms 68.192 ms]
+```
+
+**Results for `StdLibOptimized`**
+```
+time:   [65.147 ms 65.563 ms 65.988 ms]
+```
+
+**Results for `StdLibStringOnly`**
+```
+time:   [160.37 ms 161.42 ms 162.48 ms]
+```
+
+**Results for `StdLibArcStrOnly`**
+```
+time:   [160.37 ms 161.42 ms 162.48 ms]
+```
+
 ## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
