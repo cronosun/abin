@@ -8,7 +8,7 @@ on:
 jobs:
 
   publish-cargo:
-    name: Publishing to Cargo
+    name: Publishing to Cargo (abin)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -18,6 +18,5 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          working-directory: abin
           command: publish
-          args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
+          args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty -manifest-path abin/Cargo.toml
