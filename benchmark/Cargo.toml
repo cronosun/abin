@@ -1,6 +1,6 @@
 [package]
 name = "abin-benchmark"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["cronosun <silvergate@gmail.com>"]
 edition = "2018"
 description = "Benchmark for the abin crate; this crate is not useful on its own."
