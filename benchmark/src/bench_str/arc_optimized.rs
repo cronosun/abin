@@ -60,28 +60,24 @@ impl BenchStr for StdLibOptimized {
     where
         Self: Sized,
     {
+        let mut length_in_bytes: usize = 0;
         let mut small_vec = SmallVec::<[Self; 12]>::new();
         for item in iter {
+            length_in_bytes += item.as_slice().len();
             small_vec.push(item);
         }
 
         let small_vec_len = small_vec.len();
-        if small_vec_len == 0 {
+        if length_in_bytes == 0 {
             Self::Empty
-        } else if small_vec_len == 1 {
+        } else if small_vec_len == 0 {
             mem::replace(&mut small_vec[0], Self::Empty)
         } else {
-            // compute entire length
-            let entire_length = small_vec.iter().map(|item| item.as_slice().len()).sum();
-            if entire_length == 0 {
-                Self::Empty
-            } else {
-                let mut string = String::with_capacity(entire_length);
-                for item in small_vec.into_iter() {
-                    string.push_str(item.as_slice());
-                }
-                Self::from_given_string(string)
+            let mut string = String::with_capacity(length_in_bytes);
+            for item in small_vec.into_iter() {
+                string.push_str(item.as_slice());
             }
+            Self::from_given_string(string)
         }
     }
 

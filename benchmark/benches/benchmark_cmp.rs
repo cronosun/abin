@@ -1,8 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use abin_benchmark::{
-    benchmark_test_set, run_benchmark, BenchStr, SStrBenchStr, StdLibArcStrOnly, StdLibOptimized,
-    StdLibStringOnly, StrBenchStr,
+    benchmark_test_set, run_benchmark, BenchStr, BytesBenchStr, SStrBenchStr, StdLibArcStrOnly,
+    StdLibOptimized, StdLibStringOnly, StrBenchStr,
 };
 
 fn perform<TBenchStr: BenchStr>() {
@@ -18,6 +18,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("Implementation: StdLibOptimized", |b| {
         b.iter(|| perform::<StdLibOptimized>())
+    });
+    c.bench_function("Implementation: BytesBenchStr", |b| {
+        b.iter(|| perform::<BytesBenchStr>())
     });
     c.bench_function("Implementation: StdLibStringOnly", |b| {
         b.iter(|| perform::<StdLibStringOnly>())

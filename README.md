@@ -214,69 +214,82 @@ It's named after the trait `AnyBin`.
 
 See `abin-benchmark` crate for details. The benchmarks are performed against those implementations:
 
- * `StdLibOptimized`: Uses `Arc<str>` / `Arc<String>` / `&'static str`, `()`(empty) with slicing-support (hand-optimized). It's very similar to what `abin` internally does (except for storing small binaries on the stack). Overall, this implementation performs similar to `abin` - it's a bit faster but allocates more.
+ * `BytesBenchStr`: Uses the `bytes` crate. Overall, this implementation performs similar to `abin` (memory and performance; `abin` allocates a bit less).
+ * `StdLibOptimized`: Uses `Arc<str>` / `Arc<String>` / `&'static str`, `()`(empty) with slicing-support (hand-optimized). It's very similar to what `abin` internally does (except for storing small binaries on the stack). Overall, this implementation performs similar to `abin` (`abin` allocates a bit less).
  * `StdLibStringOnly`: Uses always `String` (from Rust std-lib); no optimization. Much worse than `abin` (slower and allocates way more).
  * `StdLibArcStrOnly`: Always uses `Arc<str>` (from Rust std-lib); no optimization. Much worse than `abin` (slower and allocates way more).
   
 ### Memory
 
-`abin` outperforms every implementation. It's slightly better than `StdLibOptimized` (especially in number of allocations) - and it's much better than `StdLibStringOnly` and `StdLibArcStrOnly` (see number of bytes allocated, it's 380 MB vs 840 MB / 1.2 GB; and the number of allocations is almost 10x).
+`abin` is slightly better than `StdLibOptimized` & `BytesBenchStr` (especially in number of allocations) - and outperforms `StdLibStringOnly` and `StdLibArcStrOnly` by margin (see number of bytes allocated, it's 380 MB vs 840 MB / 1.2 GB; and the number of allocations is almost 10x).
 
 **Results for `abin` (using `SStr`)**
 
 ```
-{ allocations: 3154, deallocations: 3154, reallocations: 12, bytes_allocated: 388755346, 
+{ allocations: 3154, deallocations: 3154, reallocations: 12, bytes_allocated: 388755346,
 bytes_deallocated: 388755346, bytes_reallocated: 11520 }
+```
+
+**Results for `BytesBenchStr`**
+
+```
+{ allocations: 15454, deallocations: 15454, reallocations: 2212, bytes_allocated: 494895196,
+bytes_deallocated: 494895196, bytes_reallocated: 520 }
 ```
 
 **Results for `StdLibOptimized`**
 
 ```
-{ allocations: 12754, deallocations: 12754, reallocations: 12, bytes_allocated: 389136018, 
-bytes_deallocated: 389136018, bytes_reallocated: 14400 }
+{ allocations: 18154, deallocations: 18154, reallocations: 12, bytes_allocated: 495272868,
+bytes_deallocated: 495272868, bytes_reallocated: 14400 }
 ```
 
 **Results for `StdLibStringOnly`**
 
 ```
-{ allocations: 21754, deallocations: 21754, reallocations: 1212, bytes_allocated: 848171274, 
+{ allocations: 21754, deallocations: 21754, reallocations: 1212, bytes_allocated: 848171274,
 bytes_deallocated: 848171274, bytes_reallocated: 105981240 }
 ```
 
 **Results for `StdLibArcStrOnly`**
 
 ```
-{ allocations: 34354, deallocations: 34354, reallocations: 1212, bytes_allocated: 1201859852, 
+{ allocations: 34354, deallocations: 34354, reallocations: 1212, bytes_allocated: 1201859852,
 bytes_deallocated: 1201859852, bytes_reallocated: 105978360 }
 ```
 
 ### Performance
 
-As you can see, the `StdLibOptimized` is a bit better than `abin`; `abin` however, is more than twice as fast as `StdLibStringOnly` and `StdLibArcStrOnly`. 
+As you can see, `abin`, `StdLibOptimized` and `BytesBenchStr` perform about the same (`abin` is slightly better); but are more than twice as fast as `StdLibStringOnly` and `StdLibArcStrOnly`. 
 
 **Results for `abin` (using `SStr`)**
 ```
-time:   [71.015 ms 71.485 ms 71.967 ms]
+time:   [65.764 ms 66.564 ms 67.464 ms]
 ```
 
 **Results for `abin` (using `Str`)**
 ```
-time:   [67.401 ms 67.798 ms 68.192 ms]
+time:   [66.731 ms 67.459 ms 68.246 ms]
+```
+
+**Results for `BytesBenchStr`**
+```
+time:   [77.865 ms 78.599 ms 79.381 ms]
 ```
 
 **Results for `StdLibOptimized`**
 ```
-time:   [65.147 ms 65.563 ms 65.988 ms]
+time:   [74.231 ms 74.768 ms 75.359 ms]
 ```
 
 **Results for `StdLibStringOnly`**
 ```
-time:   [160.37 ms 161.42 ms 162.48 ms]
+time:   [130.42 ms 131.18 ms 131.99 ms]
 ```
 
 **Results for `StdLibArcStrOnly`**
 ```
-time:   [160.37 ms 161.42 ms 162.48 ms]
+time:   [165.94 ms 168.36 ms 170.94 ms]
 ```
 
 ## Contribution
