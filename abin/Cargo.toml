@@ -1,6 +1,6 @@
 [package]
 name = "abin"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["cronosun <silvergate@gmail.com>"]
 edition = "2018"
 description = "A library for working with binaries and strings. The library tries to avoid heap-allocations / memory-copy whenever possible by automatically choosing a reasonable strategy: stack for small binaries; static-lifetime-binary or reference-counting."
@@ -9,6 +9,7 @@ homepage = "https://github.com/cronosun/abin/"
 license = "MIT OR Apache-2.0"
 keywords = ["binary", "string", "small", "rc", "stack"]
 categories = ["data-structures", "memory-management"]
+readme = "../README.md"
 
 [dependencies]
 smallvec = ">= 1.4"

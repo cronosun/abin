@@ -115,15 +115,15 @@ See also:
 
 See the example tests:
 
-* [tests/usage_1_basics.rs](tests/usage_1_basics.rs): Basic usage.
-* [tests/usage_2_creating.rs](tests/usage_2_creating.rs): How to create binaries and strings.
-* [tests/usage_3_builder.rs](tests/usage_3_builder.rs): How to use the builder to create binaries / strings.
-* [tests/usage_4_operations.rs](tests/usage_4_operations.rs): Operations provided by binaries and strings, such as slicing, converting binaries to strings and converting binaries/strings to `Vec<u8>` and `String`.
-* [tests/usage_5_boo.rs](tests/usage_5_boo.rs): "Borrowed-Or-Owned" (boo), alternative to `Cow` that works with types that don't implement `ToOwned`.
-* [tests/usage_6_serde_boo.rs](tests/usage_6_serde_boo.rs): Use `Boo` with serde.
-* [tests/usage_7_serde_ri.rs](tests/usage_7_serde_ri.rs): Use serde with re-integration (also see *Questions and Answers*).
-* [tests/usage_8_send_sync.rs](tests/usage_8_send_sync.rs): Synchronized (`Send + Sync`) and non-synchronized binaries / strings.
-* [tests/usage_9_re_integration.rs](tests/usage_9_re_integration.rs): Re-integration (also see *Questions and Answers*)
+* [usage_1_basics.rs](abin/tests/usage_1_basics.rs): Basic usage.
+* [usage_2_creating.rs](abin/tests/usage_2_creating.rs): How to create binaries and strings.
+* [usage_3_builder.rs](abin/tests/usage_3_builder.rs): How to use the builder to create binaries / strings.
+* [usage_4_operations.rs](abin/tests/usage_4_operations.rs): Operations provided by binaries and strings, such as slicing, converting binaries to strings and converting binaries/strings to `Vec<u8>` and `String`.
+* [usage_5_boo.rs](abin/tests/usage_5_boo.rs): "Borrowed-Or-Owned" (boo), alternative to `Cow` that works with types that don't implement `ToOwned`.
+* [usage_6_serde_boo.rs](abin/tests/usage_6_serde_boo.rs): Use `Boo` with serde.
+* [usage_7_serde_ri.rs](abin/tests/usage_7_serde_ri.rs): Use serde with re-integration (also see *Questions and Answers*).
+* [usage_8_send_sync.rs](abin/tests/usage_8_send_sync.rs): Synchronized (`Send + Sync`) and non-synchronized binaries / strings.
+* [usage_9_re_integration.rs](abin/tests/usage_9_re_integration.rs): Re-integration (also see *Questions and Answers*)
 
 ## Maturity
 
@@ -168,12 +168,12 @@ Note: The same statements also apply to strings (since strings are backed by the
 
 **What operations are allocation-free / zero-copy?**
 
-It's not documented (in text) - and of course depends on the implementation ... but for the default-implementation (`NewBin`/`NewSBin`/`NewStr`/`NewSStr`) there's a test, see [tests/no_alloc_guarantees.rs](tests/no_alloc_guarantees.rs).
+It's not documented (in text) - and of course depends on the implementation ... but for the default-implementation (`NewBin`/`NewSBin`/`NewStr`/`NewSStr`) there's a test, see [no_alloc_guarantees.rs](abin/tests/no_alloc_guarantees.rs).
 
-Also see these two tests for single-allocation guarantee:
+Also, see these two tests for single-allocation guarantee:
 
- * [tests/single_allocation_builder.rs](tests/single_allocation_builder.rs)
- * [tests/single_allocation_from_segments.rs](tests/single_allocation_from_segments.rs)
+ * [single_allocation_builder.rs](abin/tests/single_allocation_builder.rs)
+ * [single_allocation_from_segments.rs](abin/tests/single_allocation_from_segments.rs)
 
 **I want to write my own implementation, how to?**
 
@@ -212,7 +212,15 @@ It's named after the trait `AnyBin`.
 
 ## Benchmark
 
-See `abin-benchmark` crate for details. The benchmarks are performed against those implementations:
+See `abin-benchmark` crate for details.
+
+```
+cd benchmark
+cargo bench
+cargo test
+```
+
+The benchmarks are performed against those implementations:
 
  * `BytesBenchStr`: Uses the `bytes` crate. Overall, this implementation performs similar to `abin` (memory and performance; `abin` allocates a bit less).
  * `StdLibOptimized`: Uses `Arc<str>` / `Arc<String>` / `&'static str`, `()`(empty) with slicing-support (hand-optimized). It's very similar to what `abin` internally does (except for storing small binaries on the stack). Overall, this implementation performs similar to `abin` (`abin` allocates a bit less).
@@ -260,36 +268,42 @@ bytes_deallocated: 1201859852, bytes_reallocated: 105978360 }
 
 ### Performance
 
-As you can see, `abin`, `StdLibOptimized` and `BytesBenchStr` perform about the same (`abin` is slightly better); but are more than twice as fast as `StdLibStringOnly` and `StdLibArcStrOnly`. 
+As you can see, `abin`, `StdLibOptimized` and `BytesBenchStr` perform about the same (`abin` is slightly better and has fewer outliers); but are almost twice as fast as `StdLibStringOnly` and `StdLibArcStrOnly`. 
 
 **Results for `abin` (using `SStr`)**
 ```
-time:   [65.764 ms 66.564 ms 67.464 ms]
+time:   [65.503 ms 67.157 ms 68.869 ms]
+Found 1 outliers among 100 measurements (1.00%)
 ```
 
 **Results for `abin` (using `Str`)**
 ```
-time:   [66.731 ms 67.459 ms 68.246 ms]
+time:   [71.207 ms 72.825 ms 74.546 ms]
+Found 3 outliers among 100 measurements (3.00%)
 ```
 
 **Results for `BytesBenchStr`**
 ```
-time:   [77.865 ms 78.599 ms 79.381 ms]
+time:   [89.518 ms 91.279 ms 93.124 ms]
+Found 13 outliers among 100 measurements (13.00%)
 ```
 
 **Results for `StdLibOptimized`**
 ```
-time:   [74.231 ms 74.768 ms 75.359 ms]
+time:   [78.972 ms 79.765 ms 80.556 ms]
+Found 4 outliers among 100 measurements (4.00%)
 ```
 
 **Results for `StdLibStringOnly`**
 ```
-time:   [130.42 ms 131.18 ms 131.99 ms]
+time:   [118.53 ms 121.24 ms 124.15 ms]
+Found 21 outliers among 100 measurements (21.00%)
 ```
 
 **Results for `StdLibArcStrOnly`**
 ```
-time:   [165.94 ms 168.36 ms 170.94 ms]
+time:   [118.36 ms 118.90 ms 119.56 ms]
+Found 10 outliers among 100 measurements (10.00%)
 ```
 
 ## Contribution
